@@ -269,18 +269,23 @@
   .wday-dot.today { border-color: var(--lift) !important; }
 
   /* Month calendar grid — 7 columns (Su–Sa), rows of day cells.
-     Smaller and denser than the week grid since it shows up to 31 days. */
-  .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 1.5rem; }
-  .month-day-label { text-align: center; font-size: 9px; color: var(--muted); padding-bottom: 4px; }
+     Smaller and denser than the week grid since it shows up to 31 days.
+     Tighter gap and smaller font than before so it fits narrow phone screens
+     without cells growing too large via aspect-ratio. */
+  .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-bottom: 1.5rem; max-width: 100%; }
+  .month-day-label { text-align: center; font-size: 8px; color: var(--muted); padding-bottom: 3px; }
   .month-cell {
     aspect-ratio: 1;
-    border-radius: 5px;
+    max-width: 32px;
+    margin: 0 auto;
+    width: 100%;
+    border-radius: 4px;
     background: var(--surface2);
     border: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 10px;
+    font-size: 9px;
     color: var(--muted);
     position: relative;
   }
