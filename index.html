@@ -268,6 +268,29 @@
   .wday-dot.active { background: var(--lift-dim); border-color: var(--lift-mid); }
   .wday-dot.today { border-color: var(--lift) !important; }
 
+  /* Month calendar grid — 7 columns (Su–Sa), rows of day cells.
+     Smaller and denser than the week grid since it shows up to 31 days. */
+  .month-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 1.5rem; }
+  .month-day-label { text-align: center; font-size: 9px; color: var(--muted); padding-bottom: 4px; }
+  .month-cell {
+    aspect-ratio: 1;
+    border-radius: 5px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: var(--muted);
+    position: relative;
+  }
+  /* Empty padding cells before the 1st / after the last day of the month */
+  .month-cell.empty { background: none; border: none; }
+  /* Day that has a logged session — gold fill, dot indicator */
+  .month-cell.active { background: var(--lift-dim); border-color: var(--lift-mid); color: var(--text); font-weight: 600; }
+  /* Today gets a gold ring regardless of whether it has a session */
+  .month-cell.today { border-color: var(--lift) !important; }
+
   /* ── PR cards ── */
   .pr-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
   .pr-badge { background: var(--lift-dim); border: 1px solid var(--lift-mid); border-radius: var(--radius-sm); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
@@ -524,15 +547,32 @@
     <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;">
       <div>
         <div class="section-label" style="margin-bottom:4px">This week</div>
+        <!-- Personal training week — "Week 3" of THEIR log, counted from
+             their first ever session. Hidden until they've logged at least one. -->
+        <div id="training-week-label" style="font-size:11px;color:var(--text);display:none;"></div>
         <!-- Federation badge — only shown if set in Settings -->
-        <span id="federation-badge" style="display:none;font-size:10px;background:var(--lift-dim);border:1px solid var(--lift-mid);color:var(--lift);padding:2px 8px;border-radius:10px;"></span>
+        <span id="federation-badge" style="display:none;font-size:10px;background:var(--lift-dim);border:1px solid var(--lift-mid);color:var(--lift);padding:2px 8px;border-radius:10px;margin-top:4px;"></span>
       </div>
-      <!-- ISO week number — calculated and injected by renderHistory() -->
-      <div id="week-number-label" style="font-family:var(--font-display);font-size:13px;color:var(--lift);letter-spacing:0.08em;"></div>
+      <div style="text-align:right;">
+        <!-- ISO calendar week number — calculated and injected by renderHistory() -->
+        <div id="week-number-label" style="font-family:var(--font-display);font-size:13px;color:var(--lift);letter-spacing:0.08em;"></div>
+        <div style="font-size:9px;color:var(--muted);margin-top:1px;">calendar week</div>
+      </div>
     </div>
 
     <!-- 7-day dot grid for the current week -->
     <div class="week-grid" id="week-grid"></div>
+
+    <!-- ── Monthly calendar view ──
+         Shows the current month with a dot on every day that has
+         a logged session. Prev/Next arrows let the user browse
+         other months. Populated by renderMonthCalendar(). -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:1.5rem;margin-bottom:10px;">
+      <button class="btn-ghost" onclick="changeMonth(-1)" style="padding:6px 12px;" aria-label="Previous month">‹</button>
+      <div id="month-label" style="font-family:var(--font-display);font-size:13px;color:var(--lift);letter-spacing:0.06em;"></div>
+      <button class="btn-ghost" onclick="changeMonth(1)" style="padding:6px 12px;" aria-label="Next month">›</button>
+    </div>
+    <div class="month-grid" id="month-grid"></div>
 
     <!-- All sessions grouped by week, newest first -->
     <div id="history-list"></div>
@@ -1516,6 +1556,95 @@
   }
 
   // ─────────────────────────────────────────────
+  // PERSONAL TRAINING WEEK
+  // Counts weeks since the user's very first logged
+  // session, so "Week 1" always means their actual
+  // first week using the app — not the calendar week.
+  // Weeks are counted from the Sunday of the first
+  // session's week, so it lines up with the same
+  // Sunday-start week grid used elsewhere.
+  // Returns null if there are no sessions yet.
+  // ─────────────────────────────────────────────
+  function getTrainingWeek(date) {
+    if (!sessions.length) return null;
+
+    const earliest = sessions.reduce((min, s) =>
+      new Date(s.date) < new Date(min.date) ? s : min
+    );
+
+    // Start-of-week (Sunday) for the first session
+    const firstSow = new Date(earliest.date);
+    firstSow.setDate(firstSow.getDate() - firstSow.getDay());
+    firstSow.setHours(0, 0, 0, 0);
+
+    // Start-of-week (Sunday) for the date being checked
+    const targetSow = new Date(date);
+    targetSow.setDate(targetSow.getDate() - targetSow.getDay());
+    targetSow.setHours(0, 0, 0, 0);
+
+    const weeksElapsed = Math.round((targetSow - firstSow) / 604800000);
+    return weeksElapsed + 1; // first week = Week 1, not Week 0
+  }
+
+  // ─────────────────────────────────────────────
+  // MONTHLY CALENDAR VIEW
+  // Shows a full calendar grid for one month at a
+  // time, with a gold dot/fill on any day that has
+  // a logged session. Starts on the current month;
+  // Prev/Next arrows browse other months without
+  // affecting any other part of the app.
+  // ─────────────────────────────────────────────
+
+  // Tracks which month is currently displayed (always day 1 of that month)
+  let viewedMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+
+  // Moves the viewed month forward or backward by `delta` months and re-renders
+  function changeMonth(delta) {
+    viewedMonth = new Date(viewedMonth.getFullYear(), viewedMonth.getMonth() + delta, 1);
+    renderMonthCalendar();
+  }
+
+  function renderMonthCalendar() {
+    const year  = viewedMonth.getFullYear();
+    const month = viewedMonth.getMonth();
+    const today = new Date();
+
+    // Month label, e.g. "June 2026"
+    document.getElementById('month-label').textContent =
+      viewedMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    // Which day-of-week the 1st falls on (0=Sun) determines leading blank cells
+    const firstDayOfWeek = new Date(year, month, 1).getDay();
+    const daysInMonth    = new Date(year, month + 1, 0).getDate();
+
+    // Collect every day in this month that has at least one logged session
+    const activeDates = new Set();
+    sessions.forEach(s => {
+      const d = new Date(s.date);
+      if (d.getFullYear() === year && d.getMonth() === month) {
+        activeDates.add(d.getDate());
+      }
+    });
+
+    const dayLabels = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+    let html = dayLabels.map(d => `<div class="month-day-label">${d}</div>`).join('');
+
+    // Leading empty cells so day 1 lines up under the correct weekday column
+    for (let i = 0; i < firstDayOfWeek; i++) {
+      html += '<div class="month-cell empty"></div>';
+    }
+
+    // One cell per day of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      const isActive = activeDates.has(day);
+      const isToday  = year === today.getFullYear() && month === today.getMonth() && day === today.getDate();
+      html += `<div class="month-cell ${isActive ? 'active' : ''}${isToday ? ' today' : ''}">${day}</div>`;
+    }
+
+    document.getElementById('month-grid').innerHTML = html;
+  }
+
+  // ─────────────────────────────────────────────
   // RENDER HISTORY
   // Builds the History tab:
   //   1. The current week's dot grid + ISO label
@@ -1560,9 +1689,23 @@
       </div>`;
     }).join('');
 
-    // ISO week label for this week
+    // ISO week label for this week (calendar reference)
     const { week, year } = getISOWeek(today);
     document.getElementById('week-number-label').textContent = 'Wk ' + week + ' · ' + year;
+
+    // Personal training week — "Week 3" of their own log, hidden until
+    // they've logged at least one session
+    const trainingWeek = getTrainingWeek(today);
+    const twLabel = document.getElementById('training-week-label');
+    if (trainingWeek !== null) {
+      twLabel.textContent = 'Week ' + trainingWeek + ' of your training';
+      twLabel.style.display = 'block';
+    } else {
+      twLabel.style.display = 'none';
+    }
+
+    // Monthly calendar grid — re-render with the latest session data
+    renderMonthCalendar();
 
     // ── Session list ──
     const el = document.getElementById('history-list');
