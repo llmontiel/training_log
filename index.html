@@ -111,6 +111,97 @@
   }
   .btn-end-corner:hover { background: var(--lift-dim); border-color: var(--lift); }
 
+  /* Danger button — used for destructive actions like Clear all data.
+     Red outline keeps it visually distinct from the gold primary actions. */
+  .btn-danger {
+    width: 100%;
+    background: none;
+    border: 1.5px solid var(--danger);
+    border-radius: var(--radius-sm);
+    color: var(--danger);
+    font-family: var(--font-body);
+    font-size: 14px;
+    font-weight: 600;
+    padding: 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-danger:hover { background: rgba(192, 80, 74, 0.12); }
+
+  /* Units toggle buttons in Settings */
+  .unit-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--muted);
+    font-family: var(--font-body);
+    font-size: 13px;
+    padding: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+  }
+  .unit-btn.active {
+    background: var(--lift-dim);
+    border-color: var(--lift-mid);
+    color: var(--lift);
+    font-weight: 500;
+  }
+
+  /* Exercise list customization rows in Settings */
+  .preset-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 10px;
+    margin-bottom: 6px;
+  }
+  .preset-name { flex: 1; font-size: 14px; color: var(--text); }
+  .preset-move-btn, .preset-remove-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 2px 6px;
+    transition: color 0.15s;
+  }
+  .preset-move-btn:hover { color: var(--lift); }
+  .preset-remove-btn:hover { color: var(--danger); }
+  .preset-move-btn:disabled { opacity: 0.25; cursor: default; }
+  .preset-move-btn:disabled:hover { color: var(--muted); }
+
+  /* Avatar emoji picker grid in Settings */
+  .emoji-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+  .emoji-opt {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px;
+    text-align: center;
+    font-size: 18px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .emoji-opt.selected { border-color: var(--lift-mid); background: var(--lift-dim); }
+
+  /* Training focus badge shown above the Log tab form */
+  .focus-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    margin-bottom: 14px;
+    font-size: 12px;
+    color: var(--lift);
+  }
+
   .btn-ghost { background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--muted); font-family: var(--font-body); font-size: 13px; padding: 8px 16px; cursor: pointer; transition: all 0.15s; }
   .btn-ghost:hover { border-color: var(--text); color: var(--text); }
 
@@ -289,8 +380,19 @@
 <header>
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
     <div>
-      <div class="wordmark">Training Log</div>
+      <!-- Wordmark row: optional avatar emoji, then user's name (if set),
+           then "Training Log" — all using the same serif display font,
+           size, and gold color so it reads as one continuous title. -->
+      <div style="display:flex;align-items:baseline;gap:8px;">
+        <span id="header-avatar" style="font-size:15px;display:none;"></span>
+        <span id="header-username" class="wordmark" style="margin-bottom:0;display:none;"></span>
+        <span class="wordmark" style="margin-bottom:0;">Training Log</span>
+      </div>
       <div class="tagline">powerlifting · strength · performance</div>
+      <!-- "Training since" — derived automatically from the earliest
+           logged session date, no manual input required. Hidden until
+           at least one session exists. -->
+      <div id="header-since" style="font-size:11px;color:var(--lift);letter-spacing:0.04em;margin-top:2px;display:none;"></div>
     </div>
     <!-- End & Log Session button — lives in the top-right corner of the header.
          Only visible when the user has added at least one exercise to the queue.
@@ -306,6 +408,7 @@
   <button onclick="switchTab('history', this)">History</button>
   <button onclick="switchTab('prs', this)">PRs</button>
   <button onclick="switchTab('e1rm', this)">1RM calc</button>
+  <button onclick="switchTab('settings', this)">Settings</button>
 </nav>
 
 <main>
@@ -320,23 +423,20 @@
        ════════════════════════════════════════ -->
   <div id="tab-log" class="tab active">
 
+    <!-- Training focus badge — only shown if a focus is set in Settings.
+         Sits above the form as a persistent reminder of the current goal. -->
+    <div class="focus-badge" id="focus-badge" style="display:none;"></div>
+
     <div class="card">
 
-      <!-- Exercise selector — "Custom..." reveals a free-text field -->
+      <!-- Exercise selector — options are rendered dynamically from the
+           user's customizable preset list (see populateExerciseDropdown()).
+           "Custom..." reveals a free-text field. -->
       <div class="field">
         <label>Exercise</label>
         <select id="lift-exercise" onchange="toggleCustomLift()">
           <option value="">Choose lift...</option>
-          <option>Back squat</option>
-          <option>Deadlift</option>
-          <option>Hip thrust</option>
-          <option>Bench press</option>
-          <option>Romanian deadlift</option>
-          <option>Overhead press</option>
-          <option>Sumo deadlift</option>
-          <option>Front squat</option>
-          <option>Pull-up</option>
-          <option>Custom...</option>
+          <!-- Preset options injected here by populateExerciseDropdown() -->
         </select>
       </div>
 
@@ -367,7 +467,7 @@
       <div class="grid-3">
         <div class="field"><label>Sets</label><input type="number" id="lift-sets" placeholder="3" min="1" max="20" oninput="updateLiveE1RM()"></div>
         <div class="field"><label>Reps</label><input type="number" id="lift-reps" placeholder="5" min="1" max="50" oninput="updateLiveE1RM()"></div>
-        <div class="field"><label>Weight (lb)</label><input type="number" id="lift-weight" placeholder="135" min="0" oninput="updateLiveE1RM()"></div>
+        <div class="field"><label>Weight (<span class="unit-label">lb</span>)</label><input type="number" id="lift-weight" placeholder="135" min="0" oninput="updateLiveE1RM()"></div>
       </div>
 
       <!-- Live 1RM banner — appears automatically once weight + reps are filled -->
@@ -375,7 +475,7 @@
         <div style="background:var(--lift-dim);border:1px solid var(--lift-mid);border-radius:var(--radius-sm);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
           <span style="font-size:12px;color:var(--lift);letter-spacing:0.06em;text-transform:uppercase;">Est. 1RM</span>
           <span style="font-family:var(--font-display);font-size:22px;color:var(--text);" id="live-e1rm-val">—</span>
-          <span style="font-size:12px;color:var(--muted);">lb · Epley</span>
+          <span style="font-size:12px;color:var(--muted);" id="live-e1rm-unit-label">lb</span>
         </div>
       </div>
 
@@ -422,7 +522,11 @@
 
     <!-- Current week block always at the top -->
     <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;">
-      <div class="section-label" style="margin-bottom:0">This week</div>
+      <div>
+        <div class="section-label" style="margin-bottom:4px">This week</div>
+        <!-- Federation badge — only shown if set in Settings -->
+        <span id="federation-badge" style="display:none;font-size:10px;background:var(--lift-dim);border:1px solid var(--lift-mid);color:var(--lift);padding:2px 8px;border-radius:10px;"></span>
+      </div>
       <!-- ISO week number — calculated and injected by renderHistory() -->
       <div id="week-number-label" style="font-family:var(--font-display);font-size:13px;color:var(--lift);letter-spacing:0.08em;"></div>
     </div>
@@ -458,7 +562,7 @@
       <div class="section-label">Your working set</div>
       <!-- oninput fires calcE1RM() live on every keystroke -->
       <div class="grid-3">
-        <div class="field"><label>Weight (lb)</label><input type="number" id="e1rm-weight" placeholder="225" oninput="calcE1RM()"></div>
+        <div class="field"><label>Weight (<span class="unit-label">lb</span>)</label><input type="number" id="e1rm-weight" placeholder="225" oninput="calcE1RM()"></div>
         <div class="field"><label>Reps done</label><input type="number" id="e1rm-reps" placeholder="5" min="1" max="30" oninput="calcE1RM()"></div>
         <div class="field">
           <label>RPE</label>
@@ -502,6 +606,125 @@
     </div>
   </div>
 
+
+  <!-- ════════════════════════════════════════
+       SETTINGS TAB
+       Sections:
+       1. Profile — name shown in header.
+       2. Units — lb/kg toggle, converts all stored weights.
+       3. Exercise list — add, remove, reorder presets
+          shown in the Log tab dropdown.
+       4. Export — download all sessions as JSON or CSV.
+       5. Data — destructive clear-all-data action.
+       ════════════════════════════════════════ -->
+  <div id="tab-settings" class="tab">
+
+    <div class="section-label">Profile</div>
+    <div class="card">
+      <div class="field">
+        <label>Your name</label>
+        <input type="text" id="settings-username" placeholder="e.g. Alex" autocomplete="off">
+      </div>
+      <!-- Avatar emoji picker — shows next to the name in the header.
+           Tapping an option selects it; selection is visually marked. -->
+      <div class="field">
+        <label>Avatar</label>
+        <div class="emoji-grid" id="avatar-picker">
+          <button class="emoji-opt" data-emoji="🏋️" onclick="pickAvatar('🏋️')">🏋️</button>
+          <button class="emoji-opt" data-emoji="💪" onclick="pickAvatar('💪')">💪</button>
+          <button class="emoji-opt" data-emoji="🦾" onclick="pickAvatar('🦾')">🦾</button>
+          <button class="emoji-opt" data-emoji="🔥" onclick="pickAvatar('🔥')">🔥</button>
+          <button class="emoji-opt" data-emoji="⚡" onclick="pickAvatar('⚡')">⚡</button>
+          <button class="emoji-opt" data-emoji="🐐" onclick="pickAvatar('🐐')">🐐</button>
+        </div>
+      </div>
+      <!-- Training focus — shown as a badge above the Log tab form so the
+           current goal stays visible while logging. -->
+      <div class="field">
+        <label>Training focus</label>
+        <select id="settings-focus">
+          <option value="">None</option>
+          <option>Powerlifting meet prep</option>
+          <option>Strength</option>
+          <option>Hypertrophy</option>
+          <option>General fitness</option>
+        </select>
+      </div>
+      <!-- Bodyweight — used to calculate strength ratios on the PRs tab
+           (e.g. "1.4× bodyweight"). Purely informational, no app logic
+           depends on it besides that display. -->
+      <div class="field">
+        <label>Bodyweight (<span class="unit-label">lb</span>)</label>
+        <input type="number" id="settings-bodyweight" placeholder="e.g. 165" min="0">
+      </div>
+      <!-- Federation + weight class — shown as a small badge on the
+           History tab, useful for lifters tracking meet prep. -->
+      <div class="grid-2">
+        <div class="field">
+          <label>Federation</label>
+          <select id="settings-federation">
+            <option value="">Not competing</option>
+            <option>USAPL</option>
+            <option>USPA</option>
+            <option>IPF</option>
+            <option>RPS</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Weight class (<span class="unit-label">lb</span>)</label>
+          <input type="text" id="settings-weightclass" placeholder="e.g. 165">
+        </div>
+      </div>
+      <button class="btn-primary" onclick="saveProfile()">Save profile</button>
+    </div>
+
+    <div class="section-label">Units</div>
+    <div class="card">
+      <!-- Toggle between lb and kg. Switching converts every stored
+           weight value so history, PRs, and 1RM stay accurate. -->
+      <div class="type-toggle" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:0;">
+        <button class="unit-btn active" id="unit-lb" onclick="setUnits('lb')">Pounds (lb)</button>
+        <button class="unit-btn" id="unit-kg" onclick="setUnits('kg')">Kilograms (kg)</button>
+      </div>
+    </div>
+
+    <div class="section-label">Exercise list</div>
+    <div class="card">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5;">
+        Customize the exercises shown in the Log tab dropdown. Drag using the arrows to reorder, or remove ones you don't use.
+      </div>
+      <!-- Populated by renderExerciseListSettings() -->
+      <div id="exercise-list-settings"></div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <input type="text" id="new-preset-input" placeholder="Add new exercise..." style="flex:1" autocomplete="off">
+        <button class="btn-ghost" onclick="addPresetExercise()" style="white-space:nowrap;">Add</button>
+      </div>
+      <button class="btn-ghost" style="width:100%;margin-top:10px;" onclick="resetPresetList()">Reset to defaults</button>
+    </div>
+
+    <div class="section-label">Export</div>
+    <div class="card">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5;">
+        Download a backup of all your logged sessions. Useful before switching devices or clearing browser data.
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn-ghost" style="flex:1" onclick="exportData('json')">Export JSON</button>
+        <button class="btn-ghost" style="flex:1" onclick="exportData('csv')">Export CSV</button>
+      </div>
+    </div>
+
+    <div class="section-label">Data</div>
+    <div class="card">
+      <div style="font-size:13px;color:var(--muted);margin-bottom:12px;line-height:1.5;">
+        Your training history is stored only on this device. Use the button below to permanently erase all logged sessions — this cannot be undone.
+      </div>
+      <!-- Danger zone — red outline to visually separate from normal actions -->
+      <button class="btn-danger" onclick="promptClearData()">Clear all data</button>
+    </div>
+
+  </div>
+
 </main><!-- /main -->
 
 
@@ -519,12 +742,30 @@
     <div class="grid-3" style="margin-bottom:12px">
       <div class="field"><label>Sets</label><input type="number" id="edit-ex-sets" min="1" max="20"></div>
       <div class="field"><label>Reps</label><input type="number" id="edit-ex-reps" min="1" max="50"></div>
-      <div class="field"><label>Weight (lb)</label><input type="number" id="edit-ex-weight" min="0"></div>
+      <div class="field"><label>Weight (<span class="unit-label">lb</span>)</label><input type="number" id="edit-ex-weight" min="0"></div>
     </div>
     <div class="field"><label>Notes <span style="color:#555">(optional)</span></label><input type="text" id="edit-ex-notes" placeholder="e.g. paused reps, RPE 8"></div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeEditModal()">Cancel</button>
       <button class="modal-confirm" onclick="saveEditModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     CLEAR ALL DATA MODAL
+     A second, stricter confirmation for a fully
+     destructive action — wipes every session from
+     localStorage permanently. Shows how many sessions
+     will be lost so the user understands the stakes.
+     ════════════════════════════════════════ -->
+<div class="modal-overlay" id="clear-data-modal">
+  <div class="modal">
+    <div class="modal-title" style="color:var(--danger)">Clear all data?</div>
+    <div class="modal-sub" id="clear-data-summary">This will permanently delete all logged sessions from this device. This cannot be undone.</div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeClearDataModal()">Cancel</button>
+      <button class="modal-confirm" style="background:var(--danger);color:#fff" onclick="confirmClearData()">Delete everything</button>
     </div>
   </div>
 </div>
@@ -591,6 +832,318 @@
   }
 
   // ─────────────────────────────────────────────
+  // PROFILE PERSISTENCE
+  // Stores name, avatar emoji, and training focus
+  // together under one key. Kept separate from
+  // sessions so clearing training data doesn't
+  // accidentally wipe the profile too.
+  // ─────────────────────────────────────────────
+  const PROFILE_KEY = 'trainingLog_profile';
+
+  function saveProfileToStorage(profile) {
+    try { localStorage.setItem(PROFILE_KEY, JSON.stringify(profile)); }
+    catch(e) { /* fail silently — profile is non-critical */ }
+  }
+
+  function loadProfile() {
+    const empty = { name: '', avatar: '', focus: '', bodyweight: '', federation: '', weightClass: '' };
+    try {
+      const raw = localStorage.getItem(PROFILE_KEY);
+      return raw ? { ...empty, ...JSON.parse(raw) } : empty;
+    } catch(e) { return empty; }
+  }
+
+  // Updates the header (name, avatar, training-since) and pre-fills
+  // the Settings inputs to match the currently stored profile.
+  function updateHeaderName() {
+    const profile = loadProfile();
+
+    // Name
+    const headerEl = document.getElementById('header-username');
+    if (profile.name) {
+      headerEl.textContent = profile.name;
+      headerEl.style.display = 'inline';
+    } else {
+      headerEl.style.display = 'none';
+    }
+
+    // Avatar emoji
+    const avatarEl = document.getElementById('header-avatar');
+    if (profile.avatar) {
+      avatarEl.textContent = profile.avatar;
+      avatarEl.style.display = 'inline';
+    } else {
+      avatarEl.style.display = 'none';
+    }
+
+    // Training since — derived from the earliest session date, not stored
+    updateTrainingSince();
+
+    // Pre-fill Settings inputs if the Settings tab is in the DOM
+    const settingsInput = document.getElementById('settings-username');
+    if (settingsInput) settingsInput.value = profile.name || '';
+
+    const focusSelect = document.getElementById('settings-focus');
+    if (focusSelect) focusSelect.value = profile.focus || '';
+
+    const bwInput = document.getElementById('settings-bodyweight');
+    if (bwInput) bwInput.value = profile.bodyweight || '';
+
+    const fedSelect = document.getElementById('settings-federation');
+    if (fedSelect) fedSelect.value = profile.federation || '';
+
+    const wcInput = document.getElementById('settings-weightclass');
+    if (wcInput) wcInput.value = profile.weightClass || '';
+
+    // Mark the selected avatar in the emoji picker grid
+    document.querySelectorAll('.emoji-opt').forEach(btn => {
+      btn.classList.toggle('selected', btn.dataset.emoji === profile.avatar);
+    });
+
+    // Update the Log tab focus badge
+    updateFocusBadge(profile.focus);
+  }
+
+  // Calculates and displays "Training since [Month Year]" based on the
+  // earliest date found across all logged sessions. Hidden if no sessions exist.
+  function updateTrainingSince() {
+    const sinceEl = document.getElementById('header-since');
+    if (!sessions.length) { sinceEl.style.display = 'none'; return; }
+
+    const earliest = sessions.reduce((min, s) =>
+      new Date(s.date) < new Date(min.date) ? s : min
+    );
+    const dateStr = new Date(earliest.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+    sinceEl.textContent = 'Training since ' + dateStr;
+    sinceEl.style.display = 'block';
+  }
+
+  // Shows/hides the gold focus badge above the Log tab form
+  function updateFocusBadge(focus) {
+    const badge = document.getElementById('focus-badge');
+    if (focus) {
+      badge.textContent = '🎯 ' + focus;
+      badge.style.display = 'flex';
+    } else {
+      badge.style.display = 'none';
+    }
+  }
+
+  // Tracks the avatar selection until "Save profile" is tapped
+  let pendingAvatar = null;
+
+  function pickAvatar(emoji) {
+    pendingAvatar = emoji;
+    document.querySelectorAll('.emoji-opt').forEach(btn => {
+      btn.classList.toggle('selected', btn.dataset.emoji === emoji);
+    });
+  }
+
+  // Called when "Save profile" is tapped in Settings.
+  // Saves name, avatar, and training focus together.
+  function saveProfile() {
+    const name        = document.getElementById('settings-username').value.trim();
+    const focus       = document.getElementById('settings-focus').value;
+    const bodyweight  = document.getElementById('settings-bodyweight').value.trim();
+    const federation  = document.getElementById('settings-federation').value;
+    const weightClass = document.getElementById('settings-weightclass').value.trim();
+    // Use the pending avatar selection if one was made this session,
+    // otherwise keep whatever was already saved
+    const avatar = pendingAvatar !== null ? pendingAvatar : loadProfile().avatar || '';
+
+    saveProfileToStorage({ name, avatar, focus, bodyweight, federation, weightClass });
+    updateHeaderName();
+    renderHistory(); // refresh federation badge
+    renderPRs();     // refresh bodyweight ratios
+    toast('Profile saved');
+  }
+
+  // ─────────────────────────────────────────────
+  // UNITS (lb / kg)
+  // Stored unit is persisted; switching converts every
+  // weight value already saved in sessions so history,
+  // PRs, and the live 1RM banner stay numerically correct
+  // rather than just relabeling the same number.
+  // ─────────────────────────────────────────────
+  const UNITS_KEY = 'trainingLog_units';
+  const LB_TO_KG = 0.453592;
+  const KG_TO_LB = 1 / LB_TO_KG;
+
+  function loadUnits() {
+    try { return localStorage.getItem(UNITS_KEY) || 'lb'; }
+    catch(e) { return 'lb'; }
+  }
+
+  let currentUnit = loadUnits(); // 'lb' or 'kg'
+
+  function setUnits(unit) {
+    if (unit === currentUnit) return;
+
+    // Convert every stored weight value to the new unit
+    const factor = unit === 'kg' ? LB_TO_KG : KG_TO_LB;
+    sessions.forEach(s => {
+      s.exercises.forEach(e => { e.weight = Math.round(e.weight * factor * 10) / 10; });
+    });
+    saveSessions();
+
+    currentUnit = unit;
+    try { localStorage.setItem(UNITS_KEY, unit); } catch(e) { /* ignore */ }
+
+    // Update toggle button states
+    document.getElementById('unit-lb').classList.toggle('active', unit === 'lb');
+    document.getElementById('unit-kg').classList.toggle('active', unit === 'kg');
+
+    // Update every "lb" label across the app to the new unit
+    updateUnitLabels();
+    renderHistory();
+    renderPRs();
+    toast('Switched to ' + (unit === 'kg' ? 'kilograms' : 'pounds'));
+  }
+
+  // Updates static "lb" text labels in the Log and 1RM tabs to match currentUnit.
+  // Exercise weight values themselves are converted separately in setUnits().
+  function updateUnitLabels() {
+    const label = currentUnit;
+    document.querySelectorAll('.unit-label').forEach(el => { el.textContent = label; });
+  }
+
+  // ─────────────────────────────────────────────
+  // EXERCISE LIST CUSTOMIZATION (Settings)
+  // The preset list shown in the Log tab dropdown is
+  // stored as an ordered array in localStorage so users
+  // can add, remove, and reorder exercises. Falls back
+  // to a sensible default list on first run.
+  // ─────────────────────────────────────────────
+  const PRESETS_KEY = 'trainingLog_presets';
+  const DEFAULT_PRESETS = [
+    'Back squat', 'Deadlift', 'Hip thrust', 'Bench press',
+    'Romanian deadlift', 'Overhead press', 'Sumo deadlift',
+    'Front squat', 'Pull-up'
+  ];
+
+  function loadPresets() {
+    try {
+      const raw = localStorage.getItem(PRESETS_KEY);
+      return raw ? JSON.parse(raw) : [...DEFAULT_PRESETS];
+    } catch(e) { return [...DEFAULT_PRESETS]; }
+  }
+
+  function savePresets() {
+    try { localStorage.setItem(PRESETS_KEY, JSON.stringify(presetExercises)); }
+    catch(e) { /* ignore */ }
+  }
+
+  let presetExercises = loadPresets();
+
+  // Fills the Log tab dropdown with the current preset list + Custom...
+  function populateExerciseDropdown() {
+    const select = document.getElementById('lift-exercise');
+    const currentVal = select.value; // preserve selection if mid-edit
+    select.innerHTML = '<option value="">Choose lift...</option>' +
+      presetExercises.map(p => '<option>' + p + '</option>').join('') +
+      '<option>Custom...</option>';
+    if (presetExercises.includes(currentVal)) select.value = currentVal;
+  }
+
+  // Renders the editable preset list in Settings with reorder arrows and remove buttons
+  function renderExerciseListSettings() {
+    const el = document.getElementById('exercise-list-settings');
+    if (!el) return;
+    el.innerHTML = presetExercises.map((name, i) => `
+      <div class="preset-row">
+        <button class="preset-move-btn" onclick="movePreset(${i}, -1)" ${i === 0 ? 'disabled' : ''} aria-label="Move up">↑</button>
+        <button class="preset-move-btn" onclick="movePreset(${i}, 1)" ${i === presetExercises.length - 1 ? 'disabled' : ''} aria-label="Move down">↓</button>
+        <span class="preset-name">${name}</span>
+        <button class="preset-remove-btn" onclick="removePreset(${i})" aria-label="Remove">×</button>
+      </div>
+    `).join('');
+  }
+
+  // Swaps a preset with its neighbor up or down, then re-saves and re-renders
+  function movePreset(i, dir) {
+    const j = i + dir;
+    if (j < 0 || j >= presetExercises.length) return;
+    [presetExercises[i], presetExercises[j]] = [presetExercises[j], presetExercises[i]];
+    savePresets();
+    renderExerciseListSettings();
+    populateExerciseDropdown();
+  }
+
+  // Removes a preset from the list entirely (does not affect already-logged history)
+  function removePreset(i) {
+    presetExercises.splice(i, 1);
+    savePresets();
+    renderExerciseListSettings();
+    populateExerciseDropdown();
+  }
+
+  // Adds a new preset from the free-text input in Settings
+  function addPresetExercise() {
+    const input = document.getElementById('new-preset-input');
+    const name  = input.value.trim();
+    if (!name) { toast('Enter an exercise name'); return; }
+    if (presetExercises.some(p => p.toLowerCase() === name.toLowerCase())) {
+      toast('Already in your list'); return;
+    }
+    presetExercises.push(name);
+    savePresets();
+    input.value = '';
+    renderExerciseListSettings();
+    populateExerciseDropdown();
+    toast(name + ' added');
+  }
+
+  // Restores the original default preset list
+  function resetPresetList() {
+    presetExercises = [...DEFAULT_PRESETS];
+    savePresets();
+    renderExerciseListSettings();
+    populateExerciseDropdown();
+    toast('Reset to defaults');
+  }
+
+  // ─────────────────────────────────────────────
+  // EXPORT DATA (Settings)
+  // Downloads all sessions as a JSON or CSV file so
+  // training history isn't trapped on one device/browser.
+  // ─────────────────────────────────────────────
+  function exportData(format) {
+    if (!sessions.length) { toast('No data to export yet'); return; }
+
+    let blob, filename;
+    const dateStr = new Date().toISOString().slice(0, 10);
+
+    if (format === 'json') {
+      blob = new Blob([JSON.stringify(sessions, null, 2)], { type: 'application/json' });
+      filename = 'training-log-' + dateStr + '.json';
+    } else {
+      // Flatten every exercise across every session into one CSV row each
+      const header = 'Date,Exercise,Sets,Reps,Weight,Unit,Notes\n';
+      const rows = sessions.flatMap(s => {
+        const dateOnly = new Date(s.date).toISOString().slice(0, 10);
+        return s.exercises.map(e => {
+          // Escape commas/quotes in text fields for valid CSV
+          const safe = v => '"' + String(v).replace(/"/g, '""') + '"';
+          return [dateOnly, safe(e.name), e.sets, e.reps, e.weight, currentUnit, safe(e.notes || '')].join(',');
+        });
+      });
+      blob = new Blob([header + rows.join('\n')], { type: 'text/csv' });
+      filename = 'training-log-' + dateStr + '.csv';
+    }
+
+    // Trigger a download via a temporary link element
+    const url = URL.createObjectURL(blob);
+    const a   = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast(format.toUpperCase() + ' exported');
+  }
+
+  // ─────────────────────────────────────────────
   // STATE
   // ─────────────────────────────────────────────
 
@@ -625,8 +1178,15 @@
     document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
     document.getElementById('tab-' + t).classList.add('active');
     btn.classList.add('active');
-    if (t === 'history') renderHistory();
-    if (t === 'prs')     renderPRs();
+    if (t === 'history')  renderHistory();
+    if (t === 'prs')      renderPRs();
+    if (t === 'settings') {
+      updateHeaderName();           // refresh input with current saved name
+      renderExerciseListSettings(); // refresh preset list display
+      // Reflect the currently active unit in the toggle buttons
+      document.getElementById('unit-lb').classList.toggle('active', currentUnit === 'lb');
+      document.getElementById('unit-kg').classList.toggle('active', currentUnit === 'kg');
+    }
   }
 
   // Show/hide the custom exercise name input
@@ -646,14 +1206,15 @@
   }
 
   // ─────────────────────────────────────────────
-  // PRESET LIST
-  // Names already in the dropdown — excluded from autocomplete suggestions.
+  // PRESET LIST (autocomplete exclusion helper)
+  // Returns the current preset names as a Set so
+  // autocomplete/fuzzy-match can exclude them — derived
+  // live from presetExercises so it stays in sync with
+  // whatever the user has customized in Settings.
   // ─────────────────────────────────────────────
-  const PRESET_EXERCISES = new Set([
-    'Back squat','Deadlift','Hip thrust','Bench press',
-    'Romanian deadlift','Overhead press','Sumo deadlift',
-    'Front squat','Pull-up'
-  ]);
+  function getPresetSet() {
+    return new Set(presetExercises);
+  }
 
   // ─────────────────────────────────────────────
   // CANONICAL NAME HELPERS
@@ -667,7 +1228,7 @@
   function getAllCustomNames() {
     const fromSessions = sessions.flatMap(s => s.exercises.map(e => e.name));
     const fromQueue    = currentQueue.map(e => e.name);
-    const all          = [...fromSessions, ...fromQueue].filter(n => !PRESET_EXERCISES.has(n));
+    const all          = [...fromSessions, ...fromQueue].filter(n => !getPresetSet().has(n));
     const seen = new Map();
     all.forEach(n => { const k = n.toLowerCase(); if (!seen.has(k)) seen.set(k, n); });
     return [...seen.values()];
@@ -866,7 +1427,7 @@
 
     // Populate the modal summary with current queue exercises
     document.getElementById('modal-summary').innerHTML = currentQueue.map(e =>
-      `<div>🏋️ ${e.name} — ${e.sets}×${e.reps} @ ${e.weight} lb${e.notes ? ' · ' + e.notes : ''}</div>`
+      `<div>🏋️ ${e.name} — ${e.sets}×${e.reps} @ ${e.weight} ${currentUnit}${e.notes ? ' · ' + e.notes : ''}</div>`
     ).join('');
 
     // Open the modal
@@ -896,6 +1457,7 @@
     renderQueue();
 
     closeModal();
+    updateTrainingSince(); // refresh header in case this was the very first session
     toast('Session saved ✓');
   }
 
@@ -932,6 +1494,17 @@
   // ─────────────────────────────────────────────
   function renderHistory() {
     const today = new Date();
+
+    // ── Federation badge ──
+    // Only shown if the user has set a federation in Settings
+    const profile = loadProfile();
+    const fedBadge = document.getElementById('federation-badge');
+    if (profile.federation) {
+      fedBadge.textContent = profile.federation + (profile.weightClass ? ' · ' + profile.weightClass + currentUnit : '');
+      fedBadge.style.display = 'inline-block';
+    } else {
+      fedBadge.style.display = 'none';
+    }
 
     // ── Current week dot grid ──
     // Find Sunday of this week as the start boundary
@@ -1004,7 +1577,7 @@
           `<div class="session-exercise" id="ex-row-${e._sid}-${e._eidx}">
             <div style="flex:1;min-width:0">
               <span class="session-ex-name">${e.name}</span>
-              <span class="session-ex-sets"> · ${e.sets}×${e.reps} @ ${e.weight} lb${e.notes ? ' · ' + e.notes : ''}</span>
+              <span class="session-ex-sets"> · ${e.sets}×${e.reps} @ ${e.weight} ${currentUnit}${e.notes ? ' · ' + e.notes : ''}</span>
             </div>
             <button class="session-edit-btn" onclick="openEditModal(${e._sid}, ${e._eidx})"
                     title="Edit" aria-label="Edit exercise">✎</button>
@@ -1043,6 +1616,36 @@
     indices.sort((a, b) => b - a).forEach(i => sessions.splice(i, 1));
     saveSessions(); // persist deletion to localStorage
     renderHistory();
+  }
+
+  // ─────────────────────────────────────────────
+  // CLEAR ALL DATA (Settings tab)
+  // A two-step destructive action: opens a modal
+  // showing how many sessions exist, then on confirm
+  // wipes the sessions array and localStorage entirely.
+  // Profile name is intentionally left untouched.
+  // ─────────────────────────────────────────────
+  function promptClearData() {
+    const count = sessions.length;
+    const summary = document.getElementById('clear-data-summary');
+    summary.textContent = count
+      ? 'This will permanently delete all ' + count + ' logged session' + (count !== 1 ? 's' : '') + ' from this device. This cannot be undone.'
+      : 'There is no training data to clear yet.';
+    document.getElementById('clear-data-modal').classList.add('open');
+  }
+
+  function closeClearDataModal() {
+    document.getElementById('clear-data-modal').classList.remove('open');
+  }
+
+  function confirmClearData() {
+    sessions = [];
+    try { localStorage.removeItem(STORAGE_KEY); } catch(e) { /* ignore */ }
+    closeClearDataModal();
+    renderHistory();
+    renderPRs();
+    updateTrainingSince(); // hide "Training since" line — no sessions left
+    toast('All training data cleared');
   }
 
   // ─────────────────────────────────────────────
@@ -1122,21 +1725,29 @@
     // Epley estimate: w × (1 + r/30). If r = 1, weight is already the 1RM.
     const e1rmEst = (w, r) => r > 1 ? Math.round(w * (1 + r / 30)) : w;
 
+    // Bodyweight ratio — only computed if the user has set a bodyweight in Settings
+    const bw = parseFloat(loadProfile().bodyweight) || null;
+
     document.getElementById('pr-list').innerHTML = Object.values(prs)
       .sort((a, b) => e1rmEst(b.weight, b.reps) - e1rmEst(a.weight, a.reps))
       .map(e => {
         const est      = e1rmEst(e.weight, e.reps);
         const isActual = e.reps <= 1;
+        // Small gold line under the lift name showing strength-to-bodyweight ratio
+        const ratioLine = bw
+          ? `<div style="font-size:10px;color:var(--lift);margin-top:2px;">${(est / bw).toFixed(1)}× bodyweight</div>`
+          : '';
         return `
         <div class="pr-card">
           <div class="pr-badge">🏋️</div>
           <div class="pr-body">
             <div class="pr-name">${e.name}</div>
-            <div class="pr-meta">Best set: ${e.sets}×${e.reps} @ ${e.weight} lb</div>
+            <div class="pr-meta">Best set: ${e.sets}×${e.reps} @ ${e.weight} ${currentUnit}</div>
+            ${ratioLine}
           </div>
           <div class="pr-val">
             <div class="pr-best">${est}</div>
-            <div class="pr-lbl">${isActual ? 'lb actual' : 'lb est. 1RM'}</div>
+            <div class="pr-lbl">${isActual ? currentUnit + ' actual' : currentUnit + ' est. 1RM'}</div>
           </div>
         </div>`;
       }).join('');
@@ -1168,7 +1779,7 @@
 
     const e1rm = r <= 1 ? w : formulas[activeFormula](w, r);
     document.getElementById('e1rm-display').textContent    = Math.round(e1rm);
-    document.getElementById('e1rm-formula-name').textContent = 'lb · ' + formulaNames[activeFormula] + ' formula';
+    document.getElementById('e1rm-formula-name').textContent = currentUnit + ' · ' + formulaNames[activeFormula] + ' formula';
 
     renderPcts(e1rm);
     res.style.display = 'block';
@@ -1228,7 +1839,7 @@
     // Collect all unique custom exercise names logged in past sessions
     const customNames = [...new Set(
       sessions.flatMap(s => s.exercises.map(e => e.name))
-        .filter(name => !PRESET_EXERCISES.has(name)) // exclude presets
+        .filter(name => !getPresetSet().has(name)) // exclude presets
     )];
 
     // Filter to names that start with or contain the query string
@@ -1281,6 +1892,7 @@
     // Epley: w × (1 + r/30). If r = 1, weight is already the 1RM.
     const est        = r <= 1 ? w : Math.round(w * (1 + r / 30));
     val.textContent  = est;
+    document.getElementById('live-e1rm-unit-label').textContent = currentUnit + ' · Epley';
     wrap.style.display = 'block';
   }
   // ─────────────────────────────────────────────
@@ -1360,6 +1972,16 @@
 
   // Wait for DOM to be ready before attaching listeners
   document.addEventListener('DOMContentLoaded', function() {
+    // Show the saved name (if any) in the header as soon as the page loads
+    updateHeaderName();
+
+    // Populate the Log tab exercise dropdown from the saved/default preset list
+    populateExerciseDropdown();
+
+    // Sync the unit toggle buttons in Settings to the saved unit on first load
+    document.getElementById('unit-lb').classList.toggle('active', currentUnit === 'lb');
+    document.getElementById('unit-kg').classList.toggle('active', currentUnit === 'kg');
+
     const swBtn = document.getElementById('sw-btn');
     if (!swBtn) return;
     swBtn.addEventListener('mousedown',  swPressStart);
