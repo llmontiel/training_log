@@ -1015,10 +1015,13 @@
   // to a sensible default list on first run.
   // ─────────────────────────────────────────────
   const PRESETS_KEY = 'trainingLog_presets';
+  // Trimmed to the three competition lifts plus the two most common
+  // accessory lifts trained alongside them. Anything else (hip thrust,
+  // sumo deadlift, front squat, pull-up, etc.) can be added back in
+  // via Settings or logged once as Custom...
   const DEFAULT_PRESETS = [
-    'Back squat', 'Deadlift', 'Hip thrust', 'Bench press',
-    'Romanian deadlift', 'Overhead press', 'Sumo deadlift',
-    'Front squat', 'Pull-up'
+    'Back squat', 'Bench press', 'Deadlift',
+    'Overhead press', 'Romanian deadlift'
   ];
 
   function loadPresets() {
