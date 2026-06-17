@@ -1949,13 +1949,13 @@
       swStart   = null;
       swRunning = false;
       document.getElementById('sw-btn').classList.remove('running');
-      document.getElementById('sw-hint').textContent = 'Long-press when ready for next set';
+      document.getElementById('sw-hint').textContent = 'Long-press to reset and start next set';
     } else {
       // Start rest timer — show which set just finished
       swStart   = Date.now();
       swRunning = true;
       document.getElementById('sw-btn').classList.add('running');
-      document.getElementById('sw-hint').textContent = 'Long-press when ready for next set';
+      document.getElementById('sw-hint').textContent = 'Long-press to reset and start next set';
       // Show the set label now that the timer is in use
       const lbl = document.getElementById('sw-set-label');
       lbl.textContent = 'SET ' + swSetCount;
@@ -1982,7 +1982,7 @@
     const lbl = document.getElementById('sw-set-label');
     lbl.textContent = 'SET ' + swSetCount;
     lbl.style.opacity = '1';
-    document.getElementById('sw-hint').textContent = 'Start timer after your set';
+    document.getElementById('sw-hint').textContent = 'Tap to start resting';
   }
 
   // Long-press to reset — registered after DOM is ready
