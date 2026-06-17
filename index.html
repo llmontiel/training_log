@@ -1,0 +1,1374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Training Log</title>
+<style>
+  /*
+   * ─────────────────────────────────────────────
+   * DESIGN TOKENS
+   * All colors, fonts, and spacing as CSS variables.
+   * Change a value here and it updates everywhere.
+   * ─────────────────────────────────────────────
+   */
+  :root {
+    --bg: #0f0f0f;
+    --surface: #1a1a1a;
+    --surface2: #242424;
+    --border: #2e2e2e;
+    --text: #f0ede8;
+    --muted: #888;
+    --lift: #c8a96e;         /* gold — main accent */
+    --lift-dim: #2a2318;     /* dark gold tint */
+    --lift-mid: #4a3a20;     /* medium gold border */
+    --danger: #c0504a;       /* red — delete hover */
+    --font-display: 'Georgia', serif;
+    --font-body: -apple-system, 'Helvetica Neue', sans-serif;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header { padding: 1.5rem 1.5rem 0; max-width: 480px; margin: 0 auto; }
+  .wordmark { font-family: var(--font-display); font-size: 13px; letter-spacing: 0.15em; color: var(--lift); text-transform: uppercase; margin-bottom: 0.25rem; }
+  .tagline { font-size: 11px; color: var(--muted); letter-spacing: 0.05em; }
+
+  /* ── Nav tab bar ── */
+  nav { max-width: 480px; margin: 1.25rem auto 0; padding: 0 1.5rem; display: flex; gap: 4px; border-bottom: 1px solid var(--border); }
+  nav button { background: none; border: none; color: var(--muted); font-family: var(--font-body); font-size: 13px; padding: 8px 12px 10px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: color 0.15s; white-space: nowrap; }
+  nav button.active { color: var(--lift); border-bottom-color: var(--lift); }
+  nav button:hover:not(.active) { color: var(--text); }
+
+  /* ── Main content ── */
+  main { max-width: 480px; margin: 0 auto; padding: 1.5rem; }
+  .tab { display: none; }
+  .tab.active { display: block; }
+
+  /* ── Stat row ── */
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.85rem; text-align: center; }
+  .stat-n { font-family: var(--font-display); font-size: 26px; color: var(--text); line-height: 1; margin-bottom: 4px; }
+  .stat-l { font-size: 11px; color: var(--muted); }
+
+  /* ── Section label ── */
+  .section-label { font-size: 10px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+
+  /* ── Card ── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+
+  /* ── Form fields ── */
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 11px; color: var(--muted); margin-bottom: 5px; letter-spacing: 0.04em; }
+  .field input, .field select {
+    width: 100%; background: var(--surface2); border: 1px solid var(--border);
+    border-radius: var(--radius-sm); color: var(--text); font-family: var(--font-body);
+    font-size: 15px; padding: 9px 12px; outline: none; transition: border-color 0.15s;
+    appearance: none; -webkit-appearance: none;
+  }
+  .field input:focus, .field select:focus { border-color: var(--lift); }
+  .field select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+  }
+  .field select option { background: #1a1a1a; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+
+  /* ── Buttons ── */
+  .btn-primary { width: 100%; background: var(--lift); border: none; border-radius: var(--radius-sm); color: #0f0f0f; font-family: var(--font-body); font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; transition: opacity 0.15s; letter-spacing: 0.02em; }
+  .btn-primary:hover { opacity: 0.88; }
+
+  /* End & Log Session — small pill in the top-right header corner.
+     Only visible once the user has queued at least one exercise.
+     Small and out of the way to prevent accidental taps. */
+  .btn-end-corner {
+    background: none;
+    border: 1.5px solid var(--lift-mid);
+    border-radius: var(--radius-sm);  /* matches btn-primary square corners */
+    color: var(--lift);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 2px;
+    letter-spacing: 0.02em;
+  }
+  .btn-end-corner:hover { background: var(--lift-dim); border-color: var(--lift); }
+
+  .btn-ghost { background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--muted); font-family: var(--font-body); font-size: 13px; padding: 8px 16px; cursor: pointer; transition: all 0.15s; }
+  .btn-ghost:hover { border-color: var(--text); color: var(--text); }
+
+  /* ── In-progress exercise queue (shown while building a session) ── */
+  .queue-item { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 12px; display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
+  .queue-name { flex: 1; font-size: 14px; color: var(--text); }
+  .queue-sub { font-size: 12px; color: var(--muted); }
+  .queue-del { background: none; border: none; color: var(--border); font-size: 16px; cursor: pointer; transition: color 0.15s; padding: 0 2px; line-height: 1; }
+  .queue-del:hover { color: var(--danger); }
+
+  /* ── Entry rows (History) ── */
+  .entry { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .entry-bar { width: 3px; border-radius: 2px; align-self: stretch; flex-shrink: 0; min-height: 36px; background: var(--lift); }
+  .entry-body { flex: 1; min-width: 0; }
+  .entry-name { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 2px; }
+  .entry-sub { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .entry-right { text-align: right; flex-shrink: 0; }
+  .entry-val { font-family: var(--font-display); font-size: 15px; color: var(--text); }
+  .entry-date { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .del-btn { background: none; border: none; color: var(--border); font-size: 18px; cursor: pointer; padding: 0 2px; line-height: 1; flex-shrink: 0; transition: color 0.15s; }
+  .del-btn:hover { color: var(--danger); }
+
+  /*
+   * ── Session block in History ──
+   * Each completed session is a collapsible block showing
+   * the week header, then individual exercises inside.
+   */
+  .week-block { margin-bottom: 1.5rem; }
+  .week-block-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 0; border-bottom: 1px solid var(--border); margin-bottom: 10px;
+  }
+  .week-block-title { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--lift); }
+  .week-block-meta { font-size: 11px; color: var(--muted); }
+
+  /* Session card inside a week block */
+  .session-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; }
+  .session-card-header { padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); cursor: pointer; }
+  .session-card-title { font-size: 13px; font-weight: 500; color: var(--text); }
+  .session-card-meta { font-size: 12px; color: var(--muted); }
+  .session-card-body { padding: 10px 14px; }
+  .session-exercise { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .session-exercise:last-child { border-bottom: none; }
+  .session-ex-name { flex: 1; font-size: 13px; color: var(--text); }
+  .session-ex-sets { font-size: 12px; color: var(--muted); }
+  .session-del { background: none; border: none; color: var(--border); font-size: 15px; cursor: pointer; padding: 0 2px; transition: color 0.15s; }
+  .session-del:hover { color: var(--danger); }
+  /* Small pencil edit button on each exercise row in history */
+  /* Always visible on mobile — no hover on touchscreens */
+  .session-edit-btn { background: none; border: none; color: var(--muted); font-size: 12px; cursor: pointer; padding: 0 4px; transition: color 0.15s; opacity: 1; flex-shrink:0; }
+  .session-edit-btn:hover { color: var(--lift); }
+
+  /* Inline edit input that replaces the name when editing */
+  .ex-edit-input { background: var(--surface2); border: 1px solid var(--lift-mid); border-radius: var(--radius-sm); color: var(--text); font-family: var(--font-body); font-size: 13px; padding: 3px 8px; outline: none; width: 140px; }
+  .ex-edit-input:focus { border-color: var(--lift); }
+  .ex-save-btn { background: var(--lift); border: none; border-radius: var(--radius-sm); color: #0f0f0f; font-size: 11px; font-weight: 600; padding: 3px 8px; cursor: pointer; margin-left: 4px; }
+  .ex-cancel-btn { background: none; border: none; color: var(--muted); font-size: 11px; cursor: pointer; margin-left: 2px; }
+
+  /* Week dot grid — now inside the History tab */
+  .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-bottom: 1rem; }
+  .wday { text-align: center; }
+  .wday-label { font-size: 10px; color: var(--muted); margin-bottom: 5px; }
+  .wday-dot { width: 100%; aspect-ratio: 1; border-radius: var(--radius-sm); background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  .wday-dot.active { background: var(--lift-dim); border-color: var(--lift-mid); }
+  .wday-dot.today { border-color: var(--lift) !important; }
+
+  /* ── PR cards ── */
+  .pr-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+  .pr-badge { background: var(--lift-dim); border: 1px solid var(--lift-mid); border-radius: var(--radius-sm); width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 16px; }
+  .pr-body { flex: 1; }
+  .pr-name { font-size: 14px; font-weight: 500; color: var(--text); }
+  .pr-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .pr-val { text-align: right; }
+  .pr-best { font-family: var(--font-display); font-size: 20px; color: var(--lift); }
+  .pr-lbl { font-size: 11px; color: var(--muted); }
+
+  /* ── 1RM Calculator ── */
+  .e1rm-result { background: var(--lift-dim); border: 1px solid var(--lift-mid); border-radius: var(--radius); padding: 1.5rem; text-align: center; margin: 1.25rem 0; }
+  .e1rm-label { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--lift); margin-bottom: 8px; }
+  .e1rm-num { font-family: var(--font-display); font-size: 56px; color: var(--text); line-height: 1; margin-bottom: 4px; }
+  .e1rm-unit { font-size: 13px; color: var(--muted); }
+  .formula-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1.25rem; }
+  .formula-btn { background: var(--surface2); border: 1px solid var(--border); border-radius: 20px; color: var(--muted); font-family: var(--font-body); font-size: 12px; padding: 5px 14px; cursor: pointer; transition: all 0.15s; }
+  .formula-btn.active { background: var(--lift-dim); border-color: var(--lift-mid); color: var(--lift); font-weight: 500; }
+  .pct-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 1rem; }
+  .pct-cell { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 0.65rem; text-align: center; }
+  .pct-pct { font-size: 10px; color: var(--muted); margin-bottom: 3px; }
+  .pct-val { font-family: var(--font-display); font-size: 15px; color: var(--text); }
+  .pct-rep { font-size: 10px; color: var(--muted); margin-top: 3px; }
+  .formula-note { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem; font-size: 12px; color: var(--muted); line-height: 1.6; margin-top: 1rem; }
+
+  /* ── Empty state ── */
+  .empty { text-align: center; padding: 2.5rem 1rem; color: var(--muted); font-size: 14px; line-height: 1.6; }
+  .empty-icon { font-size: 28px; display: block; margin-bottom: 10px; opacity: 0.4; }
+
+  .btn-row { display: flex; gap: 8px; margin-top: 1rem; flex-wrap: wrap; }
+
+  /*
+   * ── Confirm Modal ──
+   * Overlay that appears when "End & Log Session" is tapped.
+   * Blurs the background and shows a confirmation card.
+   */
+  .modal-overlay {
+    display: none; /* shown by JS when confirm is needed */
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 200;
+    align-items: flex-end; /* slides up from bottom on mobile */
+    justify-content: center;
+    padding: 1.5rem;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 440px;
+  }
+  .modal-title { font-family: var(--font-display); font-size: 17px; color: var(--text); margin-bottom: 6px; }
+  .modal-sub { font-size: 13px; color: var(--muted); margin-bottom: 1.25rem; line-height: 1.5; }
+  .modal-summary { background: var(--surface2); border-radius: var(--radius-sm); padding: 10px 14px; margin-bottom: 1.25rem; font-size: 13px; color: var(--muted); max-height: 140px; overflow-y: auto; }
+  .modal-summary div { padding: 4px 0; border-bottom: 1px solid var(--border); }
+  .modal-summary div:last-child { border-bottom: none; }
+  .modal-actions { display: flex; gap: 8px; }
+  .modal-confirm { flex: 1; background: var(--lift); border: none; border-radius: var(--radius-sm); color: #0f0f0f; font-family: var(--font-body); font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; }
+  .modal-cancel { flex: 1; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--muted); font-family: var(--font-body); font-size: 14px; padding: 12px; cursor: pointer; }
+  .modal-cancel:hover { border-color: var(--text); color: var(--text); }
+
+  /* ── Stopwatch button — sits left of Log exercise ── */
+  .btn-stopwatch {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-family: var(--font-mono, monospace);
+    font-size: 16px;
+    font-weight: 600;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+    min-width: 80px;
+    text-align: center;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+  }
+  /* Running state — gold to show rest timer is active */
+  .btn-stopwatch.running {
+    border-color: var(--lift-mid);
+    background: var(--lift-dim);
+    color: var(--lift);
+  }
+  .btn-stopwatch.running #sw-set-label { color: var(--lift); }
+  #sw-set-label { color: var(--muted); font-family: var(--font-body); }
+  /* Hint below the button row */
+  .sw-hint { font-size: 10px; color: var(--muted); text-align: left; margin-top: 4px; padding-left: 2px; min-height: 14px; }
+
+  /* ── Toast ── */
+  .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--lift); color: #0f0f0f; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 20px; transition: transform 0.25s ease; pointer-events: none; white-space: nowrap; z-index: 100; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  @media (max-width: 400px) {
+    .grid-3 { grid-template-columns: 1fr 1fr; }
+    .pct-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+    <div>
+      <div class="wordmark">Training Log</div>
+      <div class="tagline">powerlifting · strength · performance</div>
+    </div>
+    <!-- End & Log Session button — lives in the top-right corner of the header.
+         Only visible when the user has added at least one exercise to the queue.
+         Positioned here (away from the form) so it can't be accidentally tapped. -->
+    <button class="btn-end-corner" id="btn-end-session" onclick="promptEndSession()" style="display:none;" aria-label="End and log session">
+      End &amp; Log
+    </button>
+  </div>
+</header>
+
+<nav>
+  <button class="active" onclick="switchTab('log', this)">Log</button>
+  <button onclick="switchTab('history', this)">History</button>
+  <button onclick="switchTab('prs', this)">PRs</button>
+  <button onclick="switchTab('e1rm', this)">1RM calc</button>
+</nav>
+
+<main>
+
+  <!-- ════════════════════════════════════════
+       LOG TAB
+       The user builds a session by logging
+       individual exercises with "Log exercise".
+       When done, they tap "End & Log Session"
+       which triggers a confirmation modal before
+       saving the whole session to history.
+       ════════════════════════════════════════ -->
+  <div id="tab-log" class="tab active">
+
+    <div class="card">
+
+      <!-- Exercise selector — "Custom..." reveals a free-text field -->
+      <div class="field">
+        <label>Exercise</label>
+        <select id="lift-exercise" onchange="toggleCustomLift()">
+          <option value="">Choose lift...</option>
+          <option>Back squat</option>
+          <option>Deadlift</option>
+          <option>Hip thrust</option>
+          <option>Bench press</option>
+          <option>Romanian deadlift</option>
+          <option>Overhead press</option>
+          <option>Sumo deadlift</option>
+          <option>Front squat</option>
+          <option>Pull-up</option>
+          <option>Custom...</option>
+        </select>
+      </div>
+
+      <!-- Shown only when "Custom..." is selected.
+           As the user types, getSuggestions() searches past custom exercises
+           and renders a dropdown of matches below the input.
+           checkFuzzyMatch() also checks for near-matches (e.g. singular/plural)
+           and shows a "Did you mean?" nudge to prevent duplicate entries. -->
+      <div id="custom-lift-wrap" style="display:none" class="field">
+        <label>Exercise name</label>
+        <div style="position:relative">
+          <input type="text" id="custom-lift-name" placeholder="e.g. Bulgarian split squat"
+                 oninput="getSuggestions(this.value); checkFuzzyMatch(this.value)" autocomplete="off">
+          <!-- Autocomplete dropdown -->
+          <div id="suggestions-list" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--lift-mid);border-radius:var(--radius-sm);z-index:50;margin-top:3px;overflow:hidden"></div>
+        </div>
+        <!-- "Did you mean?" warning — shown when the typed name is similar
+             but not identical to an existing exercise. Gold border + suggestion
+             with a one-tap "Use this instead" button. -->
+        <div id="fuzzy-match-banner" style="display:none;margin-top:8px;background:var(--lift-dim);border:1px solid var(--lift-mid);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;color:var(--text);">
+          <span id="fuzzy-match-text"></span>
+          <button onclick="useFuzzyMatch()" style="margin-left:8px;background:var(--lift);border:none;border-radius:var(--radius-sm);color:#0f0f0f;font-size:12px;font-weight:600;padding:3px 10px;cursor:pointer;">Use this</button>
+          <button onclick="dismissFuzzyMatch()" style="margin-left:4px;background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;">Ignore</button>
+        </div>
+      </div>
+
+      <!-- Sets / Reps / Weight — oninput updates the live 1RM banner below -->
+      <div class="grid-3">
+        <div class="field"><label>Sets</label><input type="number" id="lift-sets" placeholder="3" min="1" max="20" oninput="updateLiveE1RM()"></div>
+        <div class="field"><label>Reps</label><input type="number" id="lift-reps" placeholder="5" min="1" max="50" oninput="updateLiveE1RM()"></div>
+        <div class="field"><label>Weight (lb)</label><input type="number" id="lift-weight" placeholder="135" min="0" oninput="updateLiveE1RM()"></div>
+      </div>
+
+      <!-- Live 1RM banner — appears automatically once weight + reps are filled -->
+      <div id="live-e1rm-wrap" style="display:none; margin-bottom:12px;">
+        <div style="background:var(--lift-dim);border:1px solid var(--lift-mid);border-radius:var(--radius-sm);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;">
+          <span style="font-size:12px;color:var(--lift);letter-spacing:0.06em;text-transform:uppercase;">Est. 1RM</span>
+          <span style="font-family:var(--font-display);font-size:22px;color:var(--text);" id="live-e1rm-val">—</span>
+          <span style="font-size:12px;color:var(--muted);">lb · Epley</span>
+        </div>
+      </div>
+
+      <!-- Button row: stopwatch on the left, Log exercise fills the rest -->
+      <div style="display:flex;gap:8px;align-items:stretch">
+        <!-- Stopwatch button — tap to start/stop rest timer, long-press to reset + advance set -->
+        <button class="btn-stopwatch" id="sw-btn" onclick="toggleStopwatch()" title="Rest timer" aria-label="Rest timer">
+          <span id="sw-display">0:00</span>
+          <span id="sw-set-label" style="font-size:10px;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;margin-top:2px;opacity:0">SET 1</span>
+        </button>
+        <button class="btn-primary" style="flex:1" onclick="addExercise()">Log exercise</button>
+      </div>
+      <!-- Hint text shown below buttons — visible while stopwatch is running -->
+      <div class="sw-hint" id="sw-hint"></div>
+
+      <!-- Notes field sits below the button row so it's the last thing
+           the user fills in before tapping Log exercise -->
+      <div class="field" style="margin-top:10px">
+        <label>Notes <span style="color:#555">(optional)</span></label>
+        <input type="text" id="lift-notes" placeholder="e.g. paused reps, RPE 8, felt strong">
+      </div>
+    </div>
+
+    <!-- ── In-progress session queue ──
+         Shows all exercises logged so far this session.
+         Hidden until at least one exercise is added. -->
+    <div id="session-queue-wrap" style="display:none;">
+      <div class="section-label">Current session</div>
+      <div id="session-queue"></div>
+
+    </div>
+
+  </div><!-- /tab-log -->
+
+
+  <!-- ════════════════════════════════════════
+       HISTORY TAB
+       Shows the current week's dot grid + ISO
+       week number at the top, then all past
+       completed sessions grouped by week,
+       newest week first.
+       ════════════════════════════════════════ -->
+  <div id="tab-history" class="tab">
+
+    <!-- Current week block always at the top -->
+    <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:10px;">
+      <div class="section-label" style="margin-bottom:0">This week</div>
+      <!-- ISO week number — calculated and injected by renderHistory() -->
+      <div id="week-number-label" style="font-family:var(--font-display);font-size:13px;color:var(--lift);letter-spacing:0.08em;"></div>
+    </div>
+
+    <!-- 7-day dot grid for the current week -->
+    <div class="week-grid" id="week-grid"></div>
+
+    <!-- All sessions grouped by week, newest first -->
+    <div id="history-list"></div>
+
+  </div><!-- /tab-history -->
+
+
+  <!-- ════════════════════════════════════════
+       PRs TAB
+       One card per exercise, showing best
+       logged set and estimated 1RM via Epley.
+       ════════════════════════════════════════ -->
+  <div id="tab-prs" class="tab">
+    <div class="section-label">Personal records</div>
+    <div id="pr-list"></div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════
+       1RM CALCULATOR TAB
+       Enter weight + reps + optional RPE,
+       pick a formula, see estimated 1RM and
+       a full training percentage breakdown.
+       ════════════════════════════════════════ -->
+  <div id="tab-e1rm" class="tab">
+    <div class="card">
+      <div class="section-label">Your working set</div>
+      <!-- oninput fires calcE1RM() live on every keystroke -->
+      <div class="grid-3">
+        <div class="field"><label>Weight (lb)</label><input type="number" id="e1rm-weight" placeholder="225" oninput="calcE1RM()"></div>
+        <div class="field"><label>Reps done</label><input type="number" id="e1rm-reps" placeholder="5" min="1" max="30" oninput="calcE1RM()"></div>
+        <div class="field">
+          <label>RPE</label>
+          <!-- RPE < 10 means reps were left in the tank; formula compensates -->
+          <select id="e1rm-rpe" onchange="calcE1RM()">
+            <option value="">—</option>
+            <option value="10">10 — max</option>
+            <option value="9.5">9.5</option>
+            <option value="9">9</option>
+            <option value="8.5">8.5</option>
+            <option value="8">8</option>
+            <option value="7.5">7.5</option>
+            <option value="7">7</option>
+          </select>
+        </div>
+      </div>
+      <div class="section-label" style="margin-top:4px">Formula</div>
+      <div class="formula-row">
+        <button class="formula-btn active" onclick="setFormula('epley', this)">Epley</button>
+        <button class="formula-btn" onclick="setFormula('brzycki', this)">Brzycki</button>
+        <button class="formula-btn" onclick="setFormula('lombardi', this)">Lombardi</button>
+        <button class="formula-btn" onclick="setFormula('mayhew', this)">Mayhew</button>
+      </div>
+      <div id="e1rm-placeholder" style="padding:1rem 0;text-align:center;color:var(--muted);font-size:14px">Enter weight and reps above</div>
+      <div id="e1rm-result-area" style="display:none">
+        <div class="e1rm-result">
+          <div class="e1rm-label">Estimated 1RM</div>
+          <div class="e1rm-num" id="e1rm-display">—</div>
+          <div class="e1rm-unit" id="e1rm-formula-name">lb</div>
+        </div>
+        <div class="section-label">Training percentages</div>
+        <div class="pct-grid" id="pct-grid"></div>
+        <div class="btn-row">
+          <button class="btn-primary" style="flex:1" onclick="sendToLog()">Log this set</button>
+          <button class="btn-ghost" onclick="copyE1RM()">Copy</button>
+        </div>
+      </div>
+    </div>
+    <div class="formula-note">
+      <strong style="color:var(--text)">Epley & Brzycki</strong> are the powerlifting standards — most accurate for 3–10 reps. <strong style="color:var(--text)">Lombardi</strong> tends to run higher. <strong style="color:var(--text)">Mayhew</strong> works better for 10–20 rep sets. RPE adjusts for reps left in the tank.
+    </div>
+  </div>
+
+</main><!-- /main -->
+
+
+<!-- ════════════════════════════════════════
+     EDIT EXERCISE MODAL
+     Opens when the pencil is tapped on any
+     exercise row in History. Pre-fills all
+     fields so the user can edit anything.
+     ════════════════════════════════════════ -->
+<div class="modal-overlay" id="edit-exercise-modal">
+  <div class="modal">
+    <div class="modal-title">Edit exercise</div>
+    <div class="modal-sub" style="margin-bottom:1rem">Update any field then tap Save.</div>
+    <div class="field"><label>Exercise name</label><input type="text" id="edit-ex-name" autocomplete="off"></div>
+    <div class="grid-3" style="margin-bottom:12px">
+      <div class="field"><label>Sets</label><input type="number" id="edit-ex-sets" min="1" max="20"></div>
+      <div class="field"><label>Reps</label><input type="number" id="edit-ex-reps" min="1" max="50"></div>
+      <div class="field"><label>Weight (lb)</label><input type="number" id="edit-ex-weight" min="0"></div>
+    </div>
+    <div class="field"><label>Notes <span style="color:#555">(optional)</span></label><input type="text" id="edit-ex-notes" placeholder="e.g. paused reps, RPE 8"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeEditModal()">Cancel</button>
+      <button class="modal-confirm" onclick="saveEditModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     CONFIRM SESSION MODAL
+     Appears when the user taps "End & Log Session".
+     Shows a summary of all exercises in the queue
+     and asks for confirmation before saving.
+     ════════════════════════════════════════ -->
+<div class="modal-overlay" id="confirm-modal">
+  <div class="modal">
+    <div class="modal-title">Confirm session log?</div>
+    <div class="modal-sub">The following exercises will be saved to your history.</div>
+    <!-- Populated by promptEndSession() with the current queue contents -->
+    <div class="modal-summary" id="modal-summary"></div>
+    <div class="modal-actions">
+      <!-- Cancel returns to the log without saving -->
+      <button class="modal-cancel" onclick="closeModal()">Cancel</button>
+      <!-- Confirm calls commitSession() to save and clear the queue -->
+      <button class="modal-confirm" onclick="commitSession()">Save session</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast notification — slides up briefly to confirm an action -->
+<div class="toast" id="toast"></div>
+
+
+<script>
+  // ─────────────────────────────────────────────
+  // LOCALSTORAGE PERSISTENCE
+  // All session data is saved to localStorage under
+  // the key 'trainingLog_sessions' as a JSON string.
+  // Dates are stored as ISO strings and parsed back
+  // to Date objects on load.
+  // ─────────────────────────────────────────────
+
+  const STORAGE_KEY = 'trainingLog_sessions';
+
+  // Save the sessions array to localStorage.
+  // Called every time sessions is mutated.
+  function saveSessions() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+    } catch(e) {
+      toast('Storage full — older sessions may not save');
+    }
+  }
+
+  // Load sessions from localStorage on page load.
+  // Dates are serialised as ISO strings — convert them back to Date objects.
+  function loadSessions() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      return JSON.parse(raw).map(s => ({
+        ...s,
+        date: new Date(s.date)
+      }));
+    } catch(e) {
+      return []; // if storage is corrupted, start fresh
+    }
+  }
+
+  // ─────────────────────────────────────────────
+  // STATE
+  // ─────────────────────────────────────────────
+
+  // sessions: persisted to localStorage on every change.
+  // Each session = { date, exercises: [{ name, sets, reps, weight, notes }] }
+  let sessions = loadSessions();
+
+  // currentQueue: in-progress exercises for the current session.
+  // Not persisted — cleared on page reload intentionally.
+  let currentQueue = [];
+
+  // Active formula for the 1RM calculator tab
+  let activeFormula = 'epley';
+
+  // ─────────────────────────────────────────────
+  // 1RM FORMULAS
+  // Takes (weight, reps) → estimated 1-rep max
+  // ─────────────────────────────────────────────
+  const formulas = {
+    epley:    (w, r) => w * (1 + r / 30),
+    brzycki:  (w, r) => w * (36 / (37 - r)),
+    lombardi: (w, r) => w * Math.pow(r, 0.1),
+    mayhew:   (w, r) => 100 * w / (52.2 + 41.9 * Math.exp(-0.055 * r))
+  };
+  const formulaNames = { epley: 'Epley', brzycki: 'Brzycki', lombardi: 'Lombardi', mayhew: 'Mayhew' };
+
+  // ─────────────────────────────────────────────
+  // TAB SWITCHING
+  // ─────────────────────────────────────────────
+  function switchTab(t, btn) {
+    document.querySelectorAll('.tab').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + t).classList.add('active');
+    btn.classList.add('active');
+    if (t === 'history') renderHistory();
+    if (t === 'prs')     renderPRs();
+  }
+
+  // Show/hide the custom exercise name input
+  function toggleCustomLift() {
+    const v = document.getElementById('lift-exercise').value;
+    document.getElementById('custom-lift-wrap').style.display = v === 'Custom...' ? 'block' : 'none';
+  }
+
+  // ─────────────────────────────────────────────
+  // TOAST
+  // ─────────────────────────────────────────────
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2200);
+  }
+
+  // ─────────────────────────────────────────────
+  // PRESET LIST
+  // Names already in the dropdown — excluded from autocomplete suggestions.
+  // ─────────────────────────────────────────────
+  const PRESET_EXERCISES = new Set([
+    'Back squat','Deadlift','Hip thrust','Bench press',
+    'Romanian deadlift','Overhead press','Sumo deadlift',
+    'Front squat','Pull-up'
+  ]);
+
+  // ─────────────────────────────────────────────
+  // CANONICAL NAME HELPERS
+  // Collects all unique custom exercise names from
+  // both committed sessions and the current queue,
+  // deduped case-insensitively (first seen wins).
+  // canonicalize() maps a new name to the stored
+  // version if one already exists, so "face pulls"
+  // and "Face Pulls" are always the same exercise.
+  // ─────────────────────────────────────────────
+  function getAllCustomNames() {
+    const fromSessions = sessions.flatMap(s => s.exercises.map(e => e.name));
+    const fromQueue    = currentQueue.map(e => e.name);
+    const all          = [...fromSessions, ...fromQueue].filter(n => !PRESET_EXERCISES.has(n));
+    const seen = new Map();
+    all.forEach(n => { const k = n.toLowerCase(); if (!seen.has(k)) seen.set(k, n); });
+    return [...seen.values()];
+  }
+
+  function canonicalize(name) {
+    const lower = name.trim().toLowerCase();
+    const match = getAllCustomNames().find(n => n.toLowerCase() === lower);
+    return match || name.trim();
+  }
+
+  // ─────────────────────────────────────────────
+  // FUZZY MATCH — "Did you mean?"
+  // Uses a simple similarity score (Dice coefficient on bigrams)
+  // to catch near-matches like "face pull" vs "Face pulls".
+  // Shows a gold banner with a one-tap correction if a close
+  // match is found that isn't an exact case-insensitive match.
+  // ─────────────────────────────────────────────
+
+  // Tracks the current fuzzy suggestion so useFuzzyMatch() can apply it
+  let currentFuzzySuggestion = null;
+
+  // Dice coefficient: measures string similarity using shared bigrams.
+  // Returns 0 (no similarity) to 1 (identical). 0.5+ is a strong match.
+  function diceCoefficient(a, b) {
+    a = a.toLowerCase();
+    b = b.toLowerCase();
+    if (a === b) return 1;
+    if (a.length < 2 || b.length < 2) return 0;
+    const getBigrams = s => {
+      const bigrams = new Map();
+      for (let i = 0; i < s.length - 1; i++) {
+        const bg = s.slice(i, i + 2);
+        bigrams.set(bg, (bigrams.get(bg) || 0) + 1);
+      }
+      return bigrams;
+    };
+    const aBigrams = getBigrams(a);
+    const bBigrams = getBigrams(b);
+    let intersection = 0;
+    for (const [bg, count] of aBigrams) {
+      const bCount = bBigrams.get(bg) || 0;
+      intersection += Math.min(count, bCount);
+    }
+    return (2 * intersection) / (a.length + b.length - 2);
+  }
+
+  // Checks the typed name against history using Dice coefficient similarity.
+  // If a close-but-not-exact match is found (score >= 0.5), shows the gold
+  // "Did you mean X?" banner so the user can unify it with one tap.
+  function checkFuzzyMatch(query) {
+    const banner  = document.getElementById('fuzzy-match-banner');
+    const textEl  = document.getElementById('fuzzy-match-text');
+    const q       = query.trim();
+
+    if (q.length < 3) { banner.style.display = 'none'; currentFuzzySuggestion = null; return; }
+
+    const allNames = getAllCustomNames();
+    const lower    = q.toLowerCase();
+
+    // Skip if it's an exact case-insensitive match — canonicalize handles those already
+    if (allNames.some(n => n.toLowerCase() === lower)) {
+      banner.style.display = 'none'; currentFuzzySuggestion = null; return;
+    }
+
+    // Find the closest name above the similarity threshold
+    let best = null, bestScore = 0;
+    allNames.forEach(name => {
+      const score = diceCoefficient(q, name);
+      if (score > bestScore && score >= 0.5) { best = name; bestScore = score; }
+    });
+
+    if (best) {
+      currentFuzzySuggestion = best;
+      textEl.innerHTML = 'Did you mean <strong style="color:var(--lift)">' + best + '</strong>?';
+      banner.style.display = 'block';
+    } else {
+      banner.style.display = 'none';
+      currentFuzzySuggestion = null;
+    }
+  }
+
+  // Replaces the typed name with the fuzzy suggestion and hides the banner
+  function useFuzzyMatch() {
+    if (!currentFuzzySuggestion) return;
+    document.getElementById('custom-lift-name').value = currentFuzzySuggestion;
+    document.getElementById('fuzzy-match-banner').style.display = 'none';
+    document.getElementById('suggestions-list').style.display = 'none';
+    currentFuzzySuggestion = null;
+  }
+
+  // Dismisses the banner without changing the input
+  function dismissFuzzyMatch() {
+    document.getElementById('fuzzy-match-banner').style.display = 'none';
+    currentFuzzySuggestion = null;
+  }
+
+  // ─────────────────────────────────────────────
+  // ADD EXERCISE TO CURRENT SESSION QUEUE
+  // Validates the form and pushes a new exercise
+  // object into currentQueue. Does NOT save to
+  // history yet — that happens on commitSession().
+  // ─────────────────────────────────────────────
+  function addExercise() {
+    const exEl = document.getElementById('lift-exercise');
+    let ex = exEl.value === 'Custom...'
+      ? document.getElementById('custom-lift-name').value.trim()
+      : exEl.value;
+    const sets   = parseInt(document.getElementById('lift-sets').value)    || 0;
+    const reps   = parseInt(document.getElementById('lift-reps').value)    || 0;
+    const weight = parseFloat(document.getElementById('lift-weight').value) || 0;
+    const notes  = document.getElementById('lift-notes').value.trim();
+
+    if (!ex || !sets || !reps || !weight) { toast('Fill in all fields'); return; }
+
+    // Canonicalize the name: if "Face Pulls" is already in history and the
+    // user types "face pulls", store it as "Face Pulls" to keep them unified.
+    if (exEl.value === 'Custom...') ex = canonicalize(ex);
+
+    // Add to the in-progress queue
+    currentQueue.push({ name: ex, sets, reps, weight, notes });
+
+    // Clear the form for the next exercise
+    exEl.value = '';
+    ['lift-sets', 'lift-reps', 'lift-weight', 'lift-notes', 'custom-lift-name'].forEach(id => {
+      document.getElementById(id).value = '';
+    });
+    document.getElementById('custom-lift-wrap').style.display = 'none';
+    document.getElementById('live-e1rm-wrap').style.display = 'none';
+    document.getElementById('fuzzy-match-banner').style.display = 'none';
+    currentFuzzySuggestion = null;
+    // Reset set counter for the next exercise
+    swSetCount = 1;
+    clearInterval(swInterval);
+    swMs = 0; swStart = null; swRunning = false; swInterval = null;
+    document.getElementById('sw-display').textContent = '0:00';
+    document.getElementById('sw-btn').classList.remove('running');
+    document.getElementById('sw-hint').textContent = '';
+    const lbl = document.getElementById('sw-set-label');
+    lbl.textContent = 'SET 1'; lbl.style.opacity = '0';
+
+    renderQueue();
+    toast(ex + ' added ✓');
+  }
+
+  // ─────────────────────────────────────────────
+  // RENDER QUEUE
+  // Shows the in-progress exercises under the form
+  // as the user builds their session. Each item has
+  // a remove button. The "End & Log" header button
+  // is shown/hidden based on whether the queue has items.
+  // ─────────────────────────────────────────────
+  function renderQueue() {
+    const wrap = document.getElementById('session-queue-wrap');
+    const el   = document.getElementById('session-queue');
+
+    if (!currentQueue.length) {
+      wrap.style.display = 'none';
+      // Hide the header button when there's nothing in the queue
+      document.getElementById('btn-end-session').style.display = 'none';
+      return;
+    }
+
+    wrap.style.display = 'block';
+    // Show the "End & Log" button in the header now that the queue has items
+    document.getElementById('btn-end-session').style.display = 'block';
+    el.innerHTML = currentQueue.map((e, i) => `
+      <div class="queue-item">
+        <div>
+          <div class="queue-name">${e.name}</div>
+          <div class="queue-sub">${e.sets}×${e.reps} @ ${e.weight} lb${e.notes ? ' · ' + e.notes : ''}</div>
+        </div>
+        <!-- Remove this exercise from the queue before committing -->
+        <button class="queue-del" onclick="removeFromQueue(${i})" aria-label="Remove">×</button>
+      </div>
+    `).join('');
+  }
+
+  // Remove an exercise from the in-progress queue by index
+  function removeFromQueue(i) {
+    currentQueue.splice(i, 1);
+    renderQueue();
+  }
+
+  // ─────────────────────────────────────────────
+  // SESSION CONFIRMATION FLOW
+  // promptEndSession() — opens the confirmation modal
+  //   with a summary of all queued exercises.
+  // closeModal() — dismisses without saving.
+  // commitSession() — saves currentQueue as a completed
+  //   session object, persists to localStorage, resets
+  //   the queue and hides the End & Log button.
+  // ─────────────────────────────────────────────
+  function promptEndSession() {
+    if (!currentQueue.length) { toast('Add at least one exercise first'); return; }
+
+    // Populate the modal summary with current queue exercises
+    document.getElementById('modal-summary').innerHTML = currentQueue.map(e =>
+      `<div>🏋️ ${e.name} — ${e.sets}×${e.reps} @ ${e.weight} lb${e.notes ? ' · ' + e.notes : ''}</div>`
+    ).join('');
+
+    // Open the modal
+    document.getElementById('confirm-modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('confirm-modal').classList.remove('open');
+  }
+
+  // ─────────────────────────────────────────────
+  // COMMIT SESSION
+  // Called when the user taps "Save session" in
+  // the modal. Saves currentQueue as a completed
+  // session, resets the queue, and updates stats.
+  // ─────────────────────────────────────────────
+  function commitSession() {
+    if (!currentQueue.length) return;
+
+    // Save session with today's date and a copy of the queue
+    sessions.unshift({ date: new Date(), exercises: [...currentQueue] });
+    saveSessions(); // persist to localStorage immediately
+
+    // Reset the queue and hide the header button
+    currentQueue = [];
+    document.getElementById('btn-end-session').style.display = 'none';
+    renderQueue();
+
+    closeModal();
+    toast('Session saved ✓');
+  }
+
+  // updateStats is intentionally removed — stat row was removed in favour of
+  // a cleaner Log tab (Option B). All session data is visible in the History tab.
+
+  // Formats a Date as "Jun 15" short string
+  function fmt(d) {
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  }
+
+  // ─────────────────────────────────────────────
+  // ISO 8601 WEEK NUMBER
+  // Returns { week, year } for a given date.
+  // ISO weeks start on Monday. Week 1 is the week
+  // containing the first Thursday of the year.
+  // Example: June 16 2026 → { week: 25, year: 2026 }
+  // ─────────────────────────────────────────────
+  function getISOWeek(date) {
+    // Find the Thursday of the same ISO week
+    const thu = new Date(date);
+    thu.setDate(date.getDate() - (date.getDay() + 6) % 7 + 3);
+    // Jan 4 is always in ISO week 1
+    const jan4 = new Date(thu.getFullYear(), 0, 4);
+    return { week: 1 + Math.round((thu - jan4) / 604800000), year: thu.getFullYear() };
+  }
+
+  // ─────────────────────────────────────────────
+  // RENDER HISTORY
+  // Builds the History tab:
+  //   1. The current week's dot grid + ISO label
+  //   2. All completed sessions grouped by ISO week,
+  //      newest week first
+  // ─────────────────────────────────────────────
+  function renderHistory() {
+    const today = new Date();
+
+    // ── Current week dot grid ──
+    // Find Sunday of this week as the start boundary
+    const sow = new Date(today);
+    sow.setDate(today.getDate() - today.getDay());
+    sow.setHours(0, 0, 0, 0);
+
+    const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
+
+    // Find which days this week have a completed session
+    const activeDays = new Set();
+    sessions.forEach(s => {
+      const d = new Date(s.date); d.setHours(0, 0, 0, 0);
+      if (d >= sow) activeDays.add(d.getDay());
+    });
+
+    document.getElementById('week-grid').innerHTML = days.map((d, i) => {
+      const has   = activeDays.has(i);
+      const isTod = i === today.getDay();
+      return `<div class="wday">
+        <div class="wday-label">${d}</div>
+        <div class="wday-dot ${has ? 'active' : ''}${isTod ? ' today' : ''}">${has ? '🏋️' : ''}</div>
+      </div>`;
+    }).join('');
+
+    // ISO week label for this week
+    const { week, year } = getISOWeek(today);
+    document.getElementById('week-number-label').textContent = 'Wk ' + week + ' · ' + year;
+
+    // ── Session list ──
+    const el = document.getElementById('history-list');
+    if (!sessions.length) {
+      el.innerHTML = '<div class="empty"><span class="empty-icon">📋</span>No sessions yet — log your first lift</div>';
+      return;
+    }
+
+    // ── Group sessions by ISO week, then by calendar day within each week ──
+    // Step 1: group by ISO week key (e.g. "2026-W25")
+    const byWeek = {};
+    sessions.forEach((s, idx) => {
+      const { week: w, year: y } = getISOWeek(s.date);
+      const weekKey = y + '-W' + String(w).padStart(2, '0');
+      if (!byWeek[weekKey]) byWeek[weekKey] = { label: 'Wk ' + w + ' · ' + y, days: {} };
+
+      // Step 2: within each week, group by YYYY-MM-DD day key so same-day
+      //         sessions are merged into one card instead of two
+      const d = s.date;
+      const dayKey = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      if (!byWeek[weekKey].days[dayKey]) byWeek[weekKey].days[dayKey] = { date: s.date, exercises: [], indices: [] };
+      // Merge exercises into the day's list, tagging each with
+      // _sid (session index) and _eidx (exercise index within session)
+      // so the edit button can locate the exact entry in the sessions array.
+      s.exercises.forEach((e, eidx) => {
+        byWeek[weekKey].days[dayKey].exercises.push({ ...e, _sid: idx, _eidx: eidx });
+      });
+      byWeek[weekKey].days[dayKey].indices.push(idx);
+    });
+
+    // Render each week group newest-first
+    el.innerHTML = Object.keys(byWeek).sort().reverse().map(weekKey => {
+      const group = byWeek[weekKey];
+
+      // Render each day card within the week, newest day first
+      const daySortedKeys = Object.keys(group.days).sort().reverse();
+      const daySessions = daySortedKeys.map(dayKey => {
+        const day = group.days[dayKey];
+        // Build exercise list — one pencil per row opens the edit modal
+        // for that exercise (name, sets, reps, weight, notes all editable).
+        const exList = day.exercises.map(e =>
+          `<div class="session-exercise" id="ex-row-${e._sid}-${e._eidx}">
+            <div style="flex:1;min-width:0">
+              <span class="session-ex-name">${e.name}</span>
+              <span class="session-ex-sets"> · ${e.sets}×${e.reps} @ ${e.weight} lb${e.notes ? ' · ' + e.notes : ''}</span>
+            </div>
+            <button class="session-edit-btn" onclick="openEditModal(${e._sid}, ${e._eidx})"
+                    title="Edit" aria-label="Edit exercise">✎</button>
+          </div>`
+        ).join('');
+        const totalSets = day.exercises.reduce((a, e) => a + e.sets, 0);
+        // Delete removes all original sessions that contributed to this day
+        const indicesStr = JSON.stringify(day.indices);
+        return `
+          <div class="session-card">
+            <div class="session-card-header">
+              <span class="session-card-title">${fmt(day.date)}</span>
+              <span class="session-card-meta">${day.exercises.length} exercise${day.exercises.length !== 1 ? 's' : ''} · ${totalSets} sets
+                <button class="session-del" onclick="deleteDaySessions(${indicesStr})" aria-label="Delete session" style="margin-left:8px">×</button>
+              </span>
+            </div>
+            <div class="session-card-body">${exList}</div>
+          </div>`;
+      }).join('');
+
+      const dayCount = daySortedKeys.length;
+      return `<div class="week-block">
+        <div class="week-block-header">
+          <span class="week-block-title">${group.label}</span>
+          <span class="week-block-meta">${dayCount} day${dayCount !== 1 ? 's' : ''}</span>
+        </div>
+        ${daySessions}
+      </div>`;
+    }).join('');
+  }
+
+  // deleteDaySessions: removes all sessions that contributed to a merged
+  // day card. Indices are sorted descending before splicing so removing
+  // a higher index doesn't shift lower ones out of position.
+  function deleteDaySessions(indices) {
+    indices.sort((a, b) => b - a).forEach(i => sessions.splice(i, 1));
+    saveSessions(); // persist deletion to localStorage
+    renderHistory();
+  }
+
+  // ─────────────────────────────────────────────
+  // EDIT EXERCISE MODAL
+  // One pencil per row opens a modal pre-filled with
+  // all fields for that exercise: name, sets, reps,
+  // weight, and notes. Save updates the sessions array.
+  // ─────────────────────────────────────────────
+
+  // Tracks which exercise is being edited
+  let editSid = null, editEidx = null;
+
+  function openEditModal(sid, eidx) {
+    editSid  = sid;
+    editEidx = eidx;
+    const e  = sessions[sid].exercises[eidx];
+
+    // Pre-fill all fields safely via JS (not HTML attributes)
+    document.getElementById('edit-ex-name').value   = e.name;
+    document.getElementById('edit-ex-sets').value   = e.sets;
+    document.getElementById('edit-ex-reps').value   = e.reps;
+    document.getElementById('edit-ex-weight').value = e.weight;
+    document.getElementById('edit-ex-notes').value  = e.notes || '';
+
+    document.getElementById('edit-exercise-modal').classList.add('open');
+    document.getElementById('edit-ex-name').focus();
+    document.getElementById('edit-ex-name').select();
+  }
+
+  function closeEditModal() {
+    document.getElementById('edit-exercise-modal').classList.remove('open');
+    editSid = null; editEidx = null;
+  }
+
+  function saveEditModal() {
+    if (editSid === null) return;
+    const name   = document.getElementById('edit-ex-name').value.trim();
+    const sets   = parseInt(document.getElementById('edit-ex-sets').value)    || 0;
+    const reps   = parseInt(document.getElementById('edit-ex-reps').value)    || 0;
+    const weight = parseFloat(document.getElementById('edit-ex-weight').value) || 0;
+    const notes  = document.getElementById('edit-ex-notes').value.trim();
+
+    if (!name)   { toast("Name cannot be empty"); return; }
+    if (!sets || !reps || !weight) { toast("Fill in sets, reps and weight"); return; }
+
+    sessions[editSid].exercises[editEidx] = {
+      name:   canonicalize(name),
+      sets, reps, weight, notes
+    };
+
+    saveSessions(); // persist edit to localStorage
+    closeEditModal();
+    renderHistory();
+    renderPRs();
+    toast('Exercise updated');
+  }
+
+  // ─────────────────────────────────────────────
+  // RENDER PRs
+  // Finds the heaviest set per exercise across all
+  // sessions, estimates 1RM, and shows one card
+  // per exercise sorted by estimated 1RM.
+  // ─────────────────────────────────────────────
+  function renderPRs() {
+    const allEx = sessions.flatMap(s => s.exercises);
+    if (!allEx.length) {
+      document.getElementById('pr-list').innerHTML = '<div class="empty"><span class="empty-icon">🏆</span>Log sessions to see your PRs here</div>';
+      return;
+    }
+
+    // Best set per exercise = heaviest weight logged
+    const prs = {};
+    allEx.forEach(e => {
+      if (!prs[e.name] || e.weight > prs[e.name].weight) prs[e.name] = e;
+    });
+
+    // Epley estimate: w × (1 + r/30). If r = 1, weight is already the 1RM.
+    const e1rmEst = (w, r) => r > 1 ? Math.round(w * (1 + r / 30)) : w;
+
+    document.getElementById('pr-list').innerHTML = Object.values(prs)
+      .sort((a, b) => e1rmEst(b.weight, b.reps) - e1rmEst(a.weight, a.reps))
+      .map(e => {
+        const est      = e1rmEst(e.weight, e.reps);
+        const isActual = e.reps <= 1;
+        return `
+        <div class="pr-card">
+          <div class="pr-badge">🏋️</div>
+          <div class="pr-body">
+            <div class="pr-name">${e.name}</div>
+            <div class="pr-meta">Best set: ${e.sets}×${e.reps} @ ${e.weight} lb</div>
+          </div>
+          <div class="pr-val">
+            <div class="pr-best">${est}</div>
+            <div class="pr-lbl">${isActual ? 'lb actual' : 'lb est. 1RM'}</div>
+          </div>
+        </div>`;
+      }).join('');
+  }
+
+  // ─────────────────────────────────────────────
+  // 1RM CALCULATOR
+  // ─────────────────────────────────────────────
+
+  function setFormula(f, btn) {
+    activeFormula = f;
+    document.querySelectorAll('.formula-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    calcE1RM();
+  }
+
+  // Reads inputs, adjusts for RPE, runs formula, renders result + percentage table
+  function calcE1RM() {
+    const w   = parseFloat(document.getElementById('e1rm-weight').value);
+    let   r   = parseInt(document.getElementById('e1rm-reps').value);
+    const rpe = parseFloat(document.getElementById('e1rm-rpe').value) || null;
+    const res = document.getElementById('e1rm-result-area');
+    const ph  = document.getElementById('e1rm-placeholder');
+
+    if (!w || !r || r < 1) { res.style.display = 'none'; ph.style.display = 'block'; return; }
+
+    // RPE adjustment: e.g. RPE 8 at 5 reps → treated as 7 reps (5 + (10−8))
+    if (rpe && rpe < 10) r = r + (10 - rpe);
+
+    const e1rm = r <= 1 ? w : formulas[activeFormula](w, r);
+    document.getElementById('e1rm-display').textContent    = Math.round(e1rm);
+    document.getElementById('e1rm-formula-name').textContent = 'lb · ' + formulaNames[activeFormula] + ' formula';
+
+    renderPcts(e1rm);
+    res.style.display = 'block';
+    ph.style.display  = 'none';
+  }
+
+  // Build the 8-cell percentage table from 60% to 95%
+  function renderPcts(e1rm) {
+    const pcts = [
+      { p: 95, r: '1–2' }, { p: 90, r: '2–3' }, { p: 85, r: '3–5' }, { p: 80, r: '5–6' },
+      { p: 75, r: '6–8' }, { p: 70, r: '8–10' }, { p: 65, r: '10–12' }, { p: 60, r: '12–15' }
+    ];
+    document.getElementById('pct-grid').innerHTML = pcts.map(({ p, r }) => `
+      <div class="pct-cell">
+        <div class="pct-pct">${p}%</div>
+        <div class="pct-val">${Math.round(e1rm * p / 100)}</div>
+        <div class="pct-rep">~${r} reps</div>
+      </div>
+    `).join('');
+  }
+
+  // sendToLog: pre-fills the weight and reps from the 1RM calculator
+  // into the Log tab form and switches tabs, so the user doesn't
+  // have to re-enter the same numbers.
+  function sendToLog() {
+    const w = document.getElementById('e1rm-weight').value;
+    const r = document.getElementById('e1rm-reps').value;
+    document.getElementById('lift-reps').value   = r;
+    document.getElementById('lift-weight').value = w;
+    document.querySelectorAll('.tab').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-log').classList.add('active');
+    document.querySelector('nav button:first-child').classList.add('active');
+    updateLiveE1RM();
+    toast('Set pre-filled in Log tab');
+  }
+
+  function copyE1RM() {
+    const val = document.getElementById('e1rm-display').textContent;
+    navigator.clipboard.writeText(val + ' lb').then(() => toast('Copied ' + val + ' lb'));
+  }
+
+  // ─────────────────────────────────────────────
+  // CUSTOM EXERCISE AUTOCOMPLETE
+  // Collects every unique custom exercise name from
+  // past sessions (anything not in the preset dropdown)
+  // and filters them as the user types.
+  // ─────────────────────────────────────────────
+
+  function getSuggestions(query) {
+    const list = document.getElementById('suggestions-list');
+    const q    = query.trim().toLowerCase();
+
+    // Hide dropdown if input is empty
+    if (!q) { list.style.display = 'none'; return; }
+
+    // Collect all unique custom exercise names logged in past sessions
+    const customNames = [...new Set(
+      sessions.flatMap(s => s.exercises.map(e => e.name))
+        .filter(name => !PRESET_EXERCISES.has(name)) // exclude presets
+    )];
+
+    // Filter to names that start with or contain the query string
+    const matches = customNames.filter(name =>
+      name.toLowerCase().includes(q)
+    ).slice(0, 6); // cap at 6 suggestions to keep the list manageable
+
+    if (!matches.length) { list.style.display = 'none'; return; }
+
+    // Render each match as a tappable row
+    list.innerHTML = matches.map(name => `
+      <div onclick="pickSuggestion('${name.replace(/'/g, "\'")}')"
+           style="padding:10px 14px;font-size:14px;color:var(--text);cursor:pointer;border-bottom:1px solid var(--border);"
+           onmouseover="this.style.background='var(--lift-dim)'"
+           onmouseout="this.style.background=''">
+        ${name}
+      </div>
+    `).join('');
+    list.style.display = 'block';
+  }
+
+  // Fill the input with the chosen suggestion and hide the dropdown
+  function pickSuggestion(name) {
+    document.getElementById('custom-lift-name').value = name;
+    document.getElementById('suggestions-list').style.display = 'none';
+  }
+
+  // Hide the suggestions dropdown when the user clicks anywhere else
+  document.addEventListener('click', function(e) {
+    if (!e.target.closest('#custom-lift-wrap')) {
+      const list = document.getElementById('suggestions-list');
+      if (list) list.style.display = 'none';
+    }
+  });
+
+  // ─────────────────────────────────────────────
+  // LIVE 1RM BANNER (Log tab)
+  // Fires on every keystroke in reps / weight.
+  // Shows a gold banner above Notes with the Epley
+  // estimate. Hides if either field is cleared.
+  // ─────────────────────────────────────────────
+  function updateLiveE1RM() {
+    const w    = parseFloat(document.getElementById('lift-weight').value);
+    const r    = parseInt(document.getElementById('lift-reps').value);
+    const wrap = document.getElementById('live-e1rm-wrap');
+    const val  = document.getElementById('live-e1rm-val');
+
+    if (!w || !r || r < 1) { wrap.style.display = 'none'; return; }
+
+    // Epley: w × (1 + r/30). If r = 1, weight is already the 1RM.
+    const est        = r <= 1 ? w : Math.round(w * (1 + r / 30));
+    val.textContent  = est;
+    wrap.style.display = 'block';
+  }
+  // ─────────────────────────────────────────────
+  // STOPWATCH
+  // Tap once to start, tap again to stop (time freezes).
+  // Long-press (500ms) at any point to reset to 0:00.
+  // Display updates every 100ms for smooth feel.
+  // State is intentionally NOT persisted — it's a
+  // within-session tool, not historical data.
+  // ─────────────────────────────────────────────
+
+  let swMs        = 0;       // elapsed milliseconds
+  let swStart     = null;    // Date.now() when last started
+  let swInterval  = null;    // setInterval handle
+  let swRunning   = false;
+  let swLongPress = null;    // setTimeout handle for long-press reset
+  let swSetCount  = 1;       // current set number — increments on reset
+
+  function toggleStopwatch() {
+    if (swRunning) {
+      // Stop — freeze rest time
+      clearInterval(swInterval);
+      swMs     += Date.now() - swStart;
+      swStart   = null;
+      swRunning = false;
+      document.getElementById('sw-btn').classList.remove('running');
+      document.getElementById('sw-hint').textContent = 'Long-press when ready for next set';
+    } else {
+      // Start rest timer — show which set just finished
+      swStart   = Date.now();
+      swRunning = true;
+      document.getElementById('sw-btn').classList.add('running');
+      document.getElementById('sw-hint').textContent = 'Long-press when ready for next set';
+      // Show the set label now that the timer is in use
+      const lbl = document.getElementById('sw-set-label');
+      lbl.textContent = 'SET ' + swSetCount;
+      lbl.style.opacity = '1';
+      swInterval = setInterval(updateSwDisplay, 100);
+    }
+  }
+
+  function updateSwDisplay() {
+    const total = swMs + (swStart ? Date.now() - swStart : 0);
+    const m     = Math.floor(total / 60000);
+    const s     = Math.floor((total % 60000) / 1000);
+    document.getElementById('sw-display').textContent = m + ':' + String(s).padStart(2, '0');
+  }
+
+  function resetStopwatch() {
+    clearInterval(swInterval);
+    swMs = 0; swStart = null; swRunning = false; swInterval = null;
+    // Increment set counter — reset means rest is over, next set is starting
+    swSetCount++;
+    document.getElementById('sw-display').textContent = '0:00';
+    document.getElementById('sw-btn').classList.remove('running');
+    // Update set label to the next set number, keep it visible
+    const lbl = document.getElementById('sw-set-label');
+    lbl.textContent = 'SET ' + swSetCount;
+    lbl.style.opacity = '1';
+    document.getElementById('sw-hint').textContent = 'Start timer after your set';
+  }
+
+  // Long-press to reset — registered after DOM is ready
+  function swPressStart() {
+    swLongPress = setTimeout(function() {
+      swLongPress = null;
+      resetStopwatch();
+    }, 600);
+  }
+
+  function swPressEnd() {
+    if (swLongPress) {
+      clearTimeout(swLongPress);
+      swLongPress = null;
+    }
+  }
+
+  // Wait for DOM to be ready before attaching listeners
+  document.addEventListener('DOMContentLoaded', function() {
+    const swBtn = document.getElementById('sw-btn');
+    if (!swBtn) return;
+    swBtn.addEventListener('mousedown',  swPressStart);
+    swBtn.addEventListener('touchstart', swPressStart, { passive: true });
+    swBtn.addEventListener('mouseup',    swPressEnd);
+    swBtn.addEventListener('mouseleave', swPressEnd);
+    swBtn.addEventListener('touchend',   swPressEnd);
+  });
+
+</script>
+</body>
+</html>
