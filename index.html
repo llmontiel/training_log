@@ -266,6 +266,7 @@
   .wday-label { font-size: 10px; color: var(--muted); margin-bottom: 5px; }
   .wday-dot { width: 100%; aspect-ratio: 1; border-radius: var(--radius-sm); background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 13px; }
   .wday-dot.active { background: var(--lift-dim); border-color: var(--lift-mid); }
+  .wday-dot.active:hover { border-color: var(--lift); }
   .wday-dot.today { border-color: var(--lift) !important; }
 
   /* Month calendar grid — 7 columns (Su–Sa), rows of day cells.
@@ -295,6 +296,27 @@
   .month-cell.active { background: var(--lift-dim); border-color: var(--lift-mid); color: var(--text); font-weight: 600; }
   /* Today gets a gold ring regardless of whether it has a session */
   .month-cell.today { border-color: var(--lift) !important; }
+  /* Active calendar cells get a subtle hover state since they're clickable */
+  .month-cell.active:hover { border-color: var(--lift); }
+
+  /* Day detail panel — appears below the month calendar when a
+     highlighted day is tapped, showing that day's logged exercises. */
+  .day-detail-panel {
+    display: none;
+    background: var(--surface);
+    border: 1px solid var(--lift-mid);
+    border-radius: var(--radius);
+    padding: 1rem 1.1rem;
+    margin-bottom: 1.5rem;
+  }
+  .day-detail-panel.open { display: block; }
+  .day-detail-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .day-detail-date { font-family: var(--font-display); font-size: 15px; color: var(--lift); }
+  .day-detail-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .day-detail-close { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1; padding: 0 4px; }
+  .day-detail-close:hover { color: var(--text); }
+  .day-detail-body .session-exercise { padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .day-detail-body .session-exercise:last-child { border-bottom: none; }
 
   /* ── PR cards ── */
   .pr-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem; display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
@@ -426,7 +448,7 @@
          Only visible when the user has added at least one exercise to the queue.
          Positioned here (away from the form) so it can't be accidentally tapped. -->
     <button class="btn-end-corner" id="btn-end-session" onclick="promptEndSession()" style="display:none;" aria-label="End and log session">
-      End &amp; Log
+      End &amp; Log Session
     </button>
   </div>
 </header>
@@ -582,6 +604,10 @@
       <button class="btn-ghost" onclick="changeMonth(1)" style="padding:6px 12px;" aria-label="Next month">›</button>
     </div>
     <div class="month-grid" id="month-grid"></div>
+
+    <!-- Day detail panel — hidden until a highlighted day is tapped.
+         Shows every exercise logged on that specific date. -->
+    <div class="day-detail-panel" id="day-detail-panel"></div>
 
     <!-- All sessions grouped by week, newest first -->
     <div id="history-list"></div>
@@ -794,6 +820,24 @@
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeEditModal()">Cancel</button>
       <button class="modal-confirm" onclick="saveEditModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     DELETE CONFIRMATION MODAL
+     Shared by both "delete a whole day" and
+     "delete a single exercise" — title/message
+     are filled in by promptDeleteDay() or
+     promptDeleteExercise() before opening.
+     ════════════════════════════════════════ -->
+<div class="modal-overlay" id="delete-confirm-modal">
+  <div class="modal">
+    <div class="modal-title" style="color:var(--danger)" id="delete-confirm-title">Delete?</div>
+    <div class="modal-sub" id="delete-confirm-sub"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeDeleteConfirmModal()">Cancel</button>
+      <button class="modal-confirm" style="background:var(--danger);color:#fff" onclick="confirmDelete()">Delete</button>
     </div>
   </div>
 </div>
@@ -1539,6 +1583,19 @@
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
+  // fmtSmart: same short format as fmt(), but adds the year when the
+  // date isn't from the current year — e.g. "Jun 15" this year vs
+  // "Jun 15, 2025" once it's no longer the current year. Used on the
+  // PRs tab so old PRs don't look ambiguous after a year of use.
+  function fmtSmart(d) {
+    const isCurrentYear = d.getFullYear() === new Date().getFullYear();
+    return d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: isCurrentYear ? undefined : 'numeric'
+    });
+  }
+
   // ─────────────────────────────────────────────
   // ISO 8601 WEEK NUMBER
   // Returns { week, year } for a given date.
@@ -1601,6 +1658,7 @@
   // Moves the viewed month forward or backward by `delta` months and re-renders
   function changeMonth(delta) {
     viewedMonth = new Date(viewedMonth.getFullYear(), viewedMonth.getMonth() + delta, 1);
+    closeDayDetail(); // hide any open detail panel — it belongs to the previous month
     renderMonthCalendar();
   }
 
@@ -1634,14 +1692,68 @@
       html += '<div class="month-cell empty"></div>';
     }
 
-    // One cell per day of the month
+    // One cell per day of the month — active days are clickable to view that day's exercises
     for (let day = 1; day <= daysInMonth; day++) {
       const isActive = activeDates.has(day);
       const isToday  = year === today.getFullYear() && month === today.getMonth() && day === today.getDate();
-      html += `<div class="month-cell ${isActive ? 'active' : ''}${isToday ? ' today' : ''}">${day}</div>`;
+      // Only days with a logged session get the click handler and pointer cursor
+      const clickAttr = isActive ? `onclick="showDayDetail(${year}, ${month}, ${day})" style="cursor:pointer;"` : '';
+      html += `<div class="month-cell ${isActive ? 'active' : ''}${isToday ? ' today' : ''}" ${clickAttr}>${day}</div>`;
     }
 
     document.getElementById('month-grid').innerHTML = html;
+  }
+
+  // ─────────────────────────────────────────────
+  // DAY DETAIL PANEL
+  // Shown when a user taps a highlighted day in the
+  // month calendar. Displays every exercise logged
+  // that day, pulled from all sessions matching the
+  // exact calendar date (merging same-day sessions
+  // the same way History does).
+  // ─────────────────────────────────────────────
+  function showDayDetail(year, month, day) {
+    // Find every session that falls on this exact calendar day
+    const matches = sessions.filter(s => {
+      const d = new Date(s.date);
+      return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
+    });
+    if (!matches.length) return;
+
+    // Merge exercises from all matching sessions (handles same-day multi-session logging)
+    const exercises = matches.flatMap(s => s.exercises);
+    // Long date label — includes year only if this day isn't in the current year
+    const isCurrentYear = year === new Date().getFullYear();
+    const dateLabel = new Date(year, month, day).toLocaleDateString('en-US', {
+      weekday: 'long', month: 'long', day: 'numeric',
+      year: isCurrentYear ? undefined : 'numeric'
+    });
+    const totalSets = exercises.reduce((a, e) => a + e.sets, 0);
+
+    const panel = document.getElementById('day-detail-panel');
+    panel.innerHTML = `
+      <div class="day-detail-header">
+        <div>
+          <div class="day-detail-date">${dateLabel}</div>
+          <div class="day-detail-meta">${exercises.length} exercise${exercises.length !== 1 ? 's' : ''} · ${totalSets} sets</div>
+        </div>
+        <button class="day-detail-close" onclick="closeDayDetail()" aria-label="Close">×</button>
+      </div>
+      <div class="day-detail-body">
+        ${exercises.map(e => `
+          <div class="session-exercise">
+            <span class="session-ex-name">${e.name}</span>
+            <span class="session-ex-sets"> · ${e.sets}×${e.reps} @ ${e.weight} ${currentUnit}${e.notes ? ' · ' + e.notes : ''}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    panel.classList.add('open');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function closeDayDetail() {
+    document.getElementById('day-detail-panel').classList.remove('open');
   }
 
   // ─────────────────────────────────────────────
@@ -1673,19 +1785,26 @@
 
     const days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
-    // Find which days this week have a completed session
-    const activeDays = new Set();
+    // Find which days this week have a completed session.
+    // Store the actual Date object (not just day index) so clicking
+    // a day can look up the exact year/month/day for showDayDetail().
+    const activeDays = new Map(); // day-of-week index -> Date
     sessions.forEach(s => {
       const d = new Date(s.date); d.setHours(0, 0, 0, 0);
-      if (d >= sow) activeDays.add(d.getDay());
+      if (d >= sow) activeDays.set(d.getDay(), d);
     });
 
     document.getElementById('week-grid').innerHTML = days.map((d, i) => {
-      const has   = activeDays.has(i);
+      const activeDate = activeDays.get(i);
+      const has   = !!activeDate;
       const isTod = i === today.getDay();
+      // Only days with a logged session are clickable
+      const clickAttr = has
+        ? `onclick="showDayDetail(${activeDate.getFullYear()}, ${activeDate.getMonth()}, ${activeDate.getDate()})" style="cursor:pointer;"`
+        : '';
       return `<div class="wday">
         <div class="wday-label">${d}</div>
-        <div class="wday-dot ${has ? 'active' : ''}${isTod ? ' today' : ''}">${has ? '🏋️' : ''}</div>
+        <div class="wday-dot ${has ? 'active' : ''}${isTod ? ' today' : ''}" ${clickAttr}>${has ? '🏋️' : ''}</div>
       </div>`;
     }).join('');
 
@@ -1744,8 +1863,8 @@
       const daySortedKeys = Object.keys(group.days).sort().reverse();
       const daySessions = daySortedKeys.map(dayKey => {
         const day = group.days[dayKey];
-        // Build exercise list — one pencil per row opens the edit modal
-        // for that exercise (name, sets, reps, weight, notes all editable).
+        // Build exercise list — each row has an edit pencil and a delete ×.
+        // _sid/_eidx let deleteExercise() find the exact exercise to remove.
         const exList = day.exercises.map(e =>
           `<div class="session-exercise" id="ex-row-${e._sid}-${e._eidx}">
             <div style="flex:1;min-width:0">
@@ -1754,6 +1873,8 @@
             </div>
             <button class="session-edit-btn" onclick="openEditModal(${e._sid}, ${e._eidx})"
                     title="Edit" aria-label="Edit exercise">✎</button>
+            <button class="session-edit-btn" onclick="promptDeleteExercise(${e._sid}, ${e._eidx}, '${e.name.replace(/'/g, "\\'")}')"
+                    title="Delete" aria-label="Delete exercise" style="color:var(--danger);opacity:0.7;">×</button>
           </div>`
         ).join('');
         const totalSets = day.exercises.reduce((a, e) => a + e.sets, 0);
@@ -1762,9 +1883,9 @@
         return `
           <div class="session-card">
             <div class="session-card-header">
-              <span class="session-card-title">${fmt(day.date)}</span>
+              <span class="session-card-title">${fmtSmart(day.date)}</span>
               <span class="session-card-meta">${day.exercises.length} exercise${day.exercises.length !== 1 ? 's' : ''} · ${totalSets} sets
-                <button class="session-del" onclick="deleteDaySessions(${indicesStr})" aria-label="Delete session" style="margin-left:8px">×</button>
+                <button class="session-del" onclick="promptDeleteDay(${indicesStr}, '${fmtSmart(day.date)}')" aria-label="Delete day" style="margin-left:8px">×</button>
               </span>
             </div>
             <div class="session-card-body">${exList}</div>
@@ -1780,6 +1901,68 @@
         ${daySessions}
       </div>`;
     }).join('');
+  }
+
+  // ─────────────────────────────────────────────
+  // DELETE CONFIRMATION FLOW
+  // Both "delete a whole day" and "delete a single
+  // exercise" route through the same confirmation
+  // modal so nothing is ever removed without an
+  // explicit second tap.
+  // ─────────────────────────────────────────────
+
+  // Tracks what the pending delete action will do once confirmed
+  let pendingDelete = null; // { type: 'day' | 'exercise', ...details }
+
+  // Triggered by the × on a day card — deletes every session that
+  // contributed to that merged day view
+  function promptDeleteDay(indices, dateLabel) {
+    pendingDelete = { type: 'day', indices };
+    document.getElementById('delete-confirm-title').textContent = 'Delete this day?';
+    document.getElementById('delete-confirm-sub').textContent =
+      'This will permanently remove everything logged on ' + dateLabel + '. This cannot be undone.';
+    document.getElementById('delete-confirm-modal').classList.add('open');
+  }
+
+  // Triggered by the × on a single exercise row — deletes just that one entry
+  function promptDeleteExercise(sid, eidx, name) {
+    pendingDelete = { type: 'exercise', sid, eidx };
+    document.getElementById('delete-confirm-title').textContent = 'Delete this exercise?';
+    document.getElementById('delete-confirm-sub').textContent =
+      '"' + name + '" will be permanently removed from this day. This cannot be undone.';
+    document.getElementById('delete-confirm-modal').classList.add('open');
+  }
+
+  function closeDeleteConfirmModal() {
+    document.getElementById('delete-confirm-modal').classList.remove('open');
+    pendingDelete = null;
+  }
+
+  // Called when the user taps "Delete" in the confirmation modal —
+  // performs whichever pending action was queued up
+  function confirmDelete() {
+    if (!pendingDelete) return;
+
+    if (pendingDelete.type === 'day') {
+      deleteDaySessions(pendingDelete.indices);
+    } else if (pendingDelete.type === 'exercise') {
+      deleteExercise(pendingDelete.sid, pendingDelete.eidx);
+    }
+
+    closeDeleteConfirmModal();
+  }
+
+  // Removes a single exercise from a session. If that was the last
+  // exercise in the session, the whole (now-empty) session is removed too.
+  function deleteExercise(sid, eidx) {
+    sessions[sid].exercises.splice(eidx, 1);
+    if (sessions[sid].exercises.length === 0) {
+      sessions.splice(sid, 1);
+    }
+    saveSessions();
+    renderHistory();
+    renderPRs(); // a PR may have come from the deleted exercise
+    toast('Exercise deleted');
   }
 
   // deleteDaySessions: removes all sessions that contributed to a merged
@@ -1883,7 +2066,10 @@
   // per exercise sorted by estimated 1RM.
   // ─────────────────────────────────────────────
   function renderPRs() {
-    const allEx = sessions.flatMap(s => s.exercises);
+    // Attach each session's date to its exercises before flattening,
+    // so every exercise object carries the date it was logged on —
+    // needed to show "set on [date]" for whichever set became the PR.
+    const allEx = sessions.flatMap(s => s.exercises.map(e => ({ ...e, date: s.date })));
     if (!allEx.length) {
       document.getElementById('pr-list').innerHTML = '<div class="empty"><span class="empty-icon">🏆</span>Log sessions to see your PRs here</div>';
       return;
@@ -1915,7 +2101,7 @@
           <div class="pr-badge">🏋️</div>
           <div class="pr-body">
             <div class="pr-name">${e.name}</div>
-            <div class="pr-meta">Best set: ${e.sets}×${e.reps} @ ${e.weight} ${currentUnit}</div>
+            <div class="pr-meta">Best set: ${e.sets}×${e.reps} @ ${e.weight} ${currentUnit} · ${fmtSmart(new Date(e.date))}</div>
             ${ratioLine}
           </div>
           <div class="pr-val">
