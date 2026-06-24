@@ -419,6 +419,28 @@
   .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--lift); color: #0f0f0f; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 20px; transition: transform 0.25s ease; pointer-events: none; white-space: nowrap; z-index: 100; }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
+  /* Jump-to-queue floating button — bottom-right, only shown on the
+     Log tab when the queue has items. Purely a scroll shortcut, not
+     a destructive action, so it's safe to make easily reachable. */
+  .jump-to-queue-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--surface2);
+    border: 1px solid var(--lift-mid);
+    border-radius: 20px;
+    color: var(--lift);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 10px 16px;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    z-index: 50;
+    transition: all 0.15s;
+  }
+  .jump-to-queue-btn:hover { border-color: var(--lift); background: var(--lift-dim); }
+
   @media (max-width: 400px) {
     .grid-3 { grid-template-columns: 1fr 1fr; }
     .pct-grid { grid-template-columns: repeat(2, 1fr); }
@@ -884,6 +906,20 @@
 <!-- Toast notification — slides up briefly to confirm an action -->
 <div class="toast" id="toast"></div>
 
+<!-- ════════════════════════════════════════
+     JUMP TO QUEUE BUTTON
+     A small floating pill, only visible on the Log
+     tab when the session queue has items. Tapping it
+     scrolls back up to the header where the existing
+     "End & Log Session" button lives — solves the
+     reachability complaint without touching that
+     button's safety (still requires confirmation,
+     still can't be triggered from here directly).
+     ════════════════════════════════════════ -->
+<button class="jump-to-queue-btn" id="jump-to-queue-btn" onclick="scrollToQueue()" style="display:none;" aria-label="Scroll to session summary">
+  ↑ View session (<span id="jump-to-queue-count">0</span>)
+</button>
+
 
 <script>
   // ─────────────────────────────────────────────
@@ -1258,6 +1294,31 @@
   }
 
   // ─────────────────────────────────────────────
+  // QUEUE PERSISTENCE
+  // The in-progress exercise queue is now saved to
+  // its own localStorage key, separate from completed
+  // sessions. This means closing the tab mid-session
+  // (before tapping "End & Log Session") no longer
+  // loses unsaved exercises — they're restored exactly
+  // as left when the app is reopened. The queue is only
+  // cleared from storage once the session is actually
+  // committed via commitSession().
+  // ─────────────────────────────────────────────
+  const QUEUE_KEY = 'trainingLog_currentQueue';
+
+  function saveQueue() {
+    try { localStorage.setItem(QUEUE_KEY, JSON.stringify(currentQueue)); }
+    catch(e) { /* non-critical — queue just won't survive a refresh this time */ }
+  }
+
+  function loadQueue() {
+    try {
+      const raw = localStorage.getItem(QUEUE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    } catch(e) { return []; }
+  }
+
+  // ─────────────────────────────────────────────
   // STATE
   // ─────────────────────────────────────────────
 
@@ -1266,8 +1327,9 @@
   let sessions = loadSessions();
 
   // currentQueue: in-progress exercises for the current session.
-  // Not persisted — cleared on page reload intentionally.
-  let currentQueue = [];
+  // Restored from localStorage on load so an interrupted session
+  // (tab closed before "End & Log Session") isn't lost.
+  let currentQueue = loadQueue();
 
   // Active formula for the 1RM calculator tab
   let activeFormula = 'epley';
@@ -1300,6 +1362,16 @@
       // Reflect the currently active unit in the toggle buttons
       document.getElementById('unit-lb').classList.toggle('active', currentUnit === 'lb');
       document.getElementById('unit-kg').classList.toggle('active', currentUnit === 'kg');
+    }
+
+    // The jump-to-queue shortcut only makes sense on the Log tab — hide it
+    // everywhere else, then let renderQueue() decide if it should reappear
+    // when the user comes back to Log.
+    const jumpBtn = document.getElementById('jump-to-queue-btn');
+    if (t === 'log') {
+      renderQueue(); // re-evaluate visibility based on current queue state
+    } else {
+      jumpBtn.style.display = 'none';
     }
   }
 
@@ -1464,6 +1536,7 @@
 
     // Add to the in-progress queue
     currentQueue.push({ name: ex, sets, reps, weight, notes });
+    saveQueue(); // persist immediately so this exercise survives a tab close
 
     // Clear the form for the next exercise
     exEl.value = '';
@@ -1498,22 +1571,28 @@
   function renderQueue() {
     const wrap = document.getElementById('session-queue-wrap');
     const el   = document.getElementById('session-queue');
+    const jumpBtn = document.getElementById('jump-to-queue-btn');
 
     if (!currentQueue.length) {
       wrap.style.display = 'none';
       // Hide the header button when there's nothing in the queue
       document.getElementById('btn-end-session').style.display = 'none';
+      // Hide the floating jump shortcut too — nothing to jump to
+      jumpBtn.style.display = 'none';
       return;
     }
 
     wrap.style.display = 'block';
     // Show the "End & Log" button in the header now that the queue has items
     document.getElementById('btn-end-session').style.display = 'block';
+    // Show the floating jump shortcut with a live count of queued exercises
+    document.getElementById('jump-to-queue-count').textContent = currentQueue.length;
+    jumpBtn.style.display = 'block';
     el.innerHTML = currentQueue.map((e, i) => `
       <div class="queue-item">
         <div>
           <div class="queue-name">${e.name}</div>
-          <div class="queue-sub">${e.sets}×${e.reps} @ ${e.weight} lb${e.notes ? ' · ' + e.notes : ''}</div>
+          <div class="queue-sub">${e.sets}×${e.reps} @ ${e.weight} ${currentUnit}${e.notes ? ' · ' + e.notes : ''}</div>
         </div>
         <!-- Remove this exercise from the queue before committing -->
         <button class="queue-del" onclick="removeFromQueue(${i})" aria-label="Remove">×</button>
@@ -1521,9 +1600,17 @@
     `).join('');
   }
 
+  // Scrolls smoothly back up to the top of the page, where the header
+  // and "End & Log Session" button live. Purely a navigation shortcut —
+  // does not trigger or confirm anything on its own.
+  function scrollToQueue() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   // Remove an exercise from the in-progress queue by index
   function removeFromQueue(i) {
     currentQueue.splice(i, 1);
+    saveQueue(); // keep persisted queue in sync after a removal
     renderQueue();
   }
 
@@ -1567,6 +1654,7 @@
 
     // Reset the queue and hide the header button
     currentQueue = [];
+    try { localStorage.removeItem(QUEUE_KEY); } catch(e) { /* ignore */ }
     document.getElementById('btn-end-session').style.display = 'none';
     renderQueue();
 
@@ -2340,6 +2428,11 @@
     // Sync the unit toggle buttons in Settings to the saved unit on first load
     document.getElementById('unit-lb').classList.toggle('active', currentUnit === 'lb');
     document.getElementById('unit-kg').classList.toggle('active', currentUnit === 'kg');
+
+    // If the user closed the tab mid-session, currentQueue was restored
+    // from localStorage above — render it now so those exercises (and
+    // the "End & Log Session" button) reappear immediately on load.
+    renderQueue();
 
     const swBtn = document.getElementById('sw-btn');
     if (!swBtn) return;
