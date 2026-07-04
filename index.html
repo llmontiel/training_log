@@ -1808,13 +1808,13 @@
     return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   }
 
-  // fmtSmart: same short format as fmt(), but adds the year when the
-  // date isn't from the current year — e.g. "Jun 15" this year vs
-  // "Jun 15, 2025" once it's no longer the current year. Used on the
-  // PRs tab so old PRs don't look ambiguous after a year of use.
+  // fmtSmart: short format with day of week — e.g. "Tuesday, Jun 23".
+  // Adds the year when the date isn't from the current year, e.g.
+  // "Tuesday, Jun 23, 2025". Used on History session cards and PRs tab.
   function fmtSmart(d) {
     const isCurrentYear = d.getFullYear() === new Date().getFullYear();
     return d.toLocaleDateString('en-US', {
+      weekday: 'long',
       month: 'short',
       day: 'numeric',
       year: isCurrentYear ? undefined : 'numeric'
@@ -1960,7 +1960,7 @@
       <div class="day-detail-header">
         <div>
           <div class="day-detail-date">${dateLabel}</div>
-          <div class="day-detail-meta">${exercises.length} exercise${exercises.length !== 1 ? 's' : ''} · ${totalSets} sets</div>
+          <div class="day-detail-meta">${exercises.length} exercise${exercises.length !== 1 ? 's' : ''}</div>
         </div>
         <button class="day-detail-close" onclick="closeDayDetail()" aria-label="Close">×</button>
       </div>
@@ -2102,14 +2102,13 @@
                     title="Delete" aria-label="Delete exercise" style="color:var(--danger);opacity:0.7;">×</button>
           </div>`
         ).join('');
-        const totalSets = day.exercises.reduce((a, e) => a + e.sets, 0);
         // Delete removes all original sessions that contributed to this day
         const indicesStr = JSON.stringify(day.indices);
         return `
           <div class="session-card">
             <div class="session-card-header">
               <span class="session-card-title">${fmtSmart(day.date)}</span>
-              <span class="session-card-meta">${day.exercises.length} exercise${day.exercises.length !== 1 ? 's' : ''} · ${totalSets} sets
+              <span class="session-card-meta">${day.exercises.length} exercise${day.exercises.length !== 1 ? 's' : ''}
                 <button class="session-del" onclick="promptDeleteDay(${indicesStr}, '${fmtSmart(day.date)}')" aria-label="Delete day" style="margin-left:8px">×</button>
               </span>
             </div>
