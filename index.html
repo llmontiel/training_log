@@ -305,16 +305,57 @@
   .session-card-title { font-size: 13px; font-weight: 500; color: var(--text); }
   .session-card-meta { font-size: 12px; color: var(--muted); }
   .session-card-body { padding: 10px 14px; }
-  .session-exercise { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+  .session-exercise { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-bottom: 1px solid var(--border); position: relative; }
   .session-exercise:last-child { border-bottom: none; }
   .session-ex-name { flex: 1; font-size: 13px; color: var(--text); }
   .session-ex-sets { font-size: 12px; color: var(--muted); }
   .session-del { background: none; border: none; color: var(--border); font-size: 15px; cursor: pointer; padding: 0 2px; transition: color 0.15s; }
   .session-del:hover { color: var(--danger); }
   /* Small pencil edit button on each exercise row in history */
-  /* Always visible on mobile — no hover on touchscreens */
-  .session-edit-btn { background: none; border: none; color: var(--muted); font-size: 12px; cursor: pointer; padding: 0 4px; transition: color 0.15s; opacity: 1; flex-shrink:0; }
-  .session-edit-btn:hover { color: var(--lift); }
+  /* ── Exercise row ⋯ button and action menu ──
+     Single tap target per row — opens a dropdown with
+     Edit, Move to date, and Delete options in large text. */
+  .ex-more-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+    flex-shrink: 0;
+    line-height: 1;
+    letter-spacing: 1px;
+    transition: color 0.15s;
+  }
+  .ex-more-btn:hover { color: var(--text); }
+  /* Action menu dropdown */
+  .action-menu {
+    position: absolute;
+    right: 10px;
+    top: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    z-index: 200;
+    min-width: 170px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+    overflow: hidden;
+  }
+  .action-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    font-size: 14px;
+    cursor: pointer;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  .action-menu-item:last-child { border-bottom: none; }
+  .action-menu-item:hover { background: var(--surface2); }
+  .action-menu-item.edit  { color: var(--text); }
+  .action-menu-item.move  { color: var(--lift); }
+  .action-menu-item.delete { color: var(--danger); }
 
   /* Inline edit input that replaces the name when editing */
   .ex-edit-input { background: var(--surface2); border: 1px solid var(--lift-mid); border-radius: var(--radius-sm); color: var(--text); font-family: var(--font-body); font-size: 13px; padding: 3px 8px; outline: none; width: 140px; }
@@ -583,9 +624,9 @@
 
       <!-- Sets / Reps / Weight — oninput updates the live 1RM banner below -->
       <div class="grid-3">
-        <div class="field"><label>Sets</label><input type="number" id="lift-sets" placeholder="3" min="1" max="20" inputmode="numeric" oninput="sanitizeNumberInput(this); updateLiveE1RM()"></div>
-        <div class="field"><label>Reps</label><input type="number" id="lift-reps" placeholder="5" min="1" max="50" inputmode="numeric" oninput="sanitizeNumberInput(this); updateLiveE1RM()"></div>
-        <div class="field"><label>Weight (<span class="unit-label">lb</span>)</label><input type="number" id="lift-weight" placeholder="135" min="0" inputmode="decimal" oninput="sanitizeNumberInput(this, true); updateLiveE1RM()"></div>
+        <div class="field"><label>Sets</label><input type="number" id="lift-sets" placeholder="—" min="1" max="20" inputmode="numeric" oninput="sanitizeNumberInput(this); updateLiveE1RM()"></div>
+        <div class="field"><label>Reps</label><input type="number" id="lift-reps" placeholder="—" min="1" max="50" inputmode="numeric" oninput="sanitizeNumberInput(this); updateLiveE1RM()"></div>
+        <div class="field"><label>Weight (<span class="unit-label">lb</span>)</label><input type="number" id="lift-weight" placeholder="—" min="0" inputmode="decimal" oninput="sanitizeNumberInput(this, true); updateLiveE1RM()"></div>
       </div>
 
       <!-- Live 1RM banner — appears automatically once weight + reps are filled -->
@@ -705,8 +746,8 @@
       <div class="section-label">Your working set</div>
       <!-- oninput fires calcE1RM() live on every keystroke -->
       <div class="grid-3">
-        <div class="field"><label>Weight (<span class="unit-label">lb</span>)</label><input type="number" id="e1rm-weight" placeholder="225" inputmode="decimal" oninput="sanitizeNumberInput(this, true); calcE1RM()"></div>
-        <div class="field"><label>Reps done</label><input type="number" id="e1rm-reps" placeholder="5" min="1" max="30" inputmode="numeric" oninput="sanitizeNumberInput(this); calcE1RM()"></div>
+        <div class="field"><label>Weight (<span class="unit-label">lb</span>)</label><input type="number" id="e1rm-weight" placeholder="—" inputmode="decimal" oninput="sanitizeNumberInput(this, true); calcE1RM()"></div>
+        <div class="field"><label>Reps done</label><input type="number" id="e1rm-reps" placeholder="—" min="1" max="30" inputmode="numeric" oninput="sanitizeNumberInput(this); calcE1RM()"></div>
         <div class="field">
           <label>RPE</label>
           <!-- RPE < 10 means reps were left in the tank; formula compensates -->
@@ -869,6 +910,30 @@
 
 
 <!-- ════════════════════════════════════════
+     MOVE EXERCISE TO DATE MODAL
+     Opens from the ⋯ action menu "Move to date"
+     option. Shows which exercise is being moved
+     and a date picker pre-filled with its current
+     session date. Confirms before moving.
+     ════════════════════════════════════════ -->
+<div class="modal-overlay" id="move-exercise-modal">
+  <div class="modal">
+    <div class="modal-title">Move to another date</div>
+    <div class="modal-sub">This exercise will be removed from its current day and saved under the date you choose.</div>
+    <!-- Shows which exercise is being moved -->
+    <div id="move-exercise-preview" style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;color:var(--lift);margin-bottom:12px;"></div>
+    <div class="field">
+      <label>Move to date</label>
+      <input type="date" id="move-exercise-date-input" style="color-scheme:dark;">
+    </div>
+    <div class="modal-actions" style="margin-top:12px;">
+      <button class="modal-cancel" onclick="closeMoveExerciseModal()">Cancel</button>
+      <button class="modal-confirm" onclick="confirmMoveExercise()">Move exercise</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
      EDIT EXERCISE MODAL
      Opens when the pencil is tapped on any
      exercise row in History. Pre-fills all
@@ -880,9 +945,9 @@
     <div class="modal-sub" style="margin-bottom:1rem">Update any field then tap Save.</div>
     <div class="field"><label>Exercise name</label><input type="text" id="edit-ex-name" autocomplete="off"></div>
     <div class="grid-3" style="margin-bottom:12px">
-      <div class="field"><label>Sets</label><input type="number" id="edit-ex-sets" min="1" max="20" inputmode="numeric" oninput="sanitizeNumberInput(this)"></div>
-      <div class="field"><label>Reps</label><input type="number" id="edit-ex-reps" min="1" max="50" inputmode="numeric" oninput="sanitizeNumberInput(this)"></div>
-      <div class="field"><label>Weight (<span class="unit-label">lb</span>)</label><input type="number" id="edit-ex-weight" min="0" inputmode="decimal" oninput="sanitizeNumberInput(this, true)"></div>
+      <div class="field"><label>Sets</label><input type="number" id="edit-ex-sets" placeholder="—" min="1" max="20" inputmode="numeric" oninput="sanitizeNumberInput(this)"></div>
+      <div class="field"><label>Reps</label><input type="number" id="edit-ex-reps" placeholder="—" min="1" max="50" inputmode="numeric" oninput="sanitizeNumberInput(this)"></div>
+      <div class="field"><label>Weight (<span class="unit-label">lb</span>)</label><input type="number" id="edit-ex-weight" placeholder="—" min="0" inputmode="decimal" oninput="sanitizeNumberInput(this, true)"></div>
     </div>
     <div class="field"><label>Notes <span style="color:#555">(optional)</span></label><input type="text" id="edit-ex-notes" placeholder="e.g. paused reps, RPE 8"></div>
     <div class="modal-actions">
@@ -2217,6 +2282,123 @@
   }
 
   // Triggered by the × on a single exercise row — deletes just that one entry
+  // ─────────────────────────────────────────────
+  // EXERCISE ACTION MENU (⋯ button)
+  // A single dropdown per exercise row replacing
+  // the old three separate buttons. Shows Edit,
+  // Move to date, and Delete with large text targets.
+  // Only one menu can be open at a time — opening a
+  // new one closes the previous.
+  // ─────────────────────────────────────────────
+  let activeActionMenu = null; // tracks the currently open menu element
+
+  function toggleActionMenu(event, sid, eidx, name) {
+    event.stopPropagation(); // prevent the document click handler from closing it immediately
+
+    // If there's already an open menu, close it
+    if (activeActionMenu) {
+      activeActionMenu.remove();
+      activeActionMenu = null;
+    }
+
+    // Build the menu and inject it into the exercise row
+    const row = document.getElementById('ex-row-' + sid + '-' + eidx);
+    if (!row) return;
+
+    // Get the current session date for pre-filling the move modal
+    const sessionDate = sessions[sid] ? new Date(sessions[sid].date).toISOString().slice(0, 10) : '';
+    const safeName = name.replace(/'/g, "\\'");
+
+    const menu = document.createElement('div');
+    menu.className = 'action-menu';
+    menu.innerHTML = `
+      <div class="action-menu-item edit" onclick="closeActionMenu(); openEditModal(${sid}, ${eidx})">
+        <span style="width:18px;text-align:center;">✎</span> Edit
+      </div>
+      <div class="action-menu-item move" onclick="closeActionMenu(); promptMoveExercise(${sid}, ${eidx}, '${safeName}', '${sessionDate}')">
+        <span style="width:18px;text-align:center;">⤴</span> Move to date
+      </div>
+      <div class="action-menu-item delete" onclick="closeActionMenu(); promptDeleteExercise(${sid}, ${eidx}, '${safeName}')">
+        <span style="width:18px;text-align:center;">×</span> Delete
+      </div>`;
+
+    row.appendChild(menu);
+    activeActionMenu = menu;
+  }
+
+  function closeActionMenu() {
+    if (activeActionMenu) {
+      activeActionMenu.remove();
+      activeActionMenu = null;
+    }
+  }
+
+  // Close the menu when tapping anywhere outside it
+  document.addEventListener('click', function() { closeActionMenu(); });
+
+  // ─────────────────────────────────────────────
+  // MOVE EXERCISE TO DATE
+  // Removes a single exercise from its current session
+  // and creates a new session on the chosen date
+  // containing just that exercise. If a session for
+  // that date already exists, the exercise is appended
+  // to it rather than creating a duplicate session.
+  // ─────────────────────────────────────────────
+  let pendingMoveExercise = null; // { sid, eidx, name } waiting for date confirmation
+
+  function promptMoveExercise(sid, eidx, name, currentDateStr) {
+    pendingMoveExercise = { sid, eidx, name };
+    document.getElementById('move-exercise-preview').textContent = '🏋️ ' + name + ' · ' + sessions[sid].exercises[eidx].sets + '×' + sessions[sid].exercises[eidx].reps + ' @ ' + sessions[sid].exercises[eidx].weight + ' ' + currentUnit;
+    document.getElementById('move-exercise-date-input').value = currentDateStr;
+    document.getElementById('move-exercise-modal').classList.add('open');
+  }
+
+  function closeMoveExerciseModal() {
+    document.getElementById('move-exercise-modal').classList.remove('open');
+    pendingMoveExercise = null;
+  }
+
+  function confirmMoveExercise() {
+    if (!pendingMoveExercise) return;
+    const val = document.getElementById('move-exercise-date-input').value;
+    if (!val) { toast('Please pick a date'); return; }
+
+    const { sid, eidx } = pendingMoveExercise;
+    const exercise = { ...sessions[sid].exercises[eidx] };
+
+    // Parse target date as local midnight
+    const [y, m, d] = val.split('-').map(Number);
+    const targetDate = new Date(y, m - 1, d);
+    const targetStr = y + '-' + m + '-' + d;
+
+    // Check if a session already exists on the target date
+    const existingIdx = sessions.findIndex(s => {
+      const sd = new Date(s.date);
+      return sd.getFullYear() === y && sd.getMonth() === m - 1 && sd.getDate() === d;
+    });
+
+    if (existingIdx !== -1) {
+      // Append to the existing session on that date
+      sessions[existingIdx].exercises.push(exercise);
+    } else {
+      // Create a new session on the target date
+      sessions.unshift({ date: targetDate, exercises: [exercise] });
+    }
+
+    // Remove the exercise from its original session
+    sessions[sid].exercises.splice(eidx, 1);
+    // If that left the original session empty, remove it too
+    if (sessions[sid] && sessions[sid].exercises.length === 0) {
+      sessions.splice(sid, 1);
+    }
+
+    saveSessions();
+    closeMoveExerciseModal();
+    renderHistory();
+    renderPRs();
+    toast('Exercise moved');
+  }
+
   function promptDeleteExercise(sid, eidx, name) {
     pendingDelete = { type: 'exercise', sid, eidx };
     document.getElementById('delete-confirm-title').textContent = 'Delete this exercise?';
