@@ -2171,18 +2171,17 @@
       const daySortedKeys = Object.keys(group.days).sort().reverse();
       const daySessions = daySortedKeys.map(dayKey => {
         const day = group.days[dayKey];
-        // Build exercise list — each row has an edit pencil and a delete ×.
-        // _sid/_eidx let deleteExercise() find the exact exercise to remove.
+        // Each exercise row has a single ⋯ button that opens an action menu
+        // with Edit, Move to date, and Delete — one large tap target instead
+        // of three small icons side by side, better for all finger sizes.
         const exList = day.exercises.map(e =>
           `<div class="session-exercise" id="ex-row-${e._sid}-${e._eidx}">
             <div style="flex:1;min-width:0">
-              <span class="session-ex-name">${e.name}</span>
-              <span class="session-ex-sets"> · ${e.sets}×${e.reps} @ ${e.weight} ${currentUnit}${e.notes ? ' · ' + e.notes : ''}</span>
+              <div class="session-ex-name">${e.name}</div>
+              <div class="session-ex-sets">${e.sets}×${e.reps} @ ${e.weight} ${currentUnit}${e.notes ? ' · ' + e.notes : ''}</div>
             </div>
-            <button class="session-edit-btn" onclick="openEditModal(${e._sid}, ${e._eidx})"
-                    title="Edit" aria-label="Edit exercise">✎</button>
-            <button class="session-edit-btn" onclick="promptDeleteExercise(${e._sid}, ${e._eidx}, '${e.name.replace(/'/g, "\\'")}')"
-                    title="Delete" aria-label="Delete exercise" style="color:var(--danger);opacity:0.7;">×</button>
+            <button class="ex-more-btn" onclick="toggleActionMenu(event, ${e._sid}, ${e._eidx}, '${e.name.replace(/'/g, "\\'")}')"
+                    aria-label="Exercise options">⋯</button>
           </div>`
         ).join('');
         // Delete removes all original sessions that contributed to this day
