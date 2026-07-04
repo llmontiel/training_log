@@ -90,26 +90,44 @@
   .btn-primary { width: 100%; background: var(--lift); border: none; border-radius: var(--radius-sm); color: #0f0f0f; font-family: var(--font-body); font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; transition: opacity 0.15s; letter-spacing: 0.02em; }
   .btn-primary:hover { opacity: 0.88; }
 
-  /* End & Log Session — small pill in the top-right header corner.
-     Only visible once the user has queued at least one exercise.
-     Small and out of the way to prevent accidental taps. */
-  .btn-end-corner {
-    background: none;
+  /* End & Log Session — floating action button fixed to the bottom-right
+     corner of the screen. Only visible when the queue has at least one
+     exercise. Replaces the old header pill so the button is always
+     reachable without scrolling, and acts as a passive reminder that
+     an open session needs closing. Tapping it opens the confirmation
+     modal — nothing saves without a second deliberate tap. */
+  .fab-end-session {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--lift-dim);
     border: 1.5px solid var(--lift-mid);
-    border-radius: var(--radius-sm);  /* matches btn-primary square corners */
+    border-radius: 20px;
     color: var(--lift);
     font-family: var(--font-body);
     font-size: 12px;
     font-weight: 600;
-    padding: 6px 12px;
+    padding: 10px 16px;
     cursor: pointer;
-    transition: all 0.2s;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    z-index: 60; /* above the toast */
+    transition: all 0.15s;
     white-space: nowrap;
-    flex-shrink: 0;
-    margin-top: 2px;
-    letter-spacing: 0.02em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
-  .btn-end-corner:hover { background: var(--lift-dim); border-color: var(--lift); }
+  .fab-end-session:hover { border-color: var(--lift); background: #3a2818; }
+  /* Live exercise count badge inside the floating pill */
+  .fab-count {
+    background: var(--lift);
+    color: #0f0f0f;
+    font-size: 10px;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 1px 7px;
+    line-height: 1.4;
+  }
 
   /* Danger button — used for destructive actions like Clear all data.
      Red outline keeps it visually distinct from the gold primary actions. */
@@ -419,27 +437,7 @@
   .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--lift); color: #0f0f0f; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 20px; transition: transform 0.25s ease; pointer-events: none; white-space: nowrap; z-index: 100; }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
-  /* Jump-to-queue floating button — bottom-right, only shown on the
-     Log tab when the queue has items. Purely a scroll shortcut, not
-     a destructive action, so it's safe to make easily reachable. */
-  .jump-to-queue-btn {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: var(--surface2);
-    border: 1px solid var(--lift-mid);
-    border-radius: 20px;
-    color: var(--lift);
-    font-family: var(--font-body);
-    font-size: 12px;
-    font-weight: 600;
-    padding: 10px 16px;
-    cursor: pointer;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.5);
-    z-index: 50;
-    transition: all 0.15s;
-  }
-  .jump-to-queue-btn:hover { border-color: var(--lift); background: var(--lift-dim); }
+  /* jump-to-queue-btn removed — replaced by fab-end-session floating button */
 
   @media (max-width: 400px) {
     .grid-3 { grid-template-columns: 1fr 1fr; }
@@ -450,28 +448,21 @@
 <body>
 
 <header>
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
-    <div>
-      <!-- Wordmark row: optional avatar emoji, then user's name (if set),
-           then "Training Log" — all using the same serif display font,
-           size, and gold color so it reads as one continuous title. -->
-      <div style="display:flex;align-items:baseline;gap:8px;">
-        <span id="header-avatar" style="font-size:15px;display:none;"></span>
-        <span id="header-username" class="wordmark" style="margin-bottom:0;display:none;"></span>
-        <span class="wordmark" style="margin-bottom:0;">Training Log</span>
-      </div>
-      <div class="tagline">powerlifting · strength · performance</div>
-      <!-- "Training since" — derived automatically from the earliest
-           logged session date, no manual input required. Hidden until
-           at least one session exists. -->
-      <div id="header-since" style="font-size:11px;color:var(--lift);letter-spacing:0.04em;margin-top:2px;display:none;"></div>
+  <div>
+    <!-- Wordmark row: optional avatar emoji, then user's name (if set),
+         then "Training Log" — all using the same serif display font,
+         size, and gold color so it reads as one continuous title.
+         No button in the header anymore — End & Log Session is now
+         a floating pill (fab-end-session) always visible bottom-right. -->
+    <div style="display:flex;align-items:baseline;gap:8px;">
+      <span id="header-avatar" style="font-size:15px;display:none;"></span>
+      <span id="header-username" class="wordmark" style="margin-bottom:0;display:none;"></span>
+      <span class="wordmark" style="margin-bottom:0;">Training Log</span>
     </div>
-    <!-- End & Log Session button — lives in the top-right corner of the header.
-         Only visible when the user has added at least one exercise to the queue.
-         Positioned here (away from the form) so it can't be accidentally tapped. -->
-    <button class="btn-end-corner" id="btn-end-session" onclick="promptEndSession()" style="display:none;" aria-label="End and log session">
-      End &amp; Log Session
-    </button>
+    <div class="tagline">powerlifting · strength · performance</div>
+    <!-- "Training since" — derived automatically from the earliest logged session.
+         Hidden until the user has at least one completed session. -->
+    <div id="header-since" style="font-size:11px;color:var(--lift);letter-spacing:0.04em;margin-top:2px;display:none;"></div>
   </div>
 </header>
 
@@ -885,19 +876,30 @@
 <!-- ════════════════════════════════════════
      CONFIRM SESSION MODAL
      Appears when the user taps "End & Log Session".
-     Shows a summary of all exercises in the queue
-     and asks for confirmation before saving.
+     Shows a summary of all exercises in the queue,
+     a session date row (pre-filled with today but
+     editable for backdating), and asks for
+     confirmation before saving.
      ════════════════════════════════════════ -->
 <div class="modal-overlay" id="confirm-modal">
   <div class="modal">
     <div class="modal-title">Confirm session log?</div>
-    <div class="modal-sub">The following exercises will be saved to your history.</div>
+    <div class="modal-sub">Review your session before saving.</div>
     <!-- Populated by promptEndSession() with the current queue contents -->
     <div class="modal-summary" id="modal-summary"></div>
+    <!-- Session date row — pre-filled with today's date by promptEndSession().
+         The user can change this to any past date to backdate the session
+         (e.g. logging yesterday's workout the next morning). The date input
+         uses type="date" which opens a native date picker on iOS. -->
+    <div style="display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--lift-mid);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;">
+      <span style="font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;">Session date</span>
+      <input type="date" id="session-date-input"
+             style="flex:1;background:none;border:none;color:var(--lift);font-family:var(--font-body);font-size:12px;font-weight:500;outline:none;min-width:0;color-scheme:dark;">
+    </div>
     <div class="modal-actions">
       <!-- Cancel returns to the log without saving -->
       <button class="modal-cancel" onclick="closeModal()">Cancel</button>
-      <!-- Confirm calls commitSession() to save and clear the queue -->
+      <!-- Confirm calls commitSession() to save using the selected date -->
       <button class="modal-confirm" onclick="commitSession()">Save session</button>
     </div>
   </div>
@@ -907,17 +909,20 @@
 <div class="toast" id="toast"></div>
 
 <!-- ════════════════════════════════════════
-     JUMP TO QUEUE BUTTON
-     A small floating pill, only visible on the Log
-     tab when the session queue has items. Tapping it
-     scrolls back up to the header where the existing
-     "End & Log Session" button lives — solves the
-     reachability complaint without touching that
-     button's safety (still requires confirmation,
-     still can't be triggered from here directly).
+     FLOATING END & LOG SESSION BUTTON
+     Fixed to the bottom-right corner of the screen.
+     Only shown when the session queue has items.
+     Replaces the old header corner button so the
+     action is always reachable from anywhere on the
+     page — even mid-scroll through a long session.
+     Live count badge shows how many exercises are
+     queued. Tapping opens the confirmation modal
+     (with backdate option) — nothing saves without
+     a deliberate second tap on "Save session."
      ════════════════════════════════════════ -->
-<button class="jump-to-queue-btn" id="jump-to-queue-btn" onclick="scrollToQueue()" style="display:none;" aria-label="Scroll back to top">
-  ↑ Back to top (<span id="jump-to-queue-count">0</span>)
+<button class="fab-end-session" id="fab-end-session" onclick="promptEndSession()" style="display:none;" aria-label="End and log session">
+  End &amp; Log Session
+  <span class="fab-count" id="fab-count">0</span>
 </button>
 
 
@@ -1364,14 +1369,14 @@
       document.getElementById('unit-kg').classList.toggle('active', currentUnit === 'kg');
     }
 
-    // The jump-to-queue shortcut only makes sense on the Log tab — hide it
-    // everywhere else, then let renderQueue() decide if it should reappear
-    // when the user comes back to Log.
-    const jumpBtn = document.getElementById('jump-to-queue-btn');
+    // The floating End & Log Session button only makes sense on the Log tab.
+    // Hide it when switching to other tabs; let renderQueue() decide whether
+    // to show it when the user returns to Log (based on queue state).
+    const fab = document.getElementById('fab-end-session');
     if (t === 'log') {
-      renderQueue(); // re-evaluate visibility based on current queue state
+      renderQueue(); // re-evaluate FAB visibility based on current queue state
     } else {
-      jumpBtn.style.display = 'none';
+      fab.style.display = 'none';
     }
   }
 
@@ -1571,23 +1576,18 @@
   function renderQueue() {
     const wrap = document.getElementById('session-queue-wrap');
     const el   = document.getElementById('session-queue');
-    const jumpBtn = document.getElementById('jump-to-queue-btn');
 
     if (!currentQueue.length) {
       wrap.style.display = 'none';
-      // Hide the header button when there's nothing in the queue
-      document.getElementById('btn-end-session').style.display = 'none';
-      // Hide the floating jump shortcut too — nothing to jump to
-      jumpBtn.style.display = 'none';
+      // Hide the floating End & Log Session button — no session in progress
+      document.getElementById('fab-end-session').style.display = 'none';
       return;
     }
 
     wrap.style.display = 'block';
-    // Show the "End & Log" button in the header now that the queue has items
-    document.getElementById('btn-end-session').style.display = 'block';
-    // Show the floating jump shortcut with a live count of queued exercises
-    document.getElementById('jump-to-queue-count').textContent = currentQueue.length;
-    jumpBtn.style.display = 'block';
+    // Show the floating End & Log Session button with a live exercise count badge
+    document.getElementById('fab-count').textContent = currentQueue.length;
+    document.getElementById('fab-end-session').style.display = 'flex';
     el.innerHTML = currentQueue.map((e, i) => `
       <div class="queue-item">
         <div>
@@ -1600,13 +1600,6 @@
     `).join('');
   }
 
-  // Scrolls smoothly back up to the top of the page, where the header
-  // and "End & Log Session" button live. Purely a navigation shortcut —
-  // does not trigger or confirm anything on its own.
-  function scrollToQueue() {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-
   // Remove an exercise from the in-progress queue by index
   function removeFromQueue(i) {
     currentQueue.splice(i, 1);
@@ -1617,11 +1610,12 @@
   // ─────────────────────────────────────────────
   // SESSION CONFIRMATION FLOW
   // promptEndSession() — opens the confirmation modal
-  //   with a summary of all queued exercises.
+  //   pre-filled with today's date (editable for
+  //   backdating) and a summary of all queued exercises.
   // closeModal() — dismisses without saving.
   // commitSession() — saves currentQueue as a completed
-  //   session object, persists to localStorage, resets
-  //   the queue and hides the End & Log button.
+  //   session using the selected date, persists to
+  //   localStorage, resets the queue and hides the FAB.
   // ─────────────────────────────────────────────
   function promptEndSession() {
     if (!currentQueue.length) { toast('Add at least one exercise first'); return; }
@@ -1630,6 +1624,15 @@
     document.getElementById('modal-summary').innerHTML = currentQueue.map(e =>
       `<div>🏋️ ${e.name} — ${e.sets}×${e.reps} @ ${e.weight} ${currentUnit}${e.notes ? ' · ' + e.notes : ''}</div>`
     ).join('');
+
+    // Pre-fill the date input with today's date in YYYY-MM-DD format
+    // (required by type="date"). The user can change this to any past date
+    // to backdate the session — useful for logging yesterday's workout today.
+    const today = new Date();
+    const yyyy  = today.getFullYear();
+    const mm    = String(today.getMonth() + 1).padStart(2, '0');
+    const dd    = String(today.getDate()).padStart(2, '0');
+    document.getElementById('session-date-input').value = yyyy + '-' + mm + '-' + dd;
 
     // Open the modal
     document.getElementById('confirm-modal').classList.add('open');
@@ -1648,18 +1651,28 @@
   function commitSession() {
     if (!currentQueue.length) return;
 
-    // Save session with today's date and a copy of the queue
-    sessions.unshift({ date: new Date(), exercises: [...currentQueue] });
+    // Read the date the user selected in the modal (defaults to today,
+    // but can be any past date for backdating). Parse it as local midnight
+    // rather than UTC to avoid off-by-one-day issues on some timezones.
+    const dateInputVal = document.getElementById('session-date-input').value;
+    let sessionDate = new Date(); // fallback to now if input is somehow empty
+    if (dateInputVal) {
+      const [y, m, d] = dateInputVal.split('-').map(Number);
+      sessionDate = new Date(y, m - 1, d); // local midnight, not UTC
+    }
+
+    // Save session with the selected date and a copy of the current queue
+    sessions.unshift({ date: sessionDate, exercises: [...currentQueue] });
     saveSessions(); // persist to localStorage immediately
 
-    // Reset the queue and hide the header button
+    // Reset the queue and hide the floating End & Log Session button
     currentQueue = [];
     try { localStorage.removeItem(QUEUE_KEY); } catch(e) { /* ignore */ }
-    document.getElementById('btn-end-session').style.display = 'none';
+    document.getElementById('fab-end-session').style.display = 'none';
     renderQueue();
 
     closeModal();
-    updateTrainingSince(); // refresh header in case this was the very first session
+    updateTrainingSince(); // refresh "Training since" in case this was the first session
     toast('Session saved ✓');
   }
 
