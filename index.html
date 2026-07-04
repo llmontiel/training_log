@@ -893,6 +893,30 @@
 </div>
 
 <!-- ════════════════════════════════════════
+     EDIT SESSION DATE MODAL
+     Opens when the pencil is tapped next to a
+     session date in History. Pre-filled with the
+     current date — user can change it to any date
+     to correct sessions that were logged on the
+     wrong day. Updates all sessions in a merged
+     day card together.
+     ════════════════════════════════════════ -->
+<div class="modal-overlay" id="edit-date-modal">
+  <div class="modal">
+    <div class="modal-title">Edit session date</div>
+    <div class="modal-sub" style="margin-bottom:1rem;">Change the date this session is recorded under.</div>
+    <div class="field">
+      <label>Session date</label>
+      <input type="date" id="edit-session-date-input" style="color-scheme:dark;">
+    </div>
+    <div class="modal-actions" style="margin-top:1rem;">
+      <button class="modal-cancel" onclick="closeEditDateModal()">Cancel</button>
+      <button class="modal-confirm" onclick="confirmEditSessionDate()">Save date</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
      DELETE CONFIRMATION MODAL
      Shared by both "delete a whole day" and
      "delete a single exercise" — title/message
@@ -2101,7 +2125,14 @@
         return `
           <div class="session-card">
             <div class="session-card-header">
-              <span class="session-card-title">${fmtSmart(day.date)}</span>
+              <span style="display:flex;align-items:center;gap:6px;">
+                <span class="session-card-title">${fmtSmart(day.date)}</span>
+                <!-- Pencil to edit the session date — opens the date edit modal
+                     pre-filled with the current date. Passes all session indices
+                     so every session in this merged day gets updated together. -->
+                <button class="session-edit-btn" onclick="promptEditSessionDate(${indicesStr}, '${day.date.toISOString().slice(0,10)}')"
+                        title="Edit date" aria-label="Edit session date" style="font-size:11px;">✎</button>
+              </span>
               <span class="session-card-meta">${day.exercises.length} exercise${day.exercises.length !== 1 ? 's' : ''}
                 <button class="session-del" onclick="promptDeleteDay(${indicesStr}, '${fmtSmart(day.date)}')" aria-label="Delete day" style="margin-left:8px">×</button>
               </span>
@@ -2134,6 +2165,49 @@
 
   // Triggered by the × on a day card — deletes every session that
   // contributed to that merged day view
+  // ─────────────────────────────────────────────
+  // EDIT SESSION DATE
+  // Lets the user correct the date a session was
+  // logged under — useful for sessions that were
+  // accidentally logged on the wrong day before
+  // the backdate feature existed.
+  // All sessions in a merged day card are updated
+  // together (same indices array used by delete).
+  // ─────────────────────────────────────────────
+  let pendingEditDateIndices = null; // session indices to update on confirm
+
+  function promptEditSessionDate(indices, currentDateStr) {
+    pendingEditDateIndices = indices;
+    // Pre-fill with current session date in YYYY-MM-DD format
+    document.getElementById('edit-session-date-input').value = currentDateStr;
+    document.getElementById('edit-date-modal').classList.add('open');
+  }
+
+  function closeEditDateModal() {
+    document.getElementById('edit-date-modal').classList.remove('open');
+    pendingEditDateIndices = null;
+  }
+
+  function confirmEditSessionDate() {
+    if (!pendingEditDateIndices) return;
+    const val = document.getElementById('edit-session-date-input').value;
+    if (!val) { toast('Please pick a date'); return; }
+
+    // Parse the date as local midnight to avoid timezone off-by-one issues
+    const [y, m, d] = val.split('-').map(Number);
+    const newDate = new Date(y, m - 1, d);
+
+    // Update the date on every session that contributed to this day card
+    pendingEditDateIndices.forEach(i => {
+      if (sessions[i]) sessions[i].date = newDate;
+    });
+
+    saveSessions();
+    closeEditDateModal();
+    renderHistory();
+    toast('Date updated');
+  }
+
   function promptDeleteDay(indices, dateLabel) {
     pendingDelete = { type: 'day', indices };
     document.getElementById('delete-confirm-title').textContent = 'Delete this day?';
