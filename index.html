@@ -90,18 +90,40 @@
   .btn-primary { width: 100%; background: var(--lift); border: none; border-radius: var(--radius-sm); color: #0f0f0f; font-family: var(--font-body); font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; transition: opacity 0.15s; letter-spacing: 0.02em; }
   .btn-primary:hover { opacity: 0.88; }
 
-  /* End & Log Session — floating action button fixed to the bottom-right
-     corner of the screen. Only visible when the queue has at least one
-     exercise. Replaces the old header pill so the button is always
-     reachable without scrolling, and acts as a passive reminder that
-     an open session needs closing. Tapping it opens the confirmation
-     modal — nothing saves without a second deliberate tap. */
-  .fab-end-session {
+  /* ── End & Log Session — header corner button ──
+     Small pill in the top-right corner of the header.
+     Only visible when the queue has at least one exercise.
+     Out of the natural thumb scroll path so accidental
+     taps are unlikely. Always requires confirmation modal. */
+  .btn-end-corner {
+    background: none;
+    border: 1.5px solid var(--lift-mid);
+    border-radius: var(--radius-sm);
+    color: var(--lift);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 2px;
+    letter-spacing: 0.02em;
+  }
+  .btn-end-corner:hover { background: var(--lift-dim); border-color: var(--lift); }
+
+  /* ── Back to top floating pill ──
+     Fixed bottom-right scroll shortcut — visible when queue
+     has items. Purely navigational: scrolls to the header
+     where the End & Log Session button lives. Cannot
+     accidentally end a session. */
+  .back-to-top-btn {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background: var(--lift-dim);
-    border: 1.5px solid var(--lift-mid);
+    background: var(--surface2);
+    border: 1px solid var(--lift-mid);
     border-radius: 20px;
     color: var(--lift);
     font-family: var(--font-body);
@@ -110,24 +132,46 @@
     padding: 10px 16px;
     cursor: pointer;
     box-shadow: 0 4px 14px rgba(0,0,0,0.5);
-    z-index: 60; /* above the toast */
+    z-index: 60;
     transition: all 0.15s;
     white-space: nowrap;
+  }
+  .back-to-top-btn:hover { border-color: var(--lift); background: var(--lift-dim); }
+
+  /* ── Open session banner ──
+     Gold for same-day open sessions, red for sessions from
+     a previous day. Appears at the top of the Log tab so
+     the user sees it before logging anything new. */
+  .session-banner {
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    margin-bottom: 12px;
     display: flex;
-    align-items: center;
-    gap: 8px;
+    align-items: flex-start;
+    gap: 10px;
   }
-  .fab-end-session:hover { border-color: var(--lift); background: #3a2818; }
-  /* Live exercise count badge inside the floating pill */
-  .fab-count {
-    background: var(--lift);
-    color: #0f0f0f;
-    font-size: 10px;
-    font-weight: 700;
-    border-radius: 10px;
-    padding: 1px 7px;
-    line-height: 1.4;
+  .session-banner.today { background: var(--lift-dim); border: 1px solid var(--lift-mid); }
+  .session-banner.stale { background: #2a1414; border: 1px solid #5a2020; }
+  .session-banner-icon { font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+  .session-banner-body { flex: 1; }
+  .session-banner-title { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
+  .session-banner.today .session-banner-title { color: var(--lift); }
+  .session-banner.stale .session-banner-title { color: #e07070; }
+  .session-banner-sub { font-size: 11px; color: var(--muted); line-height: 1.4; }
+  .session-banner-action {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: underline;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: var(--font-body);
   }
+  .session-banner.today .session-banner-action { color: var(--lift); }
+  .session-banner.stale .session-banner-action { color: #e07070; }
 
   /* Danger button — used for destructive actions like Clear all data.
      Red outline keeps it visually distinct from the gold primary actions. */
@@ -437,7 +481,7 @@
   .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--lift); color: #0f0f0f; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 20px; transition: transform 0.25s ease; pointer-events: none; white-space: nowrap; z-index: 100; }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
-  /* jump-to-queue-btn removed — replaced by fab-end-session floating button */
+
 
   @media (max-width: 400px) {
     .grid-3 { grid-template-columns: 1fr 1fr; }
@@ -448,21 +492,27 @@
 <body>
 
 <header>
-  <div>
-    <!-- Wordmark row: optional avatar emoji, then user's name (if set),
-         then "Training Log" — all using the same serif display font,
-         size, and gold color so it reads as one continuous title.
-         No button in the header anymore — End & Log Session is now
-         a floating pill (fab-end-session) always visible bottom-right. -->
-    <div style="display:flex;align-items:baseline;gap:8px;">
-      <span id="header-avatar" style="font-size:15px;display:none;"></span>
-      <span id="header-username" class="wordmark" style="margin-bottom:0;display:none;"></span>
-      <span class="wordmark" style="margin-bottom:0;">Training Log</span>
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+    <div>
+      <!-- Wordmark row: optional avatar emoji, then user's name (if set),
+           then "Training Log" — all using the same serif display font,
+           size, and gold color so it reads as one continuous title. -->
+      <div style="display:flex;align-items:baseline;gap:8px;">
+        <span id="header-avatar" style="font-size:15px;display:none;"></span>
+        <span id="header-username" class="wordmark" style="margin-bottom:0;display:none;"></span>
+        <span class="wordmark" style="margin-bottom:0;">Training Log</span>
+      </div>
+      <div class="tagline">powerlifting · strength · performance</div>
+      <!-- "Training since" — derived automatically from the earliest logged session.
+           Hidden until the user has at least one completed session. -->
+      <div id="header-since" style="font-size:11px;color:var(--lift);letter-spacing:0.04em;margin-top:2px;display:none;"></div>
     </div>
-    <div class="tagline">powerlifting · strength · performance</div>
-    <!-- "Training since" — derived automatically from the earliest logged session.
-         Hidden until the user has at least one completed session. -->
-    <div id="header-since" style="font-size:11px;color:var(--lift);letter-spacing:0.04em;margin-top:2px;display:none;"></div>
+    <!-- End & Log Session — top-right corner, hidden until queue has items.
+         Safe from accidental taps since it's out of the main scroll area.
+         Always opens the confirmation modal before saving anything. -->
+    <button class="btn-end-corner" id="btn-end-session" onclick="promptEndSession()" style="display:none;" aria-label="End and log session">
+      End &amp; Log Session
+    </button>
   </div>
 </header>
 
@@ -485,6 +535,11 @@
        saving the whole session to history.
        ════════════════════════════════════════ -->
   <div id="tab-log" class="tab active">
+
+    <!-- Open session banner — shown when the queue has exercises from a
+         previous visit. Gold if from today, red if from a previous day.
+         Populated by renderQueue() each time the queue state changes. -->
+    <div id="session-banner" style="display:none;"></div>
 
     <!-- Training focus badge — only shown if a focus is set in Settings.
          Sits above the form as a persistent reminder of the current goal. -->
@@ -909,20 +964,15 @@
 <div class="toast" id="toast"></div>
 
 <!-- ════════════════════════════════════════
-     FLOATING END & LOG SESSION BUTTON
-     Fixed to the bottom-right corner of the screen.
-     Only shown when the session queue has items.
-     Replaces the old header corner button so the
-     action is always reachable from anywhere on the
-     page — even mid-scroll through a long session.
-     Live count badge shows how many exercises are
-     queued. Tapping opens the confirmation modal
-     (with backdate option) — nothing saves without
-     a deliberate second tap on "Save session."
+     BACK TO TOP FLOATING PILL
+     Fixed bottom-right, visible only on the Log tab
+     when the queue has items. Purely a scroll shortcut
+     to bring the user back up to the End & Log Session
+     header button — cannot trigger the session save
+     directly, so accidental taps are harmless.
      ════════════════════════════════════════ -->
-<button class="fab-end-session" id="fab-end-session" onclick="promptEndSession()" style="display:none;" aria-label="End and log session">
-  End &amp; Log Session
-  <span class="fab-count" id="fab-count">0</span>
+<button class="back-to-top-btn" id="back-to-top-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})" style="display:none;" aria-label="Scroll back to top">
+  ↑ Back to top (<span id="back-to-top-count">0</span>)
 </button>
 
 
@@ -1312,8 +1362,15 @@
   const QUEUE_KEY = 'trainingLog_currentQueue';
 
   function saveQueue() {
-    try { localStorage.setItem(QUEUE_KEY, JSON.stringify(currentQueue)); }
-    catch(e) { /* non-critical — queue just won't survive a refresh this time */ }
+    try {
+      localStorage.setItem(QUEUE_KEY, JSON.stringify(currentQueue));
+      // Also save today's date alongside the queue so renderQueue() can
+      // detect on next open whether the queue is from a previous day
+      const today = new Date();
+      const dateStr = today.getFullYear() + '-' + (today.getMonth()+1) + '-' + today.getDate();
+      localStorage.setItem(QUEUE_KEY + '_date', dateStr);
+    }
+    catch(e) { /* non-critical */ }
   }
 
   function loadQueue() {
@@ -1369,14 +1426,14 @@
       document.getElementById('unit-kg').classList.toggle('active', currentUnit === 'kg');
     }
 
-    // The floating End & Log Session button only makes sense on the Log tab.
-    // Hide it when switching to other tabs; let renderQueue() decide whether
-    // to show it when the user returns to Log (based on queue state).
-    const fab = document.getElementById('fab-end-session');
+    // The back-to-top pill and header button only make sense on the Log tab.
+    // Hide both when switching away; renderQueue() re-evaluates on return.
     if (t === 'log') {
-      renderQueue(); // re-evaluate FAB visibility based on current queue state
+      renderQueue();
     } else {
-      fab.style.display = 'none';
+      document.getElementById('back-to-top-btn').style.display = 'none';
+      document.getElementById('btn-end-session').style.display = 'none';
+      document.getElementById('session-banner').style.display  = 'none';
     }
   }
 
@@ -1574,20 +1631,77 @@
   // is shown/hidden based on whether the queue has items.
   // ─────────────────────────────────────────────
   function renderQueue() {
-    const wrap = document.getElementById('session-queue-wrap');
-    const el   = document.getElementById('session-queue');
+    const wrap      = document.getElementById('session-queue-wrap');
+    const el        = document.getElementById('session-queue');
+    const banner    = document.getElementById('session-banner');
+    const backBtn   = document.getElementById('back-to-top-btn');
+    const headerBtn = document.getElementById('btn-end-session');
 
     if (!currentQueue.length) {
-      wrap.style.display = 'none';
-      // Hide the floating End & Log Session button — no session in progress
-      document.getElementById('fab-end-session').style.display = 'none';
+      wrap.style.display   = 'none';
+      banner.style.display = 'none';
+      backBtn.style.display  = 'none';
+      headerBtn.style.display = 'none';
       return;
     }
 
+    // ── Determine if the queue has exercises from a previous day ──
+    // Use the timestamp stored on the first queued exercise (added when
+    // addExercise() called saveQueue()) to detect staleness.
+    const today    = new Date();
+    const todayStr = today.getFullYear() + '-' + (today.getMonth()+1) + '-' + today.getDate();
+
+    // currentQueue items don't carry a timestamp by default — we use
+    // the queue's own localStorage save time as a proxy. If the queue
+    // was last saved on a different date, it's stale.
+    let queueDate = null;
+    try {
+      const raw = localStorage.getItem(QUEUE_KEY + '_date');
+      if (raw) queueDate = raw;
+    } catch(e) {}
+
+    const isStale = queueDate && queueDate !== todayStr;
+
+    // ── Render the appropriate banner ──
+    if (isStale && queueDate) {
+      // Red banner — exercises from a previous day
+      const [qy, qm, qd] = queueDate.split('-').map(Number);
+      const qDateLabel = new Date(qy, qm-1, qd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const isYesterday = (() => {
+        const yest = new Date(today); yest.setDate(today.getDate()-1);
+        return yest.getFullYear() + '-' + (yest.getMonth()+1) + '-' + yest.getDate() === queueDate;
+      })();
+      const dayLabel = isYesterday ? 'yesterday' : 'on ' + qDateLabel;
+      banner.innerHTML = `
+        <div class="session-banner stale">
+          <div class="session-banner-icon">⚠️</div>
+          <div class="session-banner-body">
+            <div class="session-banner-title">Open session from ${isYesterday ? 'yesterday' : qDateLabel}</div>
+            <div class="session-banner-sub">${currentQueue.length} exercise${currentQueue.length !== 1 ? 's' : ''} logged ${dayLabel} haven't been saved yet — end that session before starting today's</div>
+            <button class="session-banner-action" onclick="promptEndSession('${queueDate}')">End &amp; log ${dayLabel}'s session ↗</button>
+          </div>
+        </div>`;
+      banner.style.display = 'block';
+    } else {
+      // Gold banner — exercises from today
+      banner.innerHTML = `
+        <div class="session-banner today">
+          <div class="session-banner-icon">🏋️</div>
+          <div class="session-banner-body">
+            <div class="session-banner-title">You have an open session</div>
+            <div class="session-banner-sub">${currentQueue.length} exercise${currentQueue.length !== 1 ? 's' : ''} logged today — tap End &amp; Log Session when you're done</div>
+          </div>
+        </div>`;
+      banner.style.display = 'block';
+    }
+
+    // ── Show header button and back-to-top pill ──
+    headerBtn.style.display = 'block';
+    document.getElementById('back-to-top-count').textContent = currentQueue.length;
+    backBtn.style.display = 'block';
+
+    // ── Render queue items ──
     wrap.style.display = 'block';
-    // Show the floating End & Log Session button with a live exercise count badge
-    document.getElementById('fab-count').textContent = currentQueue.length;
-    document.getElementById('fab-end-session').style.display = 'flex';
     el.innerHTML = currentQueue.map((e, i) => `
       <div class="queue-item">
         <div>
@@ -1617,7 +1731,11 @@
   //   session using the selected date, persists to
   //   localStorage, resets the queue and hides the FAB.
   // ─────────────────────────────────────────────
-  function promptEndSession() {
+  // promptEndSession: opens the confirmation modal.
+  // Accepts an optional prefilledDate string (YYYY-M-D format) for when
+  // the red "stale session" banner links directly to end a previous day's
+  // session — pre-fills that date but still lets the user change it.
+  function promptEndSession(prefilledDate) {
     if (!currentQueue.length) { toast('Add at least one exercise first'); return; }
 
     // Populate the modal summary with current queue exercises
@@ -1625,14 +1743,18 @@
       `<div>🏋️ ${e.name} — ${e.sets}×${e.reps} @ ${e.weight} ${currentUnit}${e.notes ? ' · ' + e.notes : ''}</div>`
     ).join('');
 
-    // Pre-fill the date input with today's date in YYYY-MM-DD format
-    // (required by type="date"). The user can change this to any past date
-    // to backdate the session — useful for logging yesterday's workout today.
-    const today = new Date();
-    const yyyy  = today.getFullYear();
-    const mm    = String(today.getMonth() + 1).padStart(2, '0');
-    const dd    = String(today.getDate()).padStart(2, '0');
-    document.getElementById('session-date-input').value = yyyy + '-' + mm + '-' + dd;
+    // Pre-fill the date input — use the passed date if provided (stale
+    // session banner), otherwise default to today.
+    let dateVal;
+    if (prefilledDate) {
+      // Convert "YYYY-M-D" to "YYYY-MM-DD" for the date input
+      const [y, m, d] = prefilledDate.split('-').map(Number);
+      dateVal = y + '-' + String(m).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+    } else {
+      const today = new Date();
+      dateVal = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+    }
+    document.getElementById('session-date-input').value = dateVal;
 
     // Open the modal
     document.getElementById('confirm-modal').classList.add('open');
@@ -1665,10 +1787,12 @@
     sessions.unshift({ date: sessionDate, exercises: [...currentQueue] });
     saveSessions(); // persist to localStorage immediately
 
-    // Reset the queue and hide the floating End & Log Session button
+    // Reset the queue and clear all queue-related storage and UI
     currentQueue = [];
-    try { localStorage.removeItem(QUEUE_KEY); } catch(e) { /* ignore */ }
-    document.getElementById('fab-end-session').style.display = 'none';
+    try {
+      localStorage.removeItem(QUEUE_KEY);
+      localStorage.removeItem(QUEUE_KEY + '_date'); // clear the stale-date tracker too
+    } catch(e) { /* ignore */ }
     renderQueue();
 
     closeModal();
