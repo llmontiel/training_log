@@ -1662,9 +1662,11 @@
 
     const isStale = queueDate && queueDate !== todayStr;
 
-    // ── Render the appropriate banner ──
+    // ── Show red banner only for stale sessions (previous day or older) ──
+    // Same-day open sessions get no banner — the user is mid-workout
+    // and doesn't need the distraction. The red one is reserved for
+    // when they come back the next day and might have forgotten.
     if (isStale && queueDate) {
-      // Red banner — exercises from a previous day
       const [qy, qm, qd] = queueDate.split('-').map(Number);
       const qDateLabel = new Date(qy, qm-1, qd).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       const isYesterday = (() => {
@@ -1683,16 +1685,8 @@
         </div>`;
       banner.style.display = 'block';
     } else {
-      // Gold banner — exercises from today
-      banner.innerHTML = `
-        <div class="session-banner today">
-          <div class="session-banner-icon">🏋️</div>
-          <div class="session-banner-body">
-            <div class="session-banner-title">You have an open session</div>
-            <div class="session-banner-sub">${currentQueue.length} exercise${currentQueue.length !== 1 ? 's' : ''} logged today — tap End &amp; Log Session when you're done</div>
-          </div>
-        </div>`;
-      banner.style.display = 'block';
+      // Same day — no banner, let the user work without interruption
+      banner.style.display = 'none';
     }
 
     // ── Show header button and back-to-top pill ──
