@@ -94,12 +94,17 @@
      Small pill in the top-right corner of the header.
      Only visible when the queue has at least one exercise.
      Out of the natural thumb scroll path so accidental
-     taps are unlikely. Always requires confirmation modal. */
+     taps are unlikely. Always requires confirmation modal.
+     Filled solid gold (instead of just an outline) so it
+     stands out more against the dark header — an outlined
+     pill is easy to miss after a workout, and forgetting to
+     end a session is the whole reason the stale-session
+     banner exists. A brighter, filled button is a second nudge. */
   .btn-end-corner {
-    background: none;
-    border: 1.5px solid var(--lift-mid);
+    background: var(--lift);
+    border: 1.5px solid var(--lift);
     border-radius: var(--radius-sm);
-    color: var(--lift);
+    color: #0f0f0f;
     font-family: var(--font-body);
     font-size: 12px;
     font-weight: 600;
@@ -110,8 +115,12 @@
     flex-shrink: 0;
     margin-top: 2px;
     letter-spacing: 0.02em;
+    /* Subtle gold glow to draw the eye without being obnoxious */
+    box-shadow: 0 0 8px rgba(200, 169, 110, 0.45);
   }
-  .btn-end-corner:hover { background: var(--lift-dim); border-color: var(--lift); }
+  /* Hover/active state dims slightly (like btn-primary) instead of
+     inverting, since the button is now filled rather than outlined */
+  .btn-end-corner:hover { opacity: 0.85; }
 
   /* ── Back to top floating pill ──
      Fixed bottom-right scroll shortcut — visible when queue
@@ -292,6 +301,47 @@
    * the week header, then individual exercises inside.
    */
   .week-block { margin-bottom: 1.5rem; }
+
+  /* ── History exercise-name search box ──
+     Sits just above the session list. Plain text input with a
+     leading icon and a clear (×) button that only appears once
+     something's typed. Kept visually quiet (surface bg, thin
+     border) so it doesn't compete with the week/month view above it. */
+  .history-search {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    margin-bottom: 12px;
+  }
+  .history-search-icon { font-size: 13px; opacity: 0.6; flex-shrink: 0; }
+  .history-search input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 13px;
+    min-width: 0;
+  }
+  .history-search input::placeholder { color: var(--muted); }
+  #history-search-clear {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 16px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 2px;
+    flex-shrink: 0;
+    transition: color 0.15s;
+  }
+  #history-search-clear:hover { color: var(--text); }
+
   .week-block-header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 8px 0; border-bottom: 1px solid var(--border); margin-bottom: 10px;
@@ -314,6 +364,26 @@
   .session-ex-sets { font-size: 12px; color: var(--muted); }
   .session-del { background: none; border: none; color: var(--border); font-size: 15px; cursor: pointer; padding: 0 2px; transition: color 0.15s; }
   .session-del:hover { color: var(--danger); }
+  /* "+ Add exercise" link at the bottom of each day card — lets the
+     user log something they forgot to add before ending that session.
+     Styled as a quiet text link (not a full button) so it doesn't
+     compete visually with the exercise rows above it. */
+  .add-hist-btn {
+    background: none;
+    border: none;
+    border-top: 1px dashed var(--border);
+    width: 100%;
+    text-align: left;
+    color: var(--lift);
+    font-family: var(--font-body);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 8px 0 2px;
+    margin-top: 4px;
+    transition: opacity 0.15s;
+  }
+  .add-hist-btn:hover { opacity: 0.75; }
   /* Small pencil edit button on each exercise row in history */
   /* ── Exercise row ⋯ button and action menu ──
      Single tap target per row — opens a dropdown with
@@ -722,6 +792,15 @@
     <div class="day-detail-panel" id="day-detail-panel"></div>
 
     <!-- All sessions grouped by week, newest first -->
+    <!-- Search by exercise name — filters the list below live as you
+         type. Doesn't touch the week dot-grid or month calendar above,
+         since those just show which days had a session at all. -->
+    <div class="history-search">
+      <span class="history-search-icon">🔍</span>
+      <input type="text" id="history-search-input" placeholder="Search exercise name…"
+             autocomplete="off" oninput="onHistorySearchInput(this.value)">
+      <button id="history-search-clear" onclick="clearHistorySearch()" aria-label="Clear search" style="display:none;">×</button>
+    </div>
     <div id="history-list"></div>
 
   </div><!-- /tab-history -->
@@ -956,6 +1035,34 @@
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeEditModal()">Cancel</button>
       <button class="modal-confirm" onclick="saveEditModal()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     ADD EXERCISE (TO PAST SESSION) MODAL
+     Opens from the "+ Add exercise" link on any
+     day card in History. Lets the user log a lift
+     they forgot to add before ending their session,
+     without leaving the History tab or affecting
+     today's in-progress queue. Same fields as the
+     edit modal, but pushes a brand-new entry instead
+     of overwriting an existing one.
+     ════════════════════════════════════════ -->
+<div class="modal-overlay" id="add-history-modal">
+  <div class="modal">
+    <div class="modal-title">Add exercise</div>
+    <div class="modal-sub" id="add-history-modal-sub" style="margin-bottom:1rem">Log something you forgot to add.</div>
+    <div class="field"><label>Exercise name</label><input type="text" id="add-hist-name" placeholder="e.g. Squat" autocomplete="off"></div>
+    <div class="grid-3" style="margin-bottom:12px">
+      <div class="field"><label>Sets</label><input type="number" id="add-hist-sets" placeholder="—" min="1" max="20" inputmode="numeric" oninput="sanitizeNumberInput(this)"></div>
+      <div class="field"><label>Reps</label><input type="number" id="add-hist-reps" placeholder="—" min="1" max="50" inputmode="numeric" oninput="sanitizeNumberInput(this)"></div>
+      <div class="field"><label>Weight (<span class="unit-label">lb</span>)</label><input type="number" id="add-hist-weight" placeholder="—" min="0" inputmode="decimal" oninput="sanitizeNumberInput(this, true)"></div>
+    </div>
+    <div class="field"><label>Notes <span style="color:#555">(optional)</span></label><input type="text" id="add-hist-notes" placeholder="e.g. paused reps, RPE 8"></div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeAddToHistoryModal()">Cancel</button>
+      <button class="modal-confirm" onclick="saveAddToHistoryModal()">Add exercise</button>
     </div>
   </div>
 </div>
@@ -2023,12 +2130,45 @@
   // exact calendar date (merging same-day sessions
   // the same way History does).
   // ─────────────────────────────────────────────
+  // Tracks which calendar day is currently shown in the panel, so it
+  // can be refreshed in place after adding an exercise from it
+  // (otherwise it would keep showing the stale pre-add list).
+  let openDayDetail = null; // { year, month, day }
+
+  // Current exercise-name search term for the History list. Persists
+  // across re-renders (e.g. after an edit/add/delete) until cleared,
+  // so the user doesn't lose their filter mid-edit.
+  let historySearchTerm = '';
+
+  // Called on every keystroke in the History search box. Re-renders
+  // the list live rather than waiting for a submit — the list is
+  // short enough per session that this stays cheap.
+  function onHistorySearchInput(value) {
+    historySearchTerm = value;
+    document.getElementById('history-search-clear').style.display = value ? 'block' : 'none';
+    renderHistory();
+  }
+
+  // "×" button inside the search box — clears the term and restores
+  // the full, ungrouped-by-search history list.
+  function clearHistorySearch() {
+    historySearchTerm = '';
+    document.getElementById('history-search-input').value = '';
+    document.getElementById('history-search-clear').style.display = 'none';
+    renderHistory();
+  }
+
   function showDayDetail(year, month, day) {
-    // Find every session that falls on this exact calendar day
-    const matches = sessions.filter(s => {
+    openDayDetail = { year, month, day };
+    // Find every session that falls on this exact calendar day,
+    // keeping track of each one's index in the sessions array so
+    // "+ Add exercise" below can target the right session.
+    const matchIndices = [];
+    sessions.forEach((s, idx) => {
       const d = new Date(s.date);
-      return d.getFullYear() === year && d.getMonth() === month && d.getDate() === day;
+      if (d.getFullYear() === year && d.getMonth() === month && d.getDate() === day) matchIndices.push(idx);
     });
+    const matches = matchIndices.map(idx => sessions[idx]);
     if (!matches.length) return;
 
     // Merge exercises from all matching sessions (handles same-day multi-session logging)
@@ -2057,6 +2197,9 @@
             <span class="session-ex-sets"> · ${e.sets}×${e.reps} @ ${e.weight} ${currentUnit}${e.notes ? ' · ' + e.notes : ''}</span>
           </div>
         `).join('')}
+        <!-- Same "forgot to log something" escape hatch as the History
+             list view — adds to the last session on this calendar day. -->
+        <button class="add-hist-btn" onclick="openAddToHistoryModal(${JSON.stringify(matchIndices)}, '${dateLabel.replace(/'/g, "\\'")}')">+ Add exercise</button>
       </div>
     `;
     panel.classList.add('open');
@@ -2065,6 +2208,7 @@
 
   function closeDayDetail() {
     document.getElementById('day-detail-panel').classList.remove('open');
+    openDayDetail = null;
   }
 
   // ─────────────────────────────────────────────
@@ -2166,18 +2310,33 @@
       byWeek[weekKey].days[dayKey].indices.push(idx);
     });
 
+    // ── Exercise name search ──
+    // historySearchTerm is set by the search box above the list (see
+    // onHistorySearchInput). Trimmed + lowercased once here so every
+    // day card below does a cheap substring check instead of repeating
+    // the normalization per exercise.
+    const term = historySearchTerm.trim().toLowerCase();
+
     // Render each week group newest-first
-    el.innerHTML = Object.keys(byWeek).sort().reverse().map(weekKey => {
+    const weekBlocks = Object.keys(byWeek).sort().reverse().map(weekKey => {
       const group = byWeek[weekKey];
 
-      // Render each day card within the week, newest day first
+      // Render each day card within the week, newest day first.
+      // When a search term is active, only exercises matching that term
+      // are shown, and any day/week with zero matches is dropped entirely
+      // rather than rendered as an empty card.
       const daySortedKeys = Object.keys(group.days).sort().reverse();
       const daySessions = daySortedKeys.map(dayKey => {
         const day = group.days[dayKey];
+        const visibleExercises = term
+          ? day.exercises.filter(e => e.name.toLowerCase().includes(term))
+          : day.exercises;
+        if (term && !visibleExercises.length) return ''; // no match on this day — skip the card
+
         // Each exercise row has a single ⋯ button that opens an action menu
         // with Edit, Move to date, and Delete — one large tap target instead
         // of three small icons side by side, better for all finger sizes.
-        const exList = day.exercises.map(e =>
+        const exList = visibleExercises.map(e =>
           `<div class="session-exercise" id="ex-row-${e._sid}-${e._eidx}">
             <div style="flex:1;min-width:0">
               <div class="session-ex-name">${e.name}</div>
@@ -2189,6 +2348,10 @@
         ).join('');
         // Delete removes all original sessions that contributed to this day
         const indicesStr = JSON.stringify(day.indices);
+        // While searching, the header count reflects only the matching
+        // exercises shown, not the day's full exercise count, so the
+        // number on screen always matches what's visible below it.
+        const shownCount = visibleExercises.length;
         return `
           <div class="session-card">
             <div class="session-card-header">
@@ -2200,23 +2363,36 @@
                 <button class="session-edit-btn" onclick="promptEditSessionDate(${indicesStr}, '${day.date.toISOString().slice(0,10)}')"
                         title="Edit date" aria-label="Edit session date" style="font-size:11px;">✎</button>
               </span>
-              <span class="session-card-meta">${day.exercises.length} exercise${day.exercises.length !== 1 ? 's' : ''}
+              <span class="session-card-meta">${shownCount} exercise${shownCount !== 1 ? 's' : ''}
                 <button class="session-del" onclick="promptDeleteDay(${indicesStr}, '${fmtSmart(day.date)}')" aria-label="Delete day" style="margin-left:8px">×</button>
               </span>
             </div>
             <div class="session-card-body">${exList}</div>
+            <!-- Add exercise — covers the case where something was
+                 forgotten before the session was ended and logged.
+                 Adds to this exact day (all indices already merged
+                 by date above), not to today's in-progress queue. -->
+            <button class="add-hist-btn" onclick="openAddToHistoryModal(${indicesStr}, '${fmtSmart(day.date)}')">+ Add exercise</button>
           </div>`;
-      }).join('');
+      }).filter(Boolean); // drop empty (non-matching) day cards
 
-      const dayCount = daySortedKeys.length;
+      if (term && !daySessions.length) return ''; // no matching days this week — skip the whole week block
+
+      const dayCount = daySessions.length;
       return `<div class="week-block">
         <div class="week-block-header">
           <span class="week-block-title">${group.label}</span>
           <span class="week-block-meta">${dayCount} day${dayCount !== 1 ? 's' : ''}</span>
         </div>
-        ${daySessions}
+        ${daySessions.join('')}
       </div>`;
-    }).join('');
+    }).filter(Boolean); // drop empty (non-matching) week blocks
+
+    // If actively searching and nothing matched anywhere, show a clear
+    // empty state instead of a blank list.
+    el.innerHTML = weekBlocks.length
+      ? weekBlocks.join('')
+      : `<div class="empty"><span class="empty-icon">🔍</span>No exercises match "${historySearchTerm.trim()}"</div>`;
   }
 
   // ─────────────────────────────────────────────
@@ -2541,6 +2717,73 @@
     renderHistory();
     renderPRs();
     toast('Exercise updated');
+  }
+
+  // ─────────────────────────────────────────────
+  // ADD EXERCISE TO AN EXISTING (PAST) SESSION
+  // Covers the "I forgot to log a lift" case — lets
+  // the user add a brand-new exercise entry to a day
+  // that's already been ended and saved, instead of
+  // only being able to edit entries that already exist.
+  // Reuses the same session-index model as edit/move/
+  // delete: a day card may represent multiple merged
+  // sessions (same-day multi-session logging), so we
+  // add the new entry to the LAST session that
+  // contributed to that day — keeping it simple and
+  // consistent with how "today" would have logged it.
+  // ─────────────────────────────────────────────
+
+  // Tracks which session the new exercise will be added to
+  let addHistorySid = null;
+
+  function openAddToHistoryModal(dayIndices, dateLabel) {
+    // dayIndices is the array of session indices that make up this day
+    // card (see byWeek grouping in renderHistory) — use the last one
+    addHistorySid = dayIndices[dayIndices.length - 1];
+
+    // Clear all fields so the form starts fresh each time
+    document.getElementById('add-hist-name').value   = '';
+    document.getElementById('add-hist-sets').value   = '';
+    document.getElementById('add-hist-reps').value   = '';
+    document.getElementById('add-hist-weight').value = '';
+    document.getElementById('add-hist-notes').value  = '';
+    document.getElementById('add-history-modal-sub').textContent = `Log something you forgot to add for ${dateLabel}.`;
+
+    document.getElementById('add-history-modal').classList.add('open');
+    document.getElementById('add-hist-name').focus();
+  }
+
+  function closeAddToHistoryModal() {
+    document.getElementById('add-history-modal').classList.remove('open');
+    addHistorySid = null;
+  }
+
+  function saveAddToHistoryModal() {
+    if (addHistorySid === null) return;
+    const name   = document.getElementById('add-hist-name').value.trim();
+    const sets   = parseInt(document.getElementById('add-hist-sets').value)    || 0;
+    const reps   = parseInt(document.getElementById('add-hist-reps').value)    || 0;
+    const weight = parseFloat(document.getElementById('add-hist-weight').value) || 0;
+    const notes  = document.getElementById('add-hist-notes').value.trim();
+
+    // Same validation as logging a set normally and as the edit modal
+    if (!name)   { toast("Name cannot be empty"); return; }
+    if (!sets || !reps || !weight) { toast("Fill in sets, reps and weight"); return; }
+
+    sessions[addHistorySid].exercises.push({
+      name: canonicalize(name),
+      sets, reps, weight, notes
+    });
+
+    saveSessions(); // persist the new entry to localStorage
+    closeAddToHistoryModal();
+    renderHistory();
+    renderPRs();
+    // If added from the calendar's day-detail panel, refresh it in
+    // place so the new exercise shows up immediately instead of the
+    // panel silently going stale.
+    if (openDayDetail) showDayDetail(openDayDetail.year, openDayDetail.month, openDayDetail.day);
+    toast('Exercise added');
   }
 
   // ─────────────────────────────────────────────
