@@ -1489,6 +1489,14 @@
   // EXPORT DATA (Settings)
   // Downloads all sessions as a CSV file so training
   // history isn't trapped on one device/browser.
+  //
+  // iOS home-screen ("standalone") apps can't use the normal
+  // blob + <a download> trick — WebKit silently blocks it outside
+  // regular Safari tabs, so the button would appear to do nothing.
+  // We detect standalone mode and fall back to opening the file as
+  // a data URI in a new tab instead, which triggers iOS's native
+  // share sheet ("Save to Files" / "Save to Downloads") so the
+  // export still works when the app is saved to the home screen.
   // ─────────────────────────────────────────────
   function exportData() {
     if (!sessions.length) { toast('No data to export yet'); return; }
@@ -1505,10 +1513,33 @@
         return [dateOnly, safe(e.name), e.sets, e.reps, e.weight, currentUnit, safe(e.notes || '')].join(',');
       });
     });
-    const blob = new Blob([header + rows.join('\n')], { type: 'text/csv' });
+    const csvText = header + rows.join('\n');
+    const blob = new Blob([csvText], { type: 'text/csv' });
     const filename = 'training-log-' + dateStr + '.csv';
 
-    // Trigger a download via a temporary link element
+    // Detect iOS "Add to Home Screen" standalone mode, where the
+    // blob-download approach below silently fails.
+    const isStandalone = window.navigator.standalone === true ||
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+
+    if (isStandalone) {
+      // Standalone fallback: read the blob as a base64 data URI and
+      // open it in a new tab. iOS shows its native "Open in..." /
+      // share sheet for this, letting the user save the CSV to Files.
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const win = window.open(reader.result, '_blank');
+        // If popup was blocked, fall back to a toast explaining why,
+        // rather than failing with no feedback at all.
+        if (!win) toast('Allow pop-ups to export, or open this app in Safari directly');
+      };
+      reader.readAsDataURL(blob);
+      toast('CSV exported');
+      return;
+    }
+
+    // Standard path — works in normal browser tabs (desktop + mobile,
+    // both iOS Safari-in-tab and Android Chrome).
     const url = URL.createObjectURL(blob);
     const a   = document.createElement('a');
     a.href = url; a.download = filename;
