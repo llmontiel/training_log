@@ -13,15 +13,17 @@
    * ─────────────────────────────────────────────
    */
   :root {
-    --bg: #0f0f0f;
-    --surface: #1a1a1a;
-    --surface2: #242424;
-    --border: #2e2e2e;
-    --text: #f0ede8;
-    --muted: #888;
-    --lift: #c8a96e;         /* gold — main accent */
-    --lift-dim: #2a2318;     /* dark gold tint */
-    --lift-mid: #4a3a20;     /* medium gold border */
+    --bg: #0a0e1a;
+    --surface: #121a2b;
+    --surface2: #182238;
+    --border: #1f2b42;
+    --text: #e6ecf5;
+    --muted: #6b7a94;
+    --lift: #3ec6ff;         /* electric cyan — main accent */
+    --lift-dim: #0f2438;     /* dark cyan tint */
+    --lift-mid: #1d4a66;     /* medium cyan border */
+    --lift-glow: rgba(62, 198, 255, 0.45); /* glow color, matches --lift per accent */
+    --on-lift: #071019;      /* near-black navy text on top of cyan fills */
     --danger: #c0504a;       /* red — delete hover */
     --font-display: 'Georgia', serif;
     --font-body: -apple-system, 'Helvetica Neue', sans-serif;
@@ -82,12 +84,12 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
   }
-  .field select option { background: #1a1a1a; }
+  .field select option { background: #121a2b; }
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
 
   /* ── Buttons ── */
-  .btn-primary { width: 100%; background: var(--lift); border: none; border-radius: var(--radius-sm); color: #0f0f0f; font-family: var(--font-body); font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; transition: opacity 0.15s; letter-spacing: 0.02em; }
+  .btn-primary { width: 100%; background: var(--lift); border: none; border-radius: var(--radius-sm); color: var(--on-lift); font-family: var(--font-body); font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; transition: opacity 0.15s; letter-spacing: 0.02em; }
   .btn-primary:hover { opacity: 0.88; }
 
   /* ── End & Log Session — header corner button ──
@@ -95,7 +97,7 @@
      Only visible when the queue has at least one exercise.
      Out of the natural thumb scroll path so accidental
      taps are unlikely. Always requires confirmation modal.
-     Filled solid gold (instead of just an outline) so it
+     Filled solid cyan (instead of just an outline) so it
      stands out more against the dark header — an outlined
      pill is easy to miss after a workout, and forgetting to
      end a session is the whole reason the stale-session
@@ -104,7 +106,7 @@
     background: var(--lift);
     border: 1.5px solid var(--lift);
     border-radius: var(--radius-sm);
-    color: #0f0f0f;
+    color: var(--on-lift);
     font-family: var(--font-body);
     font-size: 12px;
     font-weight: 600;
@@ -115,8 +117,8 @@
     flex-shrink: 0;
     margin-top: 2px;
     letter-spacing: 0.02em;
-    /* Subtle gold glow to draw the eye without being obnoxious */
-    box-shadow: 0 0 8px rgba(200, 169, 110, 0.45);
+    /* Subtle cyan glow to draw the eye without being obnoxious */
+    box-shadow: 0 0 8px var(--lift-glow);
   }
   /* Hover/active state dims slightly (like btn-primary) instead of
      inverting, since the button is now filled rather than outlined */
@@ -148,7 +150,7 @@
   .back-to-top-btn:hover { border-color: var(--lift); background: var(--lift-dim); }
 
   /* ── Open session banner ──
-     Gold for same-day open sessions, red for sessions from
+     Cyan for same-day open sessions, red for sessions from
      a previous day. Appears at the top of the Log tab so
      the user sees it before logging anything new. */
   .session-banner {
@@ -183,7 +185,7 @@
   .session-banner.stale .session-banner-action { color: #e07070; }
 
   /* Danger button — used for destructive actions like Clear all data.
-     Red outline keeps it visually distinct from the gold primary actions. */
+     Red outline keeps it visually distinct from the cyan primary actions. */
   .btn-danger {
     width: 100%;
     background: none;
@@ -258,6 +260,35 @@
     transition: all 0.15s;
   }
   .emoji-opt.selected { border-color: var(--lift-mid); background: var(--lift-dim); }
+
+  /* ── Accent color picker (Settings > Appearance) ──
+     Row of round swatches, one per available accent theme. The swatch's
+     own background always shows its true color (independent of the
+     currently active theme) so all options stay visible at once; the
+     selected one gets a ring + checkmark. Selecting a swatch swaps
+     --lift/--lift-dim/--lift-mid/--on-lift/--lift-glow on :root, which
+     is all every accent-colored element in the app reads from — so one
+     variable swap re-themes buttons, nav, badges, calendar, etc. at once. */
+  .accent-grid { display: flex; gap: 12px; }
+  .accent-swatch {
+    width: 40px; height: 40px; border-radius: 50%;
+    border: 2px solid transparent;
+    background: var(--sw);
+    cursor: pointer; padding: 0;
+    position: relative;
+    transition: transform 0.15s, border-color 0.15s;
+  }
+  .accent-swatch:hover { transform: scale(1.08); }
+  .accent-swatch.selected { border-color: var(--text); }
+  .accent-swatch.selected::after {
+    content: '✓';
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 700;
+    /* Matches this swatch's own "text on accent" color — correct because
+       the selected swatch's --sw always equals the active --lift. */
+    color: var(--on-lift);
+  }
 
   /* Training focus badge shown above the Log tab form */
   .focus-badge {
@@ -433,7 +464,7 @@
   /* Inline edit input that replaces the name when editing */
   .ex-edit-input { background: var(--surface2); border: 1px solid var(--lift-mid); border-radius: var(--radius-sm); color: var(--text); font-family: var(--font-body); font-size: 13px; padding: 3px 8px; outline: none; width: 140px; }
   .ex-edit-input:focus { border-color: var(--lift); }
-  .ex-save-btn { background: var(--lift); border: none; border-radius: var(--radius-sm); color: #0f0f0f; font-size: 11px; font-weight: 600; padding: 3px 8px; cursor: pointer; margin-left: 4px; }
+  .ex-save-btn { background: var(--lift); border: none; border-radius: var(--radius-sm); color: var(--on-lift); font-size: 11px; font-weight: 600; padding: 3px 8px; cursor: pointer; margin-left: 4px; }
   .ex-cancel-btn { background: none; border: none; color: var(--muted); font-size: 11px; cursor: pointer; margin-left: 2px; }
 
   /* Week dot grid — now inside the History tab */
@@ -468,9 +499,9 @@
   /* Empty padding cells before the 1st / after the last day of the month —
      still occupy a full grid cell (via grid-auto-rows) but render invisible */
   .month-cell.empty { background: none; border: none; }
-  /* Day that has a logged session — gold fill, dot indicator */
+  /* Day that has a logged session — cyan fill, dot indicator */
   .month-cell.active { background: var(--lift-dim); border-color: var(--lift-mid); color: var(--text); font-weight: 600; }
-  /* Today gets a gold ring regardless of whether it has a session */
+  /* Today gets a cyan ring regardless of whether it has a session */
   .month-cell.today { border-color: var(--lift) !important; }
   /* Active calendar cells get a subtle hover state since they're clickable */
   .month-cell.active:hover { border-color: var(--lift); }
@@ -554,7 +585,7 @@
   .modal-summary div { padding: 4px 0; border-bottom: 1px solid var(--border); }
   .modal-summary div:last-child { border-bottom: none; }
   .modal-actions { display: flex; gap: 8px; }
-  .modal-confirm { flex: 1; background: var(--lift); border: none; border-radius: var(--radius-sm); color: #0f0f0f; font-family: var(--font-body); font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; }
+  .modal-confirm { flex: 1; background: var(--lift); border: none; border-radius: var(--radius-sm); color: var(--on-lift); font-family: var(--font-body); font-size: 14px; font-weight: 600; padding: 12px; cursor: pointer; }
   .modal-cancel { flex: 1; background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--muted); font-family: var(--font-body); font-size: 14px; padding: 12px; cursor: pointer; }
   .modal-cancel:hover { border-color: var(--text); color: var(--text); }
 
@@ -580,7 +611,7 @@
     justify-content: center;
     gap: 1px;
   }
-  /* Running state — gold to show rest timer is active */
+  /* Running state — cyan to show rest timer is active */
   .btn-stopwatch.running {
     border-color: var(--lift-mid);
     background: var(--lift-dim);
@@ -592,7 +623,7 @@
   .sw-hint { font-size: 10px; color: var(--muted); text-align: left; margin-top: 4px; padding-left: 2px; min-height: 14px; }
 
   /* ── Toast ── */
-  .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--lift); color: #0f0f0f; font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 20px; transition: transform 0.25s ease; pointer-events: none; white-space: nowrap; z-index: 100; }
+  .toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(80px); background: var(--lift); color: var(--on-lift); font-size: 13px; font-weight: 600; padding: 10px 20px; border-radius: 20px; transition: transform 0.25s ease; pointer-events: none; white-space: nowrap; z-index: 100; }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
 
@@ -602,6 +633,32 @@
     .pct-grid { grid-template-columns: repeat(2, 1fr); }
   }
 </style>
+<script>
+  // ── Apply saved accent color before first paint ──
+  // Runs synchronously in <head>, before the rest of the page renders,
+  // so the app never flashes the default cyan before switching to a
+  // saved green/purple/coral choice. Intentionally a small standalone
+  // copy of the accent map (the full version lives in the main script
+  // below alongside pickAccent()) — it can't wait for that script to
+  // load without causing the exact flash this exists to prevent.
+  (function() {
+    var THEMES = {
+      cyan:   { lift: '#3ec6ff', dim: '#0f2438', mid: '#1d4a66', on: '#071019', glow: 'rgba(62,198,255,0.45)' },
+      green:  { lift: '#4ade80', dim: '#0f2818', mid: '#1e5c3c', on: '#052b12', glow: 'rgba(74,222,128,0.45)' },
+      purple: { lift: '#b794f6', dim: '#201a2e', mid: '#4a3a66', on: '#1c1330', glow: 'rgba(183,148,246,0.45)' },
+      coral:  { lift: '#ff6f5e', dim: '#2c1611', mid: '#5c2c22', on: '#2b0b06', glow: 'rgba(255,111,94,0.45)' }
+    };
+    var saved = 'cyan';
+    try { saved = localStorage.getItem('trainingLog_accent') || 'cyan'; } catch (e) {}
+    var t = THEMES[saved] || THEMES.cyan;
+    var r = document.documentElement.style;
+    r.setProperty('--lift', t.lift);
+    r.setProperty('--lift-dim', t.dim);
+    r.setProperty('--lift-mid', t.mid);
+    r.setProperty('--on-lift', t.on);
+    r.setProperty('--lift-glow', t.glow);
+  })();
+</script>
 </head>
 <body>
 
@@ -610,7 +667,7 @@
     <div>
       <!-- Wordmark row: optional avatar emoji, then user's name (if set),
            then "Training Log" — all using the same serif display font,
-           size, and gold color so it reads as one continuous title. -->
+           size, and cyan color so it reads as one continuous title. -->
       <div style="display:flex;align-items:baseline;gap:8px;">
         <span id="header-avatar" style="font-size:15px;display:none;"></span>
         <span id="header-username" class="wordmark" style="margin-bottom:0;display:none;"></span>
@@ -651,7 +708,7 @@
   <div id="tab-log" class="tab active">
 
     <!-- Open session banner — shown when the queue has exercises from a
-         previous visit. Gold if from today, red if from a previous day.
+         previous visit. Cyan if from today, red if from a previous day.
          Populated by renderQueue() each time the queue state changes. -->
     <div id="session-banner" style="display:none;"></div>
 
@@ -686,11 +743,11 @@
           <div id="suggestions-list" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--lift-mid);border-radius:var(--radius-sm);z-index:50;margin-top:3px;overflow:hidden"></div>
         </div>
         <!-- "Did you mean?" warning — shown when the typed name is similar
-             but not identical to an existing exercise. Gold border + suggestion
+             but not identical to an existing exercise. Cyan border + suggestion
              with a one-tap "Use this instead" button. -->
         <div id="fuzzy-match-banner" style="display:none;margin-top:8px;background:var(--lift-dim);border:1px solid var(--lift-mid);border-radius:var(--radius-sm);padding:10px 12px;font-size:13px;color:var(--text);">
           <span id="fuzzy-match-text"></span>
-          <button onclick="useFuzzyMatch()" style="margin-left:8px;background:var(--lift);border:none;border-radius:var(--radius-sm);color:#0f0f0f;font-size:12px;font-weight:600;padding:3px 10px;cursor:pointer;">Use this</button>
+          <button onclick="useFuzzyMatch()" style="margin-left:8px;background:var(--lift);border:none;border-radius:var(--radius-sm);color:var(--on-lift);font-size:12px;font-weight:600;padding:3px 10px;cursor:pointer;">Use this</button>
           <button onclick="dismissFuzzyMatch()" style="margin-left:4px;background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;">Ignore</button>
         </div>
       </div>
@@ -943,6 +1000,23 @@
         </div>
       </div>
       <button class="btn-primary" onclick="saveProfile()">Save profile</button>
+    </div>
+
+    <div class="section-label">Appearance</div>
+    <div class="card">
+      <div class="field" style="margin-bottom:0;">
+        <label>Accent color</label>
+        <!-- Populated statically here (not by JS) since there are only
+             4 fixed options. pickAccent() applies the choice instantly
+             and persists it; updateAccentPickerUI() (called on load and
+             after each pick) keeps the checkmark in sync. -->
+        <div class="accent-grid" id="accent-picker">
+          <button class="accent-swatch" data-accent="cyan" style="--sw:#3ec6ff" onclick="pickAccent('cyan')" aria-label="Cyan accent"></button>
+          <button class="accent-swatch" data-accent="green" style="--sw:#4ade80" onclick="pickAccent('green')" aria-label="Green accent"></button>
+          <button class="accent-swatch" data-accent="purple" style="--sw:#b794f6" onclick="pickAccent('purple')" aria-label="Purple accent"></button>
+          <button class="accent-swatch" data-accent="coral" style="--sw:#ff6f5e" onclick="pickAccent('coral')" aria-label="Coral accent"></button>
+        </div>
+      </div>
     </div>
 
     <div class="section-label">Units</div>
@@ -1298,7 +1372,7 @@
     sinceEl.style.display = 'block';
   }
 
-  // Shows/hides the gold focus badge above the Log tab form
+  // Shows/hides the cyan focus badge above the Log tab form
   function updateFocusBadge(focus) {
     const badge = document.getElementById('focus-badge');
     if (focus) {
@@ -1317,6 +1391,66 @@
     document.querySelectorAll('.emoji-opt').forEach(btn => {
       btn.classList.toggle('selected', btn.dataset.emoji === emoji);
     });
+  }
+
+  // ─────────────────────────────────────────────
+  // ACCENT COLOR (Settings > Appearance)
+  // Four fixed accent themes on the same navy base. Picking one swaps
+  // --lift/--lift-dim/--lift-mid/--on-lift/--lift-glow on :root — the
+  // single set of variables every accent-colored element in the app
+  // (nav, buttons, PR badges, calendar highlights, focus rings, the
+  // rest timer) already reads from, so one swap re-themes everything
+  // at once. Applied immediately (no "Save" step needed, unlike the
+  // Profile card) since it's a lightweight, instantly-reversible choice.
+  // The matching pre-paint copy of this map lives in <head> (see the
+  // small inline <script> right after </style>) purely to avoid a
+  // flash of the default cyan on load — keep both in sync if a new
+  // accent is ever added here.
+  // ─────────────────────────────────────────────
+  const ACCENT_KEY = 'trainingLog_accent';
+  const ACCENT_THEMES = {
+    cyan:   { lift: '#3ec6ff', dim: '#0f2438', mid: '#1d4a66', on: '#071019', glow: 'rgba(62,198,255,0.45)' },
+    green:  { lift: '#4ade80', dim: '#0f2818', mid: '#1e5c3c', on: '#052b12', glow: 'rgba(74,222,128,0.45)' },
+    purple: { lift: '#b794f6', dim: '#201a2e', mid: '#4a3a66', on: '#1c1330', glow: 'rgba(183,148,246,0.45)' },
+    coral:  { lift: '#ff6f5e', dim: '#2c1611', mid: '#5c2c22', on: '#2b0b06', glow: 'rgba(255,111,94,0.45)' }
+  };
+
+  function loadAccent() {
+    try { return localStorage.getItem(ACCENT_KEY) || 'cyan'; }
+    catch (e) { return 'cyan'; }
+  }
+
+  function saveAccentPref(name) {
+    try { localStorage.setItem(ACCENT_KEY, name); } catch (e) { /* ignore */ }
+  }
+
+  // Writes the theme's colors onto :root as inline style overrides,
+  // taking effect immediately on every element using var(--lift) etc.
+  function applyAccent(name) {
+    const t = ACCENT_THEMES[name] || ACCENT_THEMES.cyan;
+    const r = document.documentElement.style;
+    r.setProperty('--lift', t.lift);
+    r.setProperty('--lift-dim', t.dim);
+    r.setProperty('--lift-mid', t.mid);
+    r.setProperty('--on-lift', t.on);
+    r.setProperty('--lift-glow', t.glow);
+  }
+
+  // Keeps the checkmark on the currently-selected swatch; called on
+  // load and again after every pick.
+  function updateAccentPickerUI(name) {
+    document.querySelectorAll('.accent-swatch').forEach(btn => {
+      btn.classList.toggle('selected', btn.dataset.accent === name);
+    });
+  }
+
+  // Bound to each swatch button's onclick
+  function pickAccent(name) {
+    if (!ACCENT_THEMES[name]) return;
+    saveAccentPref(name);
+    applyAccent(name);
+    updateAccentPickerUI(name);
+    toast('Accent color updated');
   }
 
   // Called when "Save profile" is tapped in Settings.
@@ -1722,7 +1856,7 @@
   // FUZZY MATCH — "Did you mean?"
   // Uses a simple similarity score (Dice coefficient on bigrams)
   // to catch near-matches like "face pull" vs "Face pulls".
-  // Shows a gold banner with a one-tap correction if a close
+  // Shows a cyan banner with a one-tap correction if a close
   // match is found that isn't an exact case-insensitive match.
   // ─────────────────────────────────────────────
 
@@ -1755,7 +1889,7 @@
   }
 
   // Checks the typed name against history using Dice coefficient similarity.
-  // If a close-but-not-exact match is found (score >= 0.5), shows the gold
+  // If a close-but-not-exact match is found (score >= 0.5), shows the cyan
   // "Did you mean X?" banner so the user can unify it with one tap.
   function checkFuzzyMatch(query) {
     const banner  = document.getElementById('fuzzy-match-banner');
@@ -2095,7 +2229,7 @@
   // ─────────────────────────────────────────────
   // MONTHLY CALENDAR VIEW
   // Shows a full calendar grid for one month at a
-  // time, with a gold dot/fill on any day that has
+  // time, with a cyan dot/fill on any day that has
   // a logged session. Starts on the current month;
   // Prev/Next arrows browse other months without
   // affecting any other part of the app.
@@ -2850,7 +2984,7 @@
       .map(e => {
         const est      = e1rmEst(e.weight, e.reps);
         const isActual = e.reps <= 1;
-        // Small gold line under the lift name showing strength-to-bodyweight ratio
+        // Small cyan line under the lift name showing strength-to-bodyweight ratio
         const ratioLine = bw
           ? `<div style="font-size:10px;color:var(--lift);margin-top:2px;">${(est / bw).toFixed(1)}× bodyweight</div>`
           : '';
@@ -2995,7 +3129,7 @@
   // ─────────────────────────────────────────────
   // LIVE 1RM BANNER (Log tab)
   // Fires on every keystroke in reps / weight.
-  // Shows a gold banner above Notes with the Epley
+  // Shows a cyan banner above Notes with the Epley
   // estimate. Hides if either field is cleared.
   // ─────────────────────────────────────────────
   function updateLiveE1RM() {
@@ -3098,6 +3232,10 @@
     // Sync the unit toggle buttons in Settings to the saved unit on first load
     document.getElementById('unit-lb').classList.toggle('active', currentUnit === 'lb');
     document.getElementById('unit-kg').classList.toggle('active', currentUnit === 'kg');
+
+    // Sync the accent color picker's checkmark to whichever theme was
+    // already applied by the pre-paint script in <head>
+    updateAccentPickerUI(loadAccent());
 
     // If the user closed the tab mid-session, currentQueue was restored
     // from localStorage above — render it now so those exercises (and
