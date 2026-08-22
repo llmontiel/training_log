@@ -4,6 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Training Log</title>
+<!-- Home screen / favicon icon — href set dynamically by JS to match
+     whichever accent color is active (see ICON_DATA_URIS and
+     applyIconForAccent() in the main script). iOS captures whatever
+     this points to at the moment "Add to Home Screen" is tapped, so
+     changing the accent afterward won't retroactively recolor an
+     icon already saved to a home screen — re-saving picks up the
+     new color. -->
+<link rel="apple-touch-icon" id="icon-apple" href="">
+<link rel="icon" id="icon-favicon" type="image/png" href="">
 <style>
   /*
    * ─────────────────────────────────────────────
@@ -1590,6 +1599,32 @@
   // flash of the default cyan on load — keep both in sync if a new
   // accent is ever added here.
   // ─────────────────────────────────────────────
+  // ─────────────────────────────────────────────
+  // HOME SCREEN / FAVICON ICON — matches accent color
+  // A simple barbell glyph on the same navy background as the app,
+  // recolored to match whichever accent is active. Swapped into the
+  // <link> tags in <head> both on load and every time pickAccent()
+  // runs. Note: iOS only captures whatever the icon currently is at
+  // the moment "Add to Home Screen" is tapped — it does not update a
+  // shortcut already saved to a home screen. Changing the accent
+  // later means removing and re-adding the shortcut to pick up the
+  // new color.
+  // ─────────────────────────────────────────────
+  const ICON_DATA_URIS = {
+    cyan:   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACp0lEQVR4nO3dzU0bURSAUYiyYkEB0EaKSMkpIm2kjyxGQijKBxgz43ftc9b8+F59fraMZrh/eHy6g//5dukHwLrEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQfp+5C/78evP21/w++fzMY9kZets6f6Y//H27sCv3Wwiq21p9zhOGvi1m0pkzS3t+57j0zOf+b2zLLslb0hJO8ZxftS3cHisvCUnB2mvOL4q5+s+PBbfkpODJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIB16f44vMfoyp1m3DpgUx+gsNtsIUxIZ87JyBWW8mDLLjDimbPPjRkw0Iw4uYkAcI55kn7D+XAPi4FLEQRIHSRykAXFM+cjoVOvPNSAOLmVGHOs/yU41YqIZcdwN2eYHTZll0h/etp2u/9nRG6ZksZkUx2bWfkcb87LC8cRBEgdJHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBEgdJHKS94viqS4+u+xKmxbfk5CDtGMf5OV/3sbFZeUtODtK+cZwT9S0cG5tlt3T/8Pi0309/cdJ9E24ni3+stqWD4ti8O/zNZvHaOls6NA5m8YaUJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImD9Bdq4GPIfzx8GwAAAABJRU5ErkJggg==',
+    green:  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACqElEQVR4nO3dzU0bURSAUYiyYkEBVEEJqSZFpZqUkJKyGAmhKB9gzIzftc9Z8+N79fnZMprh/uHx6Q7+59ulHwDrEgdJHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBEgdJHCRxkMRBEgfp+5G/7Mefn29/we/nX8c8kpWts6X7Y/7H27sDv3aziay2pd3jOGng124qkTW3tO97jk/PfOb3zrLslrwhJe0Yx/lR38LhsfKWnBykveL4qpyv+/BYfEtODpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYN06P05vsToy5xm3TpgUhyjs9hsI0xJZMzLyhWU8WLKLDPimLLNjxsx0Yw4uIgBcYx4kn3C+nMNiINLEQdJHCRxkAbEMeUjo1OtP9eAOLiUGXGs/yQ71YiJZsRxN2SbHzRllkl/eNt2uv5nR2+YksVmUhybWfsdbczLCscTB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQ9orjqy49uu5LmBbfkpODtGMc5+d83cfGZuUtOTlI+8ZxTtS3cGxslt3S/cPj034//cVJ9024nSz+sdqWDopj8+7wN5vFa+ts6dA4mMUbUpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDpI4SOIgiYMkDtJfLXBkI5dOy4UAAAAASUVORK5CYII=',
+    purple: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACqElEQVR4nO3dzU0bURSAUYiyYkEBrOko3aSAdJOOUkwWIyEU5QOMmfG79jlrfnyvPj9bRjPcPzw+3cH/fLv0A2Bd4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iB9P/KX/f715+0v+PHz+ZhHsrJ1tnR/zP94e3fg1242kdW2tHscJw382k0lsuaW9n3P8emZz/zeWZbdkjekpB3jOD/qWzg8Vt6Sk4O0VxxflfN1Hx6Lb8nJQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZAOvT/Hlxh9mdOsWwdMimN0FptthCmJjHlZuYIyXkyZZUYcU7b5cSMmmhEHFzEgjhFPsk9Yf64BcXAp4iCJgyQO0oA4pnxkdKr15xoQB5cyI471n2SnGjHRjDjuhmzzg6bMMukPb9tO1//s6A1TsthMimMza7+jjXlZ4XjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA6SOEjiIImDJA7SXnF81aVH130J0+JbcnKQdozj/Jyv+9jYrLwlJwdp3zjOifoWjo3Nslu6f3h82u+nvzjpvgm3k8U/VtvSQXFs3h3+ZrN4bZ0tHRoHs3hDShIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQRIHSRwkcZDEQfoLgCtjiqmhLAcAAAAASUVORK5CYII=',
+    coral:  'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAACp0lEQVR4nO3dS04bURBAUYgyIhILYD3ZSFaWjWRbmWfQEkIoFzCm26/sc8Z8XKXrZ8uom/uHx6c7+J9vl34ArEscJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcpO9H/rK/v36+/QU/fv855pGsbJ0t3R/zP97eHfilm01ktS3tHsdJA790U4msuaV933N8euYzv3eWZbfkDSlpxzjOj/oWDo+Vt+TkIO0Vx1flfN2Hx+JbcnKQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcJHGQxEESB0kcpEPvz/ElRl/mNOvWAZPiGJ3FZhthSiJjXlauoIxnU2aZEceUbX7ciIlmxMFFDIhjxJPsE9afa0AcXIo4SOIgiYM0II4pHxmdav25BsTBpcyIY/0n2alGTDQjjrsh2/ygKbNM+sPbttP1Pzt6w5QsNpPi2Mza72hjXlY4njhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJg7RXHF916dF1X8K0+JacHKQd4zg/5+s+NjYrb8nJQdo3jnOivoVjY7Pslu4fHp/2++nPTrpvwu1k8cpqWzoojs27w99sFi+ts6VD42AWb0hJ4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI4iCJgyQOkjhI/wAxAGP/ftW2iQAAAABJRU5ErkJggg=='
+  };
+
+  function applyIconForAccent(name) {
+    const uri = ICON_DATA_URIS[name] || ICON_DATA_URIS.cyan;
+    const appleIcon = document.getElementById('icon-apple');
+    const favicon = document.getElementById('icon-favicon');
+    if (appleIcon) appleIcon.href = uri;
+    if (favicon) favicon.href = uri;
+  }
+
   const ACCENT_KEY = 'trainingLog_accent';
   const ACCENT_THEMES = {
     cyan:   { lift: '#3ec6ff', dim: '#0f2438', mid: '#1d4a66', on: '#071019', glow: 'rgba(62,198,255,0.45)' },
@@ -1632,6 +1667,7 @@
     if (!ACCENT_THEMES[name]) return;
     saveAccentPref(name);
     applyAccent(name);
+    applyIconForAccent(name);
     updateAccentPickerUI(name);
     toast('Accent color updated');
   }
@@ -3657,6 +3693,9 @@
     // Sync the accent color picker's checkmark to whichever theme was
     // already applied by the pre-paint script in <head>
     updateAccentPickerUI(loadAccent());
+
+    // Set the home screen / favicon icon to match the saved accent
+    applyIconForAccent(loadAccent());
 
     // If the user closed the tab mid-session, currentQueue was restored
     // from localStorage above — render it now so those exercises (and
