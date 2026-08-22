@@ -557,6 +557,66 @@
   .btn-row { display: flex; gap: 8px; margin-top: 1rem; flex-wrap: wrap; }
 
   /*
+   * ── Welcome screen ──
+   * Full-page overlay shown only on first launch (before any tab
+   * content is visible). Higher z-index than the confirm modal (200)
+   * since it should sit above literally everything — there's nothing
+   * else meaningful to interact with until it's dismissed.
+   */
+  .welcome-screen {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    z-index: 300;
+    display: flex; /* toggled via inline style, not this rule */
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+    overflow-y: auto;
+  }
+  .welcome-content { max-width: 340px; width: 100%; text-align: center; }
+  .welcome-emoji { font-size: 40px; margin-bottom: 10px; }
+  .welcome-text {
+    font-size: 13px; color: var(--muted); line-height: 1.6;
+    margin: 0 0 1.5rem;
+  }
+  .welcome-skip {
+    display: block; width: 100%; text-align: center;
+    background: none; border: none; color: var(--muted);
+    font-size: 12px; margin-top: 10px; padding: 6px;
+    cursor: pointer; transition: color 0.15s;
+  }
+  .welcome-skip:hover { color: var(--text); }
+
+  /*
+   * ── Return-visit splash ──
+   * Full-page quote screen for already-onboarded users, once per
+   * session. Slides up and off (translateY to -100%) to dismiss —
+   * an "opening" motion rather than a button being clicked away.
+   */
+  .splash-screen {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    z-index: 300;
+    display: flex; /* toggled via inline style */
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    cursor: pointer;
+    transform: translateY(0);
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .splash-screen.closing { transform: translateY(-100%); }
+  .splash-content { max-width: 300px; text-align: center; }
+  .splash-quote {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 19px;
+    line-height: 1.55;
+    color: var(--text);
+    margin: 1.25rem 0 0;
+  }
+
+  /*
    * ── Confirm Modal ──
    * Overlay that appears when "End & Log Session" is tapped.
    * Blurs the background and shows a confirmation card.
@@ -661,6 +721,60 @@
 </script>
 </head>
 <body>
+
+<!-- ════════════════════════════════════════
+     WELCOME SCREEN — first launch only
+     Full-page overlay shown before anything else if the person has
+     never been through onboarding (trainingLog_onboarded not set in
+     localStorage). Collects name + avatar right here instead of
+     leaving them to find Settings on their own. "Skip for now" is
+     always available — this is a nice-to-have, never a gate blocking
+     the rest of the app. Hidden by default; shown by JS in the
+     DOMContentLoaded handler if onboarding hasn't happened yet. -->
+<div class="welcome-screen" id="welcome-screen" style="display:none;">
+  <div class="welcome-content">
+    <div class="welcome-emoji">🏋️</div>
+    <div class="wordmark" style="font-size:20px;">Training Log</div>
+    <div class="tagline" style="margin-bottom:1.25rem;">powerlifting · strength · performance</div>
+    <p class="welcome-text">Track every set, watch your PRs stack up, and never lose a session to a forgotten note again.</p>
+
+    <div class="field" style="text-align:left;">
+      <label>Your name</label>
+      <input type="text" id="welcome-name" placeholder="e.g. Alex" autocomplete="off">
+    </div>
+    <div class="field" style="text-align:left;">
+      <label>Avatar</label>
+      <div class="emoji-grid" id="welcome-avatar-picker">
+        <button class="emoji-opt" data-emoji="🏋️" onclick="pickAvatar('🏋️')">🏋️</button>
+        <button class="emoji-opt" data-emoji="💪" onclick="pickAvatar('💪')">💪</button>
+        <button class="emoji-opt" data-emoji="🦾" onclick="pickAvatar('🦾')">🦾</button>
+        <button class="emoji-opt" data-emoji="🔥" onclick="pickAvatar('🔥')">🔥</button>
+        <button class="emoji-opt" data-emoji="⚡" onclick="pickAvatar('⚡')">⚡</button>
+        <button class="emoji-opt" data-emoji="🐐" onclick="pickAvatar('🐐')">🐐</button>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="completeWelcome()" style="margin-top:0.5rem;">Get started</button>
+    <button class="welcome-skip" onclick="skipWelcome()">Skip for now</button>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════
+     RETURN-VISIT SPLASH — motivational quote
+     Shown for people who've already been through onboarding, once per
+     app session. Auto-dismisses on its own (slides up and off-screen)
+     after a couple seconds — no button, nothing to tap. Only appears
+     when the app is actually started fresh (a new tab/session); does
+     NOT re-appear on every reload that happens mid-session (e.g. a
+     phone screen timing out and the page reloading when reopened) —
+     see the sessionStorage check in maybeShowSplash(). Tapping it
+     also dismisses immediately, for anyone who doesn't want to wait. -->
+<div class="splash-screen" id="splash-screen" style="display:none;" onclick="dismissSplash()">
+  <div class="splash-content">
+    <div class="wordmark" style="font-size:13px;">Training Log</div>
+    <p class="splash-quote" id="splash-quote"></p>
+  </div>
+</div>
 
 <header>
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
@@ -1470,6 +1584,105 @@
     renderHistory(); // refresh federation badge
     renderPRs();     // refresh bodyweight ratios
     toast('Profile saved');
+  }
+
+  // ─────────────────────────────────────────────
+  // WELCOME SCREEN (first launch)
+  // Shown once, before any tab content, if the person has never been
+  // onboarded. Reuses pickAvatar()/pendingAvatar from the Profile
+  // card above — the welcome screen's avatar buttons share the same
+  // .emoji-opt class and data-emoji attributes, so picking one there
+  // highlights correctly here too if they later open Settings.
+  // ─────────────────────────────────────────────
+  const ONBOARD_KEY = 'trainingLog_onboarded';
+
+  function hasOnboarded() {
+    try { return localStorage.getItem(ONBOARD_KEY) === 'true'; }
+    catch (e) { return true; } // if storage is broken, don't block the app on a screen that can't be dismissed
+  }
+
+  function markOnboarded() {
+    try { localStorage.setItem(ONBOARD_KEY, 'true'); } catch (e) { /* ignore */ }
+  }
+
+  function hideWelcomeScreen() {
+    document.getElementById('welcome-screen').style.display = 'none';
+  }
+
+  // "Get started" — saves whatever name/avatar were entered (either
+  // can be left blank; nothing here is required) on top of the
+  // existing profile defaults, same storage shape as saveProfile().
+  function completeWelcome() {
+    const name = document.getElementById('welcome-name').value.trim();
+    const existing = loadProfile();
+    const avatar = pendingAvatar !== null ? pendingAvatar : existing.avatar || '';
+
+    saveProfileToStorage({ ...existing, name, avatar });
+    markOnboarded();
+    hideWelcomeScreen();
+    updateHeaderName();
+  }
+
+  // "Skip for now" — dismisses without saving anything; Settings
+  // remains available for name/avatar whenever they want it.
+  function skipWelcome() {
+    markOnboarded();
+    hideWelcomeScreen();
+  }
+
+  // ─────────────────────────────────────────────
+  // RETURN-VISIT SPLASH (motivational quote)
+  // Only for people who've already onboarded — first-timers get the
+  // welcome screen above instead, never both. Shown once per browser
+  // session via sessionStorage (not localStorage): sessionStorage
+  // survives a mid-session reload — e.g. a phone screen timing out
+  // and the page reloading when reopened — but clears once the tab
+  // is actually closed, so this only reappears on a genuine fresh
+  // app start, matching "just when they start the app."
+  // Original lines only — no quotes attributed to real people, to
+  // avoid misattributing words that were never actually said.
+  // ─────────────────────────────────────────────
+  const SPLASH_SESSION_KEY = 'trainingLog_splash_shown';
+  const SPLASH_QUOTES = [
+    "Chalk up. Show up. Lift heavy.",
+    "The bar doesn't care about yesterday.",
+    "Every rep is a rep closer to your best lift.",
+    "Strength is built one set at a time.",
+    "You don't find your limits — you make new ones.",
+    "The only bad session is the one you skip.",
+    "PRs are just patience with weight added.",
+    "Your future self is loading the bar right now.",
+    "Discipline sounds better after the last rep.",
+    "Nobody ever regretted showing up to train."
+  ];
+
+  function maybeShowSplash() {
+    if (!hasOnboarded()) return; // first-timers get the welcome screen, not this
+    let alreadyShown = false;
+    try { alreadyShown = sessionStorage.getItem(SPLASH_SESSION_KEY) === 'true'; }
+    catch (e) { return; } // if sessionStorage is broken, skip the splash rather than risk it never dismissing
+    if (alreadyShown) return;
+
+    try { sessionStorage.setItem(SPLASH_SESSION_KEY, 'true'); } catch (e) { /* ignore */ }
+
+    const quote = SPLASH_QUOTES[Math.floor(Math.random() * SPLASH_QUOTES.length)];
+    document.getElementById('splash-quote').textContent = quote;
+    document.getElementById('splash-screen').style.display = 'flex';
+
+    // Auto-dismiss on its own after a beat — sliding up and off, not
+    // waiting on a click. Tapping anywhere (see the overlay's onclick)
+    // dismisses it early for anyone who doesn't want to wait it out.
+    setTimeout(dismissSplash, 1800);
+  }
+
+  // Shared by both the auto-dismiss timer and tap-to-dismiss. Safe to
+  // call twice (e.g. a tap right as the timer fires) — the "closing"
+  // class and transitionend listener are idempotent.
+  function dismissSplash() {
+    const splash = document.getElementById('splash-screen');
+    if (!splash || splash.classList.contains('closing')) return;
+    splash.classList.add('closing');
+    splash.addEventListener('transitionend', () => { splash.style.display = 'none'; }, { once: true });
   }
 
   // ─────────────────────────────────────────────
@@ -3223,6 +3436,17 @@
 
   // Wait for DOM to be ready before attaching listeners
   document.addEventListener('DOMContentLoaded', function() {
+    // Show the welcome screen on first launch only, before anything
+    // else — everyone who's already been through it (or skipped it)
+    // goes straight to the app as normal.
+    if (!hasOnboarded()) {
+      document.getElementById('welcome-screen').style.display = 'flex';
+    } else {
+      // Already onboarded — show the return-visit quote splash instead,
+      // once per session (see maybeShowSplash for the session logic).
+      maybeShowSplash();
+    }
+
     // Show the saved name (if any) in the header as soon as the page loads
     updateHeaderName();
 
