@@ -589,9 +589,11 @@
 
   /*
    * ── Return-visit splash ──
-   * Full-page quote screen for already-onboarded users, once per
-   * session. Slides up and off (translateY to -100%) to dismiss —
-   * an "opening" motion rather than a button being clicked away.
+   * Full-page quote screen for already-onboarded users, at most once
+   * per calendar day. Dismisses either on its own after a few seconds,
+   * by tap, or by dragging it upward (see the pointer handlers in
+   * maybeShowSplash()'s section of the script) — "opening" motions
+   * rather than a button being clicked away.
    */
   .splash-screen {
     position: fixed; inset: 0;
@@ -601,12 +603,24 @@
     align-items: center;
     justify-content: center;
     padding: 2rem;
-    cursor: pointer;
+    cursor: grab;
+    touch-action: none; /* so dragging the splash doesn't also scroll the page underneath */
     transform: translateY(0);
-    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   }
+  /* While actively being dragged, the transition is removed (via this
+     class, toggled in JS) so the screen tracks the finger/cursor
+     1:1 instead of lagging behind with eased motion. */
+  .splash-screen.dragging { transition: none; cursor: grabbing; }
   .splash-screen.closing { transform: translateY(-100%); }
   .splash-content { max-width: 300px; text-align: center; }
+  .splash-greeting {
+    font-family: var(--font-body);
+    font-size: 13px;
+    color: var(--lift);
+    letter-spacing: 0.02em;
+    margin-bottom: 2px;
+  }
   .splash-quote {
     font-family: var(--font-display);
     font-style: italic;
@@ -614,6 +628,29 @@
     line-height: 1.55;
     color: var(--text);
     margin: 1.25rem 0 0;
+  }
+  /* Faint stacked chevrons hinting at the swipe-up gesture. Staggered
+     fade-in delays make the wave read as moving upward. Purely
+     decorative — no text, no click target of its own. */
+  .splash-swipe-hint {
+    position: absolute;
+    left: 50%;
+    bottom: 44px;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    color: var(--muted);
+    pointer-events: none;
+  }
+  .splash-swipe-hint svg { width: 18px; height: 18px; margin-top: -7px; }
+  .splash-swipe-hint svg:first-child { margin-top: 0; }
+  .splash-swipe-hint .chev1 { animation: splash-chev-fade 1.6s ease-in-out infinite; }
+  .splash-swipe-hint .chev2 { animation: splash-chev-fade 1.6s ease-in-out infinite 0.18s; }
+  .splash-swipe-hint .chev3 { animation: splash-chev-fade 1.6s ease-in-out infinite 0.36s; }
+  @keyframes splash-chev-fade {
+    0%, 100% { opacity: 0.15; transform: translateY(2px); }
+    50%      { opacity: 0.7;  transform: translateY(0); }
   }
 
   /*
@@ -761,18 +798,30 @@
 
 <!-- ════════════════════════════════════════
      RETURN-VISIT SPLASH — motivational quote
-     Shown for people who've already been through onboarding, once per
-     app session. Auto-dismisses on its own (slides up and off-screen)
-     after a couple seconds — no button, nothing to tap. Only appears
-     when the app is actually started fresh (a new tab/session); does
-     NOT re-appear on every reload that happens mid-session (e.g. a
-     phone screen timing out and the page reloading when reopened) —
-     see the sessionStorage check in maybeShowSplash(). Tapping it
-     also dismisses immediately, for anyone who doesn't want to wait. -->
-<div class="splash-screen" id="splash-screen" style="display:none;" onclick="dismissSplash()">
+     Shown for people who've already been through onboarding, at most
+     once per calendar day. Dismisses on its own after a few seconds,
+     by tap, or by dragging it upward. See maybeShowSplash() for the
+     once-per-day check and the pointer handlers for the drag gesture. -->
+<div class="splash-screen" id="splash-screen" style="display:none;">
   <div class="splash-content">
+    <!-- Personalized greeting — only shown if a profile name is
+         saved. Format: "{avatar} {name}'s" sitting right above the
+         wordmark, reading as "🔥 Lili's / Training Log". Populated
+         by maybeShowSplash(); stays hidden for anyone who skipped
+         the welcome screen and never set a name. -->
+    <div class="splash-greeting" id="splash-greeting" style="display:none;"></div>
     <div class="wordmark" style="font-size:13px;">Training Log</div>
     <p class="splash-quote" id="splash-quote"></p>
+  </div>
+  <!-- Faint upward chevron stack — hints at the swipe-up dismiss
+       gesture without spelling it out in words. Positioned relative
+       to the full screen (not splash-content) so it sits near the
+       bottom regardless of how long the quote runs. Purely
+       decorative (aria-hidden), staggered fade animates bottom-to-top. -->
+  <div class="splash-swipe-hint" aria-hidden="true">
+    <svg class="chev3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15l7-7 7 7"/></svg>
+    <svg class="chev2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15l7-7 7 7"/></svg>
+    <svg class="chev1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 15l7-7 7 7"/></svg>
   </div>
 </div>
 
@@ -1597,7 +1646,27 @@
   const ONBOARD_KEY = 'trainingLog_onboarded';
 
   function hasOnboarded() {
-    try { return localStorage.getItem(ONBOARD_KEY) === 'true'; }
+    try {
+      if (localStorage.getItem(ONBOARD_KEY) === 'true') return true;
+
+      // Backfill for existing users: the onboarding flag didn't exist
+      // before this feature shipped, so anyone with session data or a
+      // saved profile name already predates it. Treat them as already
+      // onboarded instead of showing the welcome screen retroactively
+      // to someone who's been using the app for weeks — and persist
+      // the flag so this check only ever needs to run once per device.
+      const rawSessions = localStorage.getItem(STORAGE_KEY);
+      const hasSessions = rawSessions && JSON.parse(rawSessions).length > 0;
+
+      const rawProfile = localStorage.getItem(PROFILE_KEY);
+      const hasProfileName = rawProfile && !!JSON.parse(rawProfile).name;
+
+      if (hasSessions || hasProfileName) {
+        markOnboarded();
+        return true;
+      }
+      return false;
+    }
     catch (e) { return true; } // if storage is broken, don't block the app on a screen that can't be dismissed
   }
 
@@ -1633,16 +1702,17 @@
   // ─────────────────────────────────────────────
   // RETURN-VISIT SPLASH (motivational quote)
   // Only for people who've already onboarded — first-timers get the
-  // welcome screen above instead, never both. Shown once per browser
-  // session via sessionStorage (not localStorage): sessionStorage
-  // survives a mid-session reload — e.g. a phone screen timing out
-  // and the page reloading when reopened — but clears once the tab
-  // is actually closed, so this only reappears on a genuine fresh
-  // app start, matching "just when they start the app."
+  // welcome screen above instead, never both. Shown at most once per
+  // calendar day, tracked in localStorage (not sessionStorage) as the
+  // date it last ran. sessionStorage doesn't work for this on iOS:
+  // swiping up to close a home-screen app kills the whole process,
+  // wiping sessionStorage, so a "once per session" check ended up
+  // showing the quote on every single reopen. Comparing against
+  // today's date in localStorage survives that.
   // Original lines only — no quotes attributed to real people, to
   // avoid misattributing words that were never actually said.
   // ─────────────────────────────────────────────
-  const SPLASH_SESSION_KEY = 'trainingLog_splash_shown';
+  const SPLASH_LAST_SHOWN_KEY = 'trainingLog_splash_last_shown';
   const SPLASH_QUOTES = [
     "Chalk up. Show up. Lift heavy.",
     "The bar doesn't care about yesterday.",
@@ -1658,31 +1728,108 @@
 
   function maybeShowSplash() {
     if (!hasOnboarded()) return; // first-timers get the welcome screen, not this
-    let alreadyShown = false;
-    try { alreadyShown = sessionStorage.getItem(SPLASH_SESSION_KEY) === 'true'; }
-    catch (e) { return; } // if sessionStorage is broken, skip the splash rather than risk it never dismissing
-    if (alreadyShown) return;
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD, local calendar day
+    let lastShown = null;
+    try { lastShown = localStorage.getItem(SPLASH_LAST_SHOWN_KEY); }
+    catch (e) { return; } // if storage is broken, skip the splash rather than risk it never dismissing
+    if (lastShown === today) return; // already shown today
 
-    try { sessionStorage.setItem(SPLASH_SESSION_KEY, 'true'); } catch (e) { /* ignore */ }
+    try { localStorage.setItem(SPLASH_LAST_SHOWN_KEY, today); } catch (e) { /* ignore */ }
+
+    // Personalized greeting — "🔥 Lili's" above "Training Log" — only
+    // if a name was actually saved (welcome screen or Settings). Avatar
+    // is optional on top of that; falls back to just "{name}'s" alone.
+    const profile = loadProfile();
+    const greetingEl = document.getElementById('splash-greeting');
+    if (profile.name) {
+      greetingEl.textContent = (profile.avatar ? profile.avatar + ' ' : '') + profile.name + "'s";
+      greetingEl.style.display = 'block';
+    } else {
+      greetingEl.style.display = 'none';
+    }
 
     const quote = SPLASH_QUOTES[Math.floor(Math.random() * SPLASH_QUOTES.length)];
     document.getElementById('splash-quote').textContent = quote;
     document.getElementById('splash-screen').style.display = 'flex';
 
     // Auto-dismiss on its own after a beat — sliding up and off, not
-    // waiting on a click. Tapping anywhere (see the overlay's onclick)
-    // dismisses it early for anyone who doesn't want to wait it out.
-    setTimeout(dismissSplash, 1800);
+    // waiting on a click. Tapping anywhere, or dragging it upward
+    // (see bindSplashGestures below), dismisses it early for anyone
+    // who doesn't want to wait it out.
+    setTimeout(dismissSplash, 3500);
   }
 
-  // Shared by both the auto-dismiss timer and tap-to-dismiss. Safe to
-  // call twice (e.g. a tap right as the timer fires) — the "closing"
-  // class and transitionend listener are idempotent.
+  // Shared by the auto-dismiss timer, tap-to-dismiss, and a completed
+  // drag. Safe to call more than once (e.g. a tap right as the timer
+  // fires) — the "closing" class check makes it idempotent. Skipped
+  // entirely while an active drag is in progress, so the auto-dismiss
+  // timer can't rip the screen away out from under a finger mid-swipe.
   function dismissSplash() {
     const splash = document.getElementById('splash-screen');
-    if (!splash || splash.classList.contains('closing')) return;
+    if (!splash || splash.classList.contains('closing') || splash.classList.contains('dragging')) return;
     splash.classList.add('closing');
-    splash.addEventListener('transitionend', () => { splash.style.display = 'none'; }, { once: true });
+    // Set the target directly rather than relying on the .closing
+    // class's own transform rule — this guarantees a clean animation
+    // from wherever a drag left the screen, not just from translateY(0).
+    splash.style.transform = 'translateY(-100%)';
+    splash.addEventListener('transitionend', () => {
+      splash.style.display = 'none';
+      splash.style.transform = '';
+      splash.classList.remove('closing');
+    }, { once: true });
+  }
+
+  // Swipe-up-to-dismiss gesture. Bound once (the splash element is
+  // static in the DOM, never recreated) rather than re-bound on every
+  // show. Uses Pointer Events so the same code handles touch and mouse.
+  // Distance while dragging maps to three outcomes on release:
+  //   < TAP_THRESHOLD      → treated as a plain tap, dismiss immediately
+  //   between the two      → not far enough, spring back down
+  //   > DISMISS_THRESHOLD  → far enough, finish the dismiss on its own
+  function bindSplashGestures() {
+    const splash = document.getElementById('splash-screen');
+    if (!splash) return;
+
+    const TAP_THRESHOLD = 10;      // px — anything under this is just a tap
+    const DISMISS_THRESHOLD = 110; // px dragged upward to auto-complete
+
+    let startY = 0;
+    let currentY = 0;
+    let dragging = false;
+
+    function onDown(e) {
+      dragging = true;
+      currentY = 0;
+      startY = e.clientY;
+      splash.classList.add('dragging');
+      splash.setPointerCapture(e.pointerId);
+    }
+
+    function onMove(e) {
+      if (!dragging) return;
+      currentY = Math.min(0, e.clientY - startY); // only respond to upward movement
+      splash.style.transform = `translateY(${currentY}px)`;
+    }
+
+    function onUp() {
+      if (!dragging) return;
+      dragging = false;
+      splash.classList.remove('dragging');
+
+      const distance = Math.abs(currentY);
+      if (distance < TAP_THRESHOLD || distance > DISMISS_THRESHOLD) {
+        dismissSplash();
+      } else {
+        // Didn't clear the threshold — spring back down. Transition is
+        // back on now that 'dragging' is removed, so this animates.
+        splash.style.transform = 'translateY(0)';
+      }
+    }
+
+    splash.addEventListener('pointerdown', onDown);
+    splash.addEventListener('pointermove', onMove);
+    splash.addEventListener('pointerup', onUp);
+    splash.addEventListener('pointercancel', onUp);
   }
 
   // ─────────────────────────────────────────────
@@ -3443,8 +3590,11 @@
       document.getElementById('welcome-screen').style.display = 'flex';
     } else {
       // Already onboarded — show the return-visit quote splash instead,
-      // once per session (see maybeShowSplash for the session logic).
+      // at most once per day (see maybeShowSplash for the date check).
       maybeShowSplash();
+      // Bound once here rather than per-show since #splash-screen is
+      // static in the DOM — no need to re-attach listeners every day.
+      bindSplashGestures();
     }
 
     // Show the saved name (if any) in the header as soon as the page loads
