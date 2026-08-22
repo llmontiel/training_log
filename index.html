@@ -1180,6 +1180,11 @@
           <button class="accent-swatch" data-accent="coral" style="--sw:#ff6f5e" onclick="pickAccent('coral')" aria-label="Coral accent"></button>
         </div>
       </div>
+      <!-- Lets the quote splash be tested on demand instead of waiting
+           for the once-per-day gate to reset — handy for trying it on
+           a phone without digging into browser dev tools. Doesn't
+           affect the real once-per-day timing; see previewSplash(). -->
+      <button class="btn-ghost" style="width:100%;margin-top:14px;" onclick="previewSplash()">Preview quote screen</button>
     </div>
 
     <div class="section-label">Units</div>
@@ -1735,7 +1740,14 @@
     if (lastShown === today) return; // already shown today
 
     try { localStorage.setItem(SPLASH_LAST_SHOWN_KEY, today); } catch (e) { /* ignore */ }
+    showSplash();
+  }
 
+  // Actually populates and reveals the splash — shared by the normal
+  // once-per-day flow above and previewSplash() below, which is bound
+  // to a button in Settings so the screen can be tested repeatedly
+  // without waiting for the daily gate to reset.
+  function showSplash() {
     // Personalized greeting — "🔥 Lili's" above "Training Log" — only
     // if a name was actually saved (welcome screen or Settings). Avatar
     // is optional on top of that; falls back to just "{name}'s" alone.
@@ -1750,13 +1762,28 @@
 
     const quote = SPLASH_QUOTES[Math.floor(Math.random() * SPLASH_QUOTES.length)];
     document.getElementById('splash-quote').textContent = quote;
-    document.getElementById('splash-screen').style.display = 'flex';
+
+    const splash = document.getElementById('splash-screen');
+    // Reset any leftover state from a previous show (e.g. a prior
+    // preview that was dragged closed) before revealing it again.
+    splash.classList.remove('closing', 'dragging');
+    splash.style.transform = '';
+    splash.style.display = 'flex';
 
     // Auto-dismiss on its own after a beat — sliding up and off, not
     // waiting on a click. Tapping anywhere, or dragging it upward
     // (see bindSplashGestures below), dismisses it early for anyone
     // who doesn't want to wait it out.
     setTimeout(dismissSplash, 3500);
+  }
+
+  // Bound to "Preview quote screen" in Settings > Appearance. Shows
+  // the splash immediately regardless of the once-per-day gate, and
+  // deliberately does NOT touch SPLASH_LAST_SHOWN_KEY — previewing on
+  // demand shouldn't count as (or interfere with) today's real show.
+  function previewSplash() {
+    bindSplashGestures(); // no-op if already bound this session
+    showSplash();
   }
 
   // Shared by the auto-dismiss timer, tap-to-dismiss, and a completed
@@ -1787,8 +1814,10 @@
   //   between the two      → not far enough, spring back down
   //   > DISMISS_THRESHOLD  → far enough, finish the dismiss on its own
   function bindSplashGestures() {
+    if (bindSplashGestures.bound) return; // idempotent — safe to call from both DOMContentLoaded and previewSplash()
     const splash = document.getElementById('splash-screen');
     if (!splash) return;
+    bindSplashGestures.bound = true;
 
     const TAP_THRESHOLD = 10;      // px — anything under this is just a tap
     const DISMISS_THRESHOLD = 110; // px dragged upward to auto-complete
