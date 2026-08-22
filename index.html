@@ -615,11 +615,22 @@
   .splash-screen.closing { transform: translateY(-100%); }
   .splash-content { max-width: 300px; text-align: center; }
   .splash-greeting {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .splash-greeting-emoji {
+    font-size: 22px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .splash-greeting-name {
     font-family: var(--font-display);
     font-size: 13px;
     color: var(--lift);
-    letter-spacing: 0.02em;
-    margin-bottom: 2px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
   }
   .splash-quote {
     font-family: var(--font-display);
@@ -805,11 +816,15 @@
 <div class="splash-screen" id="splash-screen" style="display:none;">
   <div class="splash-content">
     <!-- Personalized greeting — only shown if a profile name is
-         saved. Format: "{avatar} {name}'s" sitting right above the
-         wordmark, reading as "🔥 Lili's / Training Log". Populated
-         by maybeShowSplash(); stays hidden for anyone who skipped
-         the welcome screen and never set a name. -->
-    <div class="splash-greeting" id="splash-greeting" style="display:none;"></div>
+         saved. Emoji stacked above the name, both above the
+         wordmark, so it reads top-to-bottom as a pyramid:
+         🔥 / Lili's / Training Log. Populated by showSplash();
+         stays hidden for anyone who skipped the welcome screen
+         and never set a name. -->
+    <div class="splash-greeting" id="splash-greeting" style="display:none;">
+      <div class="splash-greeting-emoji" id="splash-greeting-emoji"></div>
+      <div class="splash-greeting-name" id="splash-greeting-name"></div>
+    </div>
     <div class="wordmark" style="font-size:13px;">Training Log</div>
     <p class="splash-quote" id="splash-quote"></p>
   </div>
@@ -1748,14 +1763,17 @@
   // to a button in Settings so the screen can be tested repeatedly
   // without waiting for the daily gate to reset.
   function showSplash() {
-    // Personalized greeting — "🔥 Lili's" above "Training Log" — only
-    // if a name was actually saved (welcome screen or Settings). Avatar
-    // is optional on top of that; falls back to just "{name}'s" alone.
+    // Personalized greeting — emoji stacked above "{name}'s", both
+    // above "Training Log", reading top-to-bottom as a pyramid. Only
+    // shown if a name was actually saved (welcome screen or Settings).
+    // Avatar is optional on top of that; the emoji line is simply
+    // left empty (and collapses to nothing) if none was picked.
     const profile = loadProfile();
     const greetingEl = document.getElementById('splash-greeting');
     if (profile.name) {
-      greetingEl.textContent = (profile.avatar ? profile.avatar + ' ' : '') + profile.name + "'s";
-      greetingEl.style.display = 'block';
+      document.getElementById('splash-greeting-emoji').textContent = profile.avatar || '';
+      document.getElementById('splash-greeting-name').textContent = profile.name + "'s";
+      greetingEl.style.display = 'flex';
     } else {
       greetingEl.style.display = 'none';
     }
