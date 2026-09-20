@@ -2071,20 +2071,26 @@
   // blob + <a download> trick — WebKit silently blocks it outside
   // regular Safari tabs, so the button would appear to do nothing.
   // We detect standalone mode and fall back to opening the file in
-  // a new tab instead, which triggers iOS's native share sheet
-  // ("Save to Files") so the export still works when the app is
+  // a new tab instead, so the export still works when the app is
   // saved to the home screen.
   //
-  // IMPORTANT: window.open() must run SYNCHRONOUSLY, in the same
-  // tick as the tap that triggered it. Browsers only treat a popup
-  // as "requested by the user" while that original tap's transient
-  // activation is still active; any await/async gap before the
-  // window.open() call (this used to go through FileReader, which
-  // is asynchronous) loses that activation and gets the popup
-  // blocked — regardless of the device's popup-blocking setting.
-  // URL.createObjectURL() is synchronous, so using it here (instead
-  // of FileReader's async readAsDataURL) keeps window.open() inside
-  // the original tap and avoids the block entirely.
+  // Two separate WebKit issues stack up here, and both matter:
+  //  1. window.open() must run SYNCHRONOUSLY, in the same tick as
+  //     the tap that triggered it. Browsers only treat a popup as
+  //     "requested by the user" while that original tap's transient
+  //     activation is still active; any async gap first (this used
+  //     to go through FileReader) loses that activation and gets it
+  //     blocked — regardless of the device's popup-blocking setting.
+  //  2. blob: URLs are unreliable across that new tab boundary in
+  //     WebKit — the tab opens, the address bar looks right, but the
+  //     content never actually loads and it's stuck blank/loading
+  //     forever (a long-standing Safari bug, not specific to this
+  //     app). A plain data: URI sidesteps this entirely, since the
+  //     CSV content is embedded directly in the URL string itself —
+  //     there's no separate blob store for the new tab to fail to
+  //     reach.
+  // So the standalone path below builds a data: URI synchronously
+  // (no Blob, no FileReader) and hands it straight to window.open().
   // ─────────────────────────────────────────────
   function exportData() {
     if (!sessions.length) { toast('No data to export yet'); return; }
@@ -2102,7 +2108,6 @@
       });
     });
     const csvText = header + rows.join('\n');
-    const blob = new Blob([csvText], { type: 'text/csv' });
     const filename = 'training-log-' + dateStr + '.csv';
 
     // Detect iOS "Add to Home Screen" standalone mode, where the
@@ -2111,27 +2116,27 @@
       (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
 
     if (isStandalone) {
-      // Synchronous blob URL + window.open, both still inside the
-      // tap's transient activation window — see the note above for
-      // why this matters. iOS opens it in a new tab and offers its
-      // share sheet ("Save to Files") for a text/csv blob URL.
-      const url = URL.createObjectURL(blob);
-      const win = window.open(url, '_blank');
+      // Self-contained data: URI, built synchronously — see the note
+      // above for why both of those properties matter here. Safari
+      // opens this in a new tab and renders the CSV as plain text,
+      // which the Share button (already visible in that tab) can
+      // then save to Files.
+      const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvText);
+      const win = window.open(dataUri, '_blank');
       if (!win) {
-        // Genuinely blocked (rare now that this is synchronous) —
-        // tell them plainly rather than failing silently.
+        // Genuinely blocked — tell them plainly rather than failing silently.
         toast('Allow pop-ups to export, or open this app in Safari directly');
       } else {
         toast('CSV exported');
       }
-      // Revoke well after the new tab has had time to load the blob —
-      // revoking too early breaks the tab before it can read it.
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
       return;
     }
 
     // Standard path — works in normal browser tabs (desktop + mobile,
-    // both iOS Safari-in-tab and Android Chrome).
+    // both iOS Safari-in-tab and Android Chrome). Blob + <a download>
+    // is fine here since there's no new-tab boundary for the blob to
+    // fail to cross — it's used and revoked within the same tab.
+    const blob = new Blob([csvText], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a   = document.createElement('a');
     a.href = url; a.download = filename;
