@@ -881,6 +881,18 @@
   /* A small grab handle on top of each sheet — purely decorative */
   .modal::before { content: ''; display: block; width: 38px; height: 4px; border-radius: 2px; background: var(--border); margin: -6px auto 16px; }
 
+
+  /* The "Add new exercise…" box in Settings sits outside a .field wrapper,
+     so it never picked up the app's input styling and showed as a plain
+     white box. Give it the same look as every other input. */
+  #new-preset-input {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text); font-family: var(--font-body); font-size: 16px; padding: 12px 14px; outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  #new-preset-input::placeholder { color: #566482; }
+  #new-preset-input:focus { border-color: var(--lift); box-shadow: 0 0 0 3px var(--lift-dim); background: #1b2740; }
+
   /* Keyboard/assistive focus ring that matches the accent */
   button:focus-visible, a:focus-visible { outline: 2px solid var(--lift); outline-offset: 2px; }
 
@@ -1380,6 +1392,12 @@
         Download a backup of all your logged sessions as a spreadsheet. Useful before switching devices or clearing browser data.
       </div>
       <button class="btn-ghost" style="width:100%;" onclick="exportData()">Export CSV</button>
+      <!-- Always-works backup route: shows the data as text to copy and
+           paste, for when the phone won't hand over a file. -->
+      <button type="button" onclick="copyExportAsText()"
+              style="display:block;width:100%;margin-top:8px;padding:12px;background:none;border:none;color:var(--muted);font-family:var(--font-body);font-size:13px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;">
+        Trouble saving? Copy as text instead
+      </button>
     </div>
 
     <div class="section-label">Data</div>
@@ -1390,6 +1408,11 @@
       <!-- Danger zone — red outline to visually separate from normal actions -->
       <button class="btn-danger" onclick="promptClearData()">Clear all data</button>
     </div>
+
+    <!-- Build stamp: shows exactly which version of the app this phone is
+         running, so it's obvious whether an update has actually arrived
+         (home-screen apps can hold on to an old copy). Filled in by JS. -->
+    <div id="app-version" style="text-align:center;font-size:11px;color:var(--muted);opacity:0.7;letter-spacing:0.06em;padding:4px 0 24px;"></div>
 
   </div>
 
@@ -1858,6 +1881,10 @@
   // .emoji-opt class and data-emoji attributes, so picking one there
   // highlights correctly here too if they later open Settings.
   // ─────────────────────────────────────────────
+  // Bump this string with every release. It's shown at the bottom of
+  // Settings so it's easy to confirm which version a phone is running.
+  const APP_VERSION = '2026.09.28-b · premium look + share export';
+
   const ONBOARD_KEY = 'trainingLog_onboarded';
 
   function hasOnboarded() {
@@ -2248,24 +2275,58 @@
   // first with no async gaps, then share() is called immediately.
   // ─────────────────────────────────────────────
 
-  // Builds the CSV text and file name from every logged session.
-  function buildCsvExport() {
-    const dateStr = new Date().toISOString().slice(0, 10);
-
-    // Flatten every exercise across every session into one CSV row each
-    const header = 'Date,Exercise,Sets,Reps,Weight,Unit,Notes\n';
-    const rows = sessions.flatMap(s => {
-      const dateOnly = new Date(s.date).toISOString().slice(0, 10);
-      return s.exercises.map(e => {
-        // Escape commas/quotes in text fields for valid CSV
-        const safe = v => '"' + String(v).replace(/"/g, '""') + '"';
-        return [dateOnly, safe(e.name), e.sets, e.reps, e.weight, currentUnit, safe(e.notes || '')].join(',');
-      });
-    });
-    return { csvText: header + rows.join('\n'), filename: 'training-log-' + dateStr + '.csv' };
+  // Turns any date value into a local YYYY-MM-DD string, or '' if the date is
+  // missing/invalid. Uses the phone's LOCAL calendar day (not UTC) so a
+  // workout logged at 9pm on the 28th exports as the 28th, not the 29th.
+  // Never throws — a single bad date used to be able to abort the whole export.
+  function localDateStr(value) {
+    const d = new Date(value);
+    if (isNaN(d.getTime())) return '';
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
   }
 
+  // Builds the CSV text and file name from every logged session.
+  // Written defensively: missing notes, missing exercise lists or odd
+  // values in older saved data produce blank cells instead of an error.
+  function buildCsvExport() {
+    // Quote every text cell and double any quotes inside it (standard CSV)
+    const safe = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    const header = 'Date,Exercise,Sets,Reps,Weight,Unit,Notes\n';
+    const rows = [];
+
+    // One CSV row per exercise, across every session
+    sessions.forEach(s => {
+      const day = localDateStr(s.date);
+      (s.exercises || []).forEach(e => {
+        rows.push([day, safe(e.name), e.sets, e.reps, e.weight, currentUnit, safe(e.notes)].join(','));
+      });
+    });
+
+    return { csvText: header + rows.join('\n'), filename: 'training-log-' + localDateStr(new Date()) + '.csv' };
+  }
+
+  // Public entry point for the Export CSV button. Any unexpected error is
+  // caught and shown on screen (with the copy-as-text panel as a safety
+  // net) instead of the button silently doing nothing.
   function exportData() {
+    try {
+      doExport();
+    } catch (err) {
+      console.error('Export failed:', err);
+      toast('Export hit a problem — use the copy option instead');
+      try { showExportFallback(buildCsvExport().csvText); } catch (e2) { /* nothing more to try */ }
+    }
+  }
+
+  // "Trouble saving? Copy as text" link under the Export button. Skips
+  // every file/share route and goes straight to the copy panel, which
+  // works on every phone and browser.
+  function copyExportAsText() {
+    if (!sessions.length) { toast('No data to export yet'); return; }
+    showExportFallback(buildCsvExport().csvText);
+  }
+
+  function doExport() {
     if (!sessions.length) { toast('No data to export yet'); return; }
 
     const { csvText, filename } = buildCsvExport();
@@ -3914,6 +3975,9 @@
 
     // Set the home screen / favicon icon to match the saved accent
     applyIconForAccent(loadAccent());
+
+    // Show the running app version at the bottom of Settings
+    document.getElementById('app-version').textContent = 'Version ' + APP_VERSION;
 
     // If the user closed the tab mid-session, currentQueue was restored
     // from localStorage above — render it now so those exercises (and
