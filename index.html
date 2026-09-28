@@ -1883,7 +1883,7 @@
   // ─────────────────────────────────────────────
   // Bump this string with every release. It's shown at the bottom of
   // Settings so it's easy to confirm which version a phone is running.
-  const APP_VERSION = '2026.09.28-b · premium look + share export';
+  const APP_VERSION = '2026.09.28-c · premium look + share export';
 
   const ONBOARD_KEY = 'trainingLog_onboarded';
 
@@ -2344,7 +2344,12 @@
       try { file = new File([csvText], filename, { type: 'text/csv' }); } catch (e) { /* very old browser */ }
 
       if (file && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        navigator.share({ files: [file], title: 'Training Log export' })
+        // Files ONLY — no title/text/url. iOS is reported to refuse a share
+        // that mixes a file with extra text fields, so the payload is kept
+        // to exactly one file. The toast confirms the new export code is
+        // what's running (handy when an app update hasn't arrived yet).
+        toast('Opening share sheet…');
+        navigator.share({ files: [file] })
           .then(() => toast('Export shared'))
           .catch(err => {
             // Closing the share sheet without choosing anything isn't an error
