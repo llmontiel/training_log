@@ -3052,12 +3052,17 @@
                 <button class="session-del" onclick="promptDeleteDay(${indicesStr}, '${fmtSmart(day.date)}')" aria-label="Delete day" style="margin-left:8px">×</button>
               </span>
             </div>
-            <div class="session-card-body">${exList}</div>
-            <!-- Add exercise — covers the case where something was
-                 forgotten before the session was ended and logged.
-                 Adds to this exact day (all indices already merged
-                 by date above), not to today's in-progress queue. -->
-            <button class="add-hist-btn" onclick="openAddToHistoryModal(${indicesStr}, '${fmtSmart(day.date)}')">+ Add exercise</button>
+            <div class="session-card-body">${exList}
+              <!-- Add exercise — covers the case where something was
+                   forgotten before the session was ended and logged.
+                   Adds to this exact day (all indices already merged
+                   by date above), not to today's in-progress queue.
+                   Nested inside session-card-body (not a sibling) so it
+                   picks up the body's own left/right padding and lines
+                   up with the exercise rows above it, the same way it
+                   already does inside the day-detail panel. -->
+              <button class="add-hist-btn" onclick="openAddToHistoryModal(${indicesStr}, '${fmtSmart(day.date)}')">+ Add exercise</button>
+            </div>
           </div>`;
       }).filter(Boolean); // drop empty (non-matching) day cards
 
