@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Training Log</title>
 <!-- Home screen / favicon icon — href set dynamically by JS to match
      whichever accent color is active (see ICON_DATA_URIS and
@@ -748,6 +748,211 @@
   @media (max-width: 400px) {
     .grid-3 { grid-template-columns: 1fr 1fr; }
     .pct-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     PREMIUM POLISH LAYER
+     Visual refinement only — no layout, feature or font changes.
+     Georgia (display) and the system font (body) stay exactly as
+     they were; this block just refines depth, spacing, numerals,
+     focus states and motion on top of the existing styles. It sits
+     last in the stylesheet so it overrides the earlier rules of the
+     same specificity — delete this whole block to return to the
+     previous look.
+     ═══════════════════════════════════════════════════════════ */
+
+  /* Slightly softer, rounder corners everywhere. Every component
+     reads these two tokens, so changing them re-rounds the whole app. */
+  :root {
+    --radius: 16px;
+    --radius-sm: 11px;
+    /* Shared card depth: a 1px top highlight (as if lit from above)
+       plus a soft drop shadow, so surfaces feel raised, not flat. */
+    --card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 10px 28px rgba(0, 0, 0, 0.28);
+  }
+
+  /* Crisper text rendering on iOS/macOS */
+  body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+
+  /* A faint pool of the accent color behind the header — uses the
+     existing dark accent tint, so it follows the chosen accent color.
+     It fades to fully transparent before the header's bottom edge, so
+     there's no visible seam where the frosted tab bar begins. */
+  header {
+    background: radial-gradient(ellipse 85% 130% at 50% 0%, var(--lift-dim), transparent 70%);
+  }
+
+  /* Numbers line up in columns and don't jitter as they change */
+  .stat-n, .entry-val, .pr-best, .pct-val, .day-detail-date, .month-cell,
+  .wday-dot, .field input[type="number"], .queue-sub, .session-ex-sets, .pr-meta {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Header ── */
+  header { padding-top: 1.75rem; }
+  .wordmark { letter-spacing: 0.22em; }
+  .tagline { letter-spacing: 0.08em; opacity: 0.9; }
+
+  /* ── Tab bar ──
+     Stays pinned to the top while scrolling (like a native app), with a
+     frosted backdrop so content slides softly underneath it. */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(10, 14, 26, 0.82);
+    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
+    padding-top: 4px;
+  }
+  nav button { font-size: 14px; font-weight: 500; letter-spacing: 0.02em; padding: 10px 12px 12px; }
+  nav button.active { font-weight: 700; }
+  /* Active tab underline gets a soft glow */
+  nav button.active { box-shadow: 0 6px 12px -8px var(--lift); }
+
+  /* ── Section labels — small caps with a hairline running to the edge ── */
+  .section-label {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 11px; letter-spacing: 0.18em;
+  }
+  .section-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
+  /* The label inside the History header row shares its line with other text — no hairline there */
+  #tab-history .section-label:first-child::after { display: none; }
+
+  /* ── Raised surfaces ── */
+  .card, .stat, .session-card, .pr-card, .entry, .pct-cell, .formula-note,
+  .day-detail-panel, .queue-item, .action-menu {
+    box-shadow: var(--card-shadow);
+  }
+  .card { padding: 1.4rem; }
+  .session-card, .pr-card, .entry { border-color: #243350; }
+
+  /* ── Form fields ── */
+  .field label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 7px; }
+  .field input, .field select { padding: 12px 14px; font-size: 16px; transition: border-color 0.15s, box-shadow 0.15s, background 0.15s; }
+  /* Focus: accent border plus a soft halo instead of just a border swap */
+  .field input:focus, .field select:focus { border-color: var(--lift); box-shadow: 0 0 0 3px var(--lift-dim); background: #1b2740; }
+  .field input::placeholder { color: #566482; }
+
+  /* ── Buttons ── */
+  .btn-primary, .btn-ghost, .btn-danger, .btn-end-corner, .ex-save-btn {
+    transition: transform 0.12s ease, opacity 0.15s, box-shadow 0.2s, background 0.15s, border-color 0.15s, color 0.15s;
+  }
+  .btn-primary {
+    padding: 15px 12px; font-size: 15px; font-weight: 700; letter-spacing: 0.03em;
+    box-shadow: 0 8px 22px -6px var(--lift-glow), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  }
+  .btn-primary:hover { opacity: 1; box-shadow: 0 10px 26px -6px var(--lift-glow), inset 0 1px 0 rgba(255, 255, 255, 0.28); }
+  .btn-ghost, .btn-danger { padding-top: 13px; padding-bottom: 13px; font-weight: 600; letter-spacing: 0.02em; }
+  /* Pressed feedback: a tiny, quick squeeze */
+  .btn-primary:active, .btn-ghost:active, .btn-danger:active, .btn-end-corner:active { transform: scale(0.98); }
+  /* End & Log: comfortable 44px tap height, pill-shaped */
+  .btn-end-corner { border-radius: 999px; padding: 0 18px; height: 40px; font-size: 13px; font-weight: 700; box-shadow: 0 6px 18px -4px var(--lift-glow), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
+
+  /* ── Big numbers: a little more presence ── */
+  .stat-n { font-size: 30px; }
+  .pr-best { font-size: 28px; letter-spacing: -0.01em; }
+  .pr-name { font-size: 15px; font-weight: 600; }
+  .pr-badge { border-radius: 12px; }
+  .pct-val { font-size: 17px; }
+  .entry-val { font-size: 16px; }
+
+  /* ── History ── */
+  .session-card-header { padding: 12px 16px; }
+  .session-card-title { font-family: var(--font-display); font-size: 16px; letter-spacing: 0.01em; }
+  .session-card-body { padding: 8px 16px; }
+  .session-exercise { padding: 8px 0; }
+  .session-ex-name { font-size: 14px; font-weight: 500; }
+  .session-ex-sets { font-size: 13px; }
+  .week-block-header { padding-bottom: 10px; }
+  .week-block-title { letter-spacing: 0.18em; }
+  /* Calendar: slightly larger, rounder cells with a lift on the active days */
+  .month-grid { grid-auto-rows: 34px; }
+  .month-cell { border-radius: 9px; font-size: 11px; transition: border-color 0.15s, transform 0.12s; }
+  .month-day-label { font-size: 10px; letter-spacing: 0.08em; }
+  .month-cell.active { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03); }
+  .month-cell.active:active, .wday-dot.active:active { transform: scale(0.95); }
+  .month-cell.today, .wday-dot.today { box-shadow: 0 0 0 3px var(--lift-dim); }
+  .wday-dot { border-radius: 12px; }
+  .wday-label { font-size: 11px; letter-spacing: 0.06em; }
+
+  /* ── Menus, toasts and modals ── */
+  .action-menu { border-radius: 14px; overflow: hidden; box-shadow: 0 18px 44px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05); }
+  .toast { box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45); padding: 12px 22px; letter-spacing: 0.01em; }
+  .modal-overlay { -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); background: rgba(4, 7, 13, 0.72); }
+  .modal { border-radius: 22px 22px 16px 16px; box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05); }
+  /* A small grab handle on top of each sheet — purely decorative */
+  .modal::before { content: ''; display: block; width: 38px; height: 4px; border-radius: 2px; background: var(--border); margin: -6px auto 16px; }
+
+  /* The "Add new exercise…" box in Settings sits outside a .field wrapper,
+     so it never picked up the app's input styling and showed as a plain
+     white box. Give it the same look as every other input. */
+  #new-preset-input {
+    background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+    color: var(--text); font-family: var(--font-body); font-size: 16px; padding: 12px 14px; outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  }
+  #new-preset-input::placeholder { color: #566482; }
+  #new-preset-input:focus { border-color: var(--lift); box-shadow: 0 0 0 3px var(--lift-dim); background: #1b2740; }
+
+  /* Keyboard/assistive focus ring that matches the accent */
+  button:focus-visible, a:focus-visible { outline: 2px solid var(--lift); outline-offset: 2px; }
+
+  /* ═══════════════════════════════════════════════════════════
+     REAL-APP-FEEL LAYER
+     Things that stop this from reading as "a website" — safe-area
+     handling for the notch/home-indicator, no rubber-band bounce,
+     and a quick press-down on tappable cards.
+     ═══════════════════════════════════════════════════════════ */
+  :root { box-sizing: border-box; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  html { scroll-padding-top: env(safe-area-inset-top, 0px); }
+  nav { top: env(safe-area-inset-top, 0px); }
+  html, body { overscroll-behavior-y: none; }
+  .session-card, .pr-card { transition: transform 0.12s ease; }
+  .session-card:active, .pr-card:active { transform: scale(0.985); }
+
+  /* ═══════════════════════════════════════════════════════════
+     GENTLE MOTION
+     Cards rise softly into place and tabs fade in — see the "rise"
+     class applied in renderHistory()/renderPRs() in the script below.
+     ═══════════════════════════════════════════════════════════ */
+  @keyframes rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  .rise { opacity: 0; animation: rise 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) forwards; animation-delay: calc(var(--i, 0) * 75ms); }
+  @keyframes paneIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .tab.active { animation: paneIn 0.38s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+  /* ═══════════════════════════════════════════════════════════
+     THE PR MOMENT
+     A slow glow ring and a small chip — no confetti. Triggered from
+     commitSession() when a set becomes a new best for its exercise;
+     see triggerPRGlow()/PR_FLAG_KEY in the script below.
+     ═══════════════════════════════════════════════════════════ */
+  @keyframes prGlow {
+    0%   { box-shadow: var(--card-shadow), 0 0 0 0 var(--lift-glow); border-color: var(--lift); }
+    65%  { box-shadow: var(--card-shadow), 0 0 0 16px rgba(62, 198, 255, 0); border-color: var(--lift); }
+    100% { box-shadow: var(--card-shadow), 0 0 0 16px rgba(62, 198, 255, 0); }
+  }
+  .pr-card.pr-glow { opacity: 1; animation: prGlow 2.2s ease-out; }
+  @keyframes chipIn { from { opacity: 0; transform: translateY(6px) scale(0.9); } to { opacity: 1; transform: none; } }
+  .pr-new {
+    display: inline-block; margin-left: 8px; vertical-align: 2px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; line-height: 1;
+    color: var(--on-lift); background: var(--lift); padding: 4px 8px; border-radius: 999px;
+    animation: chipIn 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) 0.5s both;
+  }
+
+  /* ═══════════════════════════════════════════════════════════
+     PR TREND SPARKLINES
+     A soft line under each PR card showing its estimated-1RM
+     history. Drawn by drawSpark() in the script below.
+     ═══════════════════════════════════════════════════════════ */
+  .pr-card { flex-wrap: wrap; }
+  .spark { flex-basis: 100%; margin-top: 4px; }
+  .spark svg { display: block; overflow: visible; }
+  .spark-foot { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 6px; letter-spacing: 0.02em; }
+  .spark-foot b { color: var(--lift); font-weight: 600; }
+
+  /* Respect the phone's "Reduce Motion" setting — applies to every
+     animation/transition added above, not just the ones named "motion" */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
   }
 </style>
 <script>
@@ -2661,6 +2866,23 @@
       sessionDate = new Date(y, m - 1, d); // local midnight, not UTC
     }
 
+    // ── New-PR detection (for the quiet PR-tab glow + immediate toast) ──
+    // Compares what's about to be logged against each exercise's best
+    // weight so far, matching the same "best set = heaviest weight" rule
+    // renderPRs() uses for its cards — computed before the session is
+    // actually saved, so "previous best" really means previous.
+    const prevBestWeight = {};
+    sessions.forEach(s => s.exercises.forEach(e => {
+      if (!(e.name in prevBestWeight) || e.weight > prevBestWeight[e.name]) prevBestWeight[e.name] = e.weight;
+    }));
+    const newPRByName = {};
+    currentQueue.forEach(e => {
+      if ((e.name in prevBestWeight) && e.weight > prevBestWeight[e.name]) {
+        if (!(e.name in newPRByName) || e.weight > newPRByName[e.name]) newPRByName[e.name] = e.weight;
+      }
+    });
+    const newPRNames = Object.keys(newPRByName);
+
     // Save session with the selected date and a copy of the current queue
     sessions.unshift({ date: sessionDate, exercises: [...currentQueue] });
     saveSessions(); // persist to localStorage immediately
@@ -2675,7 +2897,18 @@
 
     closeModal();
     updateTrainingSince(); // refresh "Training since" in case this was the first session
-    toast('Session saved ✓');
+
+    if (newPRNames.length) {
+      // Flag it for renderPRs() — the glow + chip show the next time the
+      // PRs tab is actually viewed, and only once (the flag is consumed
+      // and cleared there).
+      try { localStorage.setItem(PR_FLAG_KEY, JSON.stringify(newPRNames)); } catch (e) { /* glow is cosmetic — never worth breaking the save over */ }
+      const first = newPRNames[0];
+      const extra = newPRNames.length > 1 ? ' (+' + (newPRNames.length - 1) + ' more)' : '';
+      toast('🏆 New PR — ' + first + ', ' + newPRByName[first] + ' ' + currentUnit + extra);
+    } else {
+      toast('Session saved ✓');
+    }
   }
 
   // updateStats is intentionally removed — stat row was removed in favour of
@@ -3002,6 +3235,11 @@
     // the normalization per exercise.
     const term = historySearchTerm.trim().toLowerCase();
 
+    // Gentle entrance animation — each day card rises in a little after
+    // the one before it. Capped at 8 so a long history doesn't leave the
+    // last cards waiting through a multi-second staggered delay.
+    let riseIndex = 0;
+
     // Render each week group newest-first
     const weekBlocks = Object.keys(byWeek).sort().reverse().map(weekKey => {
       const group = byWeek[weekKey];
@@ -3037,8 +3275,9 @@
         // exercises shown, not the day's full exercise count, so the
         // number on screen always matches what's visible below it.
         const shownCount = visibleExercises.length;
+        const i = Math.min(riseIndex++, 8);
         return `
-          <div class="session-card">
+          <div class="session-card rise" style="--i:${i}">
             <div class="session-card-header">
               <span style="display:flex;align-items:center;gap:6px;">
                 <span class="session-card-title">${fmtSmart(day.date)}</span>
@@ -3476,12 +3715,25 @@
     toast('Exercise added');
   }
 
+  // Epley estimate: w × (1 + r/30). If r = 1, weight is already the 1RM.
+  // Module-level (not just inside renderPRs) since the sparkline series
+  // builder and the new-PR check in commitSession() both need it too.
+  const e1rmEst = (w, r) => r > 1 ? Math.round(w * (1 + r / 30)) : w;
+
   // ─────────────────────────────────────────────
   // RENDER PRs
   // Finds the heaviest set per exercise across all
   // sessions, estimates 1RM, and shows one card
-  // per exercise sorted by estimated 1RM.
+  // per exercise sorted by estimated 1RM. Each card
+  // also gets a trend sparkline (estimated 1RM per
+  // session, oldest → newest) and, right after a
+  // session is logged that beats a previous best,
+  // a one-time quiet glow + "New PR" chip — see
+  // PR_FLAG_KEY / triggerPRGlow(), set from
+  // commitSession() below.
   // ─────────────────────────────────────────────
+  const PR_FLAG_KEY = 'trainingLog_newPr'; // exercise name(s) that just set a new best, consumed once here
+
   function renderPRs() {
     // Attach each session's date to its exercises before flattening,
     // so every exercise object carries the date it was logged on —
@@ -3498,26 +3750,49 @@
       if (!prs[e.name] || e.weight > prs[e.name].weight) prs[e.name] = e;
     });
 
-    // Epley estimate: w × (1 + r/30). If r = 1, weight is already the 1RM.
-    const e1rmEst = (w, r) => r > 1 ? Math.round(w * (1 + r / 30)) : w;
+    // Sparkline source data: for every exercise name, one point per
+    // session that logged it (the best estimated 1RM among that
+    // session's sets of that exercise), oldest → newest.
+    const seriesByName = {};
+    sessions.forEach(s => {
+      const bestInSession = {}; // exercise name -> best {est, date} within this one session
+      s.exercises.forEach(e => {
+        const est = e1rmEst(e.weight, e.reps);
+        if (!bestInSession[e.name] || est > bestInSession[e.name].est) bestInSession[e.name] = { est, date: s.date };
+      });
+      Object.keys(bestInSession).forEach(name => {
+        (seriesByName[name] || (seriesByName[name] = [])).push(bestInSession[name]);
+      });
+    });
+    Object.values(seriesByName).forEach(series => series.sort((a, b) => a.date - b.date));
 
     // Bodyweight ratio — only computed if the user has set a bodyweight in Settings
     const bw = parseFloat(loadProfile().bodyweight) || null;
 
-    document.getElementById('pr-list').innerHTML = Object.values(prs)
-      .sort((a, b) => e1rmEst(b.weight, b.reps) - e1rmEst(a.weight, a.reps))
-      .map(e => {
+    // Which exercise(s), if any, just beat a previous best — set by
+    // commitSession(). Consumed here so the glow shows exactly once.
+    let newPrNames = [];
+    try {
+      const raw = localStorage.getItem(PR_FLAG_KEY);
+      if (raw) { newPrNames = JSON.parse(raw); localStorage.removeItem(PR_FLAG_KEY); }
+    } catch (e) { /* ignore — glow is cosmetic, never worth breaking the tab over */ }
+
+    const ordered = Object.values(prs).sort((a, b) => e1rmEst(b.weight, b.reps) - e1rmEst(a.weight, a.reps));
+    document.getElementById('pr-list').innerHTML = ordered
+      .map((e, i) => {
         const est      = e1rmEst(e.weight, e.reps);
         const isActual = e.reps <= 1;
+        const isNew    = newPrNames.indexOf(e.name) !== -1;
         // Small cyan line under the lift name showing strength-to-bodyweight ratio
         const ratioLine = bw
           ? `<div style="font-size:10px;color:var(--lift);margin-top:2px;">${(est / bw).toFixed(1)}× bodyweight</div>`
           : '';
+        const safeId = 'pr-' + i;
         return `
-        <div class="pr-card">
+        <div class="pr-card rise${isNew ? ' pr-glow' : ''}" id="card-${safeId}" style="--i:${Math.min(i, 8)}">
           <div class="pr-badge">🏋️</div>
           <div class="pr-body">
-            <div class="pr-name">${e.name}</div>
+            <div class="pr-name">${e.name}${isNew ? '<span class="pr-new">New PR</span>' : ''}</div>
             <div class="pr-meta">Best set: ${e.sets}×${e.reps} @ ${e.weight} ${currentUnit} · ${fmtSmart(new Date(e.date))}</div>
             ${ratioLine}
           </div>
@@ -3525,8 +3800,73 @@
             <div class="pr-best">${est}</div>
             <div class="pr-lbl">${isActual ? currentUnit + ' actual' : currentUnit + ' est. 1RM'}</div>
           </div>
+          <div class="spark"><div id="spark-${safeId}"></div>
+            <div class="spark-foot"><span id="delta-${safeId}"></span><span>${(seriesByName[e.name] || []).length} session${(seriesByName[e.name] || []).length !== 1 ? 's' : ''}</span></div>
+          </div>
         </div>`;
       }).join('');
+
+    // Draw each card's trend line once its box has a real width (after layout)
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    requestAnimationFrame(() => {
+      ordered.forEach((e, i) => {
+        const series = seriesByName[e.name] || [];
+        const deltaEl = document.getElementById('delta-pr-' + i);
+        if (deltaEl) {
+          deltaEl.innerHTML = series.length > 1
+            ? '<b>' + (series[series.length - 1].est >= series[0].est ? '▲ ' : '▼ ') + Math.abs(series[series.length - 1].est - series[0].est) + ' ' + currentUnit + '</b> since first log'
+            : 'First log';
+        }
+        if (series.length > 1) drawSpark('pr-' + i, series.map(p => p.est), !reduceMotion);
+      });
+    });
+  }
+
+  // Turns a list of points into a soft, curved SVG path (Catmull-Rom → cubic Bézier)
+  function smoothSparkPath(pts) {
+    let d = 'M' + pts[0][0] + ',' + pts[0][1];
+    for (let i = 0; i < pts.length - 1; i++) {
+      const p0 = pts[i - 1] || pts[i], p1 = pts[i], p2 = pts[i + 1], p3 = pts[i + 2] || p2;
+      const c1x = p1[0] + (p2[0] - p0[0]) / 6, c1y = p1[1] + (p2[1] - p0[1]) / 6;
+      const c2x = p2[0] - (p3[0] - p1[0]) / 6, c2y = p2[1] - (p3[1] - p1[1]) / 6;
+      d += ' C' + c1x + ',' + c1y + ' ' + c2x + ',' + c2y + ' ' + p2[0] + ',' + p2[1];
+    }
+    return d;
+  }
+
+  // Draws one lift's trend line into its container, optionally "writing" it in
+  function drawSpark(id, values, animate) {
+    const box = document.getElementById('spark-' + id);
+    if (!box) return;
+    const w = box.clientWidth, h = 46, pad = 6;
+    if (!w) return; // not laid out yet — safe to skip, nothing calls this before requestAnimationFrame
+    const min = Math.min.apply(null, values), max = Math.max.apply(null, values), span = Math.max(1, max - min);
+    const pts = values.map((v, k) => [pad + (w - pad * 2) * (k / (values.length - 1)), h - pad - (h - pad * 2) * ((v - min) / span)]);
+    const line = smoothSparkPath(pts);
+    const area = line + ' L' + pts[pts.length - 1][0] + ',' + h + ' L' + pts[0][0] + ',' + h + ' Z';
+    const end = pts[pts.length - 1];
+    const gid = 'sg-' + id;
+    box.innerHTML =
+      '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" aria-hidden="true">' +
+      '<defs><linearGradient id="' + gid + '" x1="0" y1="0" x2="0" y2="1">' +
+      '<stop offset="0" style="stop-color:var(--lift);stop-opacity:0.26"/><stop offset="1" style="stop-color:var(--lift);stop-opacity:0"/></linearGradient></defs>' +
+      '<path class="area" d="' + area + '" fill="url(#' + gid + ')"/>' +
+      '<path class="line" d="' + line + '" fill="none" stroke="var(--lift)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
+      '<circle class="halo" cx="' + end[0] + '" cy="' + end[1] + '" r="7" fill="var(--lift)" opacity="0.18"/>' +
+      '<circle class="dot" cx="' + end[0] + '" cy="' + end[1] + '" r="3.6" fill="var(--lift)"/></svg>';
+
+    if (animate) {
+      const path = box.querySelector('.line'), len = path.getTotalLength();
+      path.style.strokeDasharray = len; path.style.strokeDashoffset = len;
+      const areaEl = box.querySelector('.area'), dot = box.querySelector('.dot'), halo = box.querySelector('.halo');
+      areaEl.style.opacity = 0; dot.style.opacity = 0; halo.style.opacity = 0;
+      void path.getBoundingClientRect(); // force layout so the transition below actually animates
+      path.style.transition = 'stroke-dashoffset 1.1s cubic-bezier(0.4, 0, 0.2, 1)';
+      areaEl.style.transition = 'opacity 0.9s ease 0.5s';
+      dot.style.transition = 'opacity 0.4s ease 1s';
+      halo.style.transition = 'opacity 0.6s ease 1s';
+      path.style.strokeDashoffset = 0; areaEl.style.opacity = 1; dot.style.opacity = 1; halo.style.opacity = 0.18;
+    }
   }
 
   // ─────────────────────────────────────────────
