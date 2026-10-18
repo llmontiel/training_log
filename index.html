@@ -749,157 +749,6 @@
     .grid-3 { grid-template-columns: 1fr 1fr; }
     .pct-grid { grid-template-columns: repeat(2, 1fr); }
   }
-
-  /* ═══════════════════════════════════════════════════════════
-     PREMIUM POLISH LAYER
-     Visual refinement only — no layout, feature or font changes.
-     Georgia (display) and the system font (body) stay exactly as
-     they were; this block just refines depth, spacing, numerals,
-     focus states and motion on top of the existing styles. It sits
-     last in the stylesheet so it overrides the earlier rules of the
-     same specificity — delete this whole block to return to the
-     previous look.
-     ═══════════════════════════════════════════════════════════ */
-
-  /* Slightly softer, rounder corners everywhere. Every component
-     reads these two tokens, so changing them re-rounds the whole app. */
-  :root {
-    --radius: 16px;
-    --radius-sm: 11px;
-    /* Shared card depth: a 1px top highlight (as if lit from above)
-       plus a soft drop shadow, so surfaces feel raised, not flat. */
-    --card-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 10px 28px rgba(0, 0, 0, 0.28);
-  }
-
-  /* Crisper text rendering on iOS/macOS */
-  body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-
-  /* A faint pool of the accent color behind the header — uses the
-     existing dark accent tint, so it follows the chosen accent color.
-     It fades to fully transparent before the header's bottom edge, so
-     there's no visible seam where the frosted tab bar begins. */
-  header {
-    background: radial-gradient(ellipse 85% 130% at 50% 0%, var(--lift-dim), transparent 70%);
-  }
-
-  /* Numbers line up in columns and don't jitter as they change */
-  .stat-n, .entry-val, .pr-best, .pct-val, .day-detail-date, .month-cell,
-  .wday-dot, .field input[type="number"], .queue-sub, .session-ex-sets, .pr-meta {
-    font-variant-numeric: tabular-nums;
-  }
-
-  /* ── Header ── */
-  header { padding-top: 1.75rem; }
-  .wordmark { letter-spacing: 0.22em; }
-  .tagline { letter-spacing: 0.08em; opacity: 0.9; }
-
-  /* ── Tab bar ──
-     Stays pinned to the top while scrolling (like a native app), with a
-     frosted backdrop so content slides softly underneath it. */
-  nav {
-    position: sticky; top: 0; z-index: 50;
-    background: rgba(10, 14, 26, 0.82);
-    -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
-    padding-top: 4px;
-  }
-  nav button { font-size: 14px; font-weight: 500; letter-spacing: 0.02em; padding: 10px 12px 12px; }
-  nav button.active { font-weight: 700; }
-  /* Active tab underline gets a soft glow */
-  nav button.active { box-shadow: 0 6px 12px -8px var(--lift); }
-
-  /* ── Section labels — small caps with a hairline running to the edge ── */
-  .section-label {
-    display: flex; align-items: center; gap: 10px;
-    font-size: 11px; letter-spacing: 0.18em;
-  }
-  .section-label::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, var(--border), transparent); }
-  /* The label inside the History header row shares its line with other text — no hairline there */
-  #tab-history .section-label:first-child::after { display: none; }
-
-  /* ── Raised surfaces ── */
-  .card, .stat, .session-card, .pr-card, .entry, .pct-cell, .formula-note,
-  .day-detail-panel, .queue-item, .action-menu {
-    box-shadow: var(--card-shadow);
-  }
-  .card { padding: 1.4rem; }
-  .session-card, .pr-card, .entry { border-color: #243350; }
-
-  /* ── Form fields ── */
-  .field label { font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin-bottom: 7px; }
-  .field input, .field select { padding: 12px 14px; font-size: 16px; transition: border-color 0.15s, box-shadow 0.15s, background 0.15s; }
-  /* Focus: accent border plus a soft halo instead of just a border swap */
-  .field input:focus, .field select:focus { border-color: var(--lift); box-shadow: 0 0 0 3px var(--lift-dim); background: #1b2740; }
-  .field input::placeholder { color: #566482; }
-
-  /* ── Buttons ── */
-  .btn-primary, .btn-ghost, .btn-danger, .btn-end-corner, .ex-save-btn {
-    transition: transform 0.12s ease, opacity 0.15s, box-shadow 0.2s, background 0.15s, border-color 0.15s, color 0.15s;
-  }
-  .btn-primary {
-    padding: 15px 12px; font-size: 15px; font-weight: 700; letter-spacing: 0.03em;
-    box-shadow: 0 8px 22px -6px var(--lift-glow), inset 0 1px 0 rgba(255, 255, 255, 0.22);
-  }
-  .btn-primary:hover { opacity: 1; box-shadow: 0 10px 26px -6px var(--lift-glow), inset 0 1px 0 rgba(255, 255, 255, 0.28); }
-  .btn-ghost, .btn-danger { padding-top: 13px; padding-bottom: 13px; font-weight: 600; letter-spacing: 0.02em; }
-  /* Pressed feedback: a tiny, quick squeeze */
-  .btn-primary:active, .btn-ghost:active, .btn-danger:active, .btn-end-corner:active { transform: scale(0.98); }
-  /* End & Log: comfortable 44px tap height, pill-shaped */
-  .btn-end-corner { border-radius: 999px; padding: 0 18px; height: 40px; font-size: 13px; font-weight: 700; box-shadow: 0 6px 18px -4px var(--lift-glow), inset 0 1px 0 rgba(255, 255, 255, 0.25); }
-
-  /* ── Big numbers: a little more presence ── */
-  .stat-n { font-size: 30px; }
-  .pr-best { font-size: 28px; letter-spacing: -0.01em; }
-  .pr-name { font-size: 15px; font-weight: 600; }
-  .pr-badge { border-radius: 12px; }
-  .pct-val { font-size: 17px; }
-  .entry-val { font-size: 16px; }
-
-  /* ── History ── */
-  .session-card-header { padding: 12px 16px; }
-  .session-card-title { font-family: var(--font-display); font-size: 16px; letter-spacing: 0.01em; }
-  .session-card-body { padding: 8px 16px; }
-  .session-exercise { padding: 8px 0; }
-  .session-ex-name { font-size: 14px; font-weight: 500; }
-  .session-ex-sets { font-size: 13px; }
-  .week-block-header { padding-bottom: 10px; }
-  .week-block-title { letter-spacing: 0.18em; }
-  /* Calendar: slightly larger, rounder cells with a lift on the active days */
-  .month-grid { grid-auto-rows: 34px; }
-  .month-cell { border-radius: 9px; font-size: 11px; transition: border-color 0.15s, transform 0.12s; }
-  .month-day-label { font-size: 10px; letter-spacing: 0.08em; }
-  .month-cell.active { box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03); }
-  .month-cell.active:active, .wday-dot.active:active { transform: scale(0.95); }
-  .month-cell.today, .wday-dot.today { box-shadow: 0 0 0 3px var(--lift-dim); }
-  .wday-dot { border-radius: 12px; }
-  .wday-label { font-size: 11px; letter-spacing: 0.06em; }
-
-  /* ── Menus, toasts and modals ── */
-  .action-menu { border-radius: 14px; overflow: hidden; box-shadow: 0 18px 44px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.05); }
-  .toast { box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45); padding: 12px 22px; letter-spacing: 0.01em; }
-  .modal-overlay { -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); background: rgba(4, 7, 13, 0.72); }
-  .modal { border-radius: 22px 22px 16px 16px; box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05); }
-  /* A small grab handle on top of each sheet — purely decorative */
-  .modal::before { content: ''; display: block; width: 38px; height: 4px; border-radius: 2px; background: var(--border); margin: -6px auto 16px; }
-
-
-  /* The "Add new exercise…" box in Settings sits outside a .field wrapper,
-     so it never picked up the app's input styling and showed as a plain
-     white box. Give it the same look as every other input. */
-  #new-preset-input {
-    background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm);
-    color: var(--text); font-family: var(--font-body); font-size: 16px; padding: 12px 14px; outline: none;
-    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
-  }
-  #new-preset-input::placeholder { color: #566482; }
-  #new-preset-input:focus { border-color: var(--lift); box-shadow: 0 0 0 3px var(--lift-dim); background: #1b2740; }
-
-  /* Keyboard/assistive focus ring that matches the accent */
-  button:focus-visible, a:focus-visible { outline: 2px solid var(--lift); outline-offset: 2px; }
-
-  /* Respect the phone's "Reduce Motion" setting */
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-  }
 </style>
 <script>
   // ── Apply saved accent color before first paint ──
@@ -1392,12 +1241,6 @@
         Download a backup of all your logged sessions as a spreadsheet. Useful before switching devices or clearing browser data.
       </div>
       <button class="btn-ghost" style="width:100%;" onclick="exportData()">Export CSV</button>
-      <!-- Always-works backup route: shows the data as text to copy and
-           paste, for when the phone won't hand over a file. -->
-      <button type="button" onclick="copyExportAsText()"
-              style="display:block;width:100%;margin-top:8px;padding:12px;background:none;border:none;color:var(--muted);font-family:var(--font-body);font-size:13px;text-decoration:underline;text-underline-offset:3px;cursor:pointer;">
-        Trouble saving? Copy as text instead
-      </button>
     </div>
 
     <div class="section-label">Data</div>
@@ -1408,11 +1251,6 @@
       <!-- Danger zone — red outline to visually separate from normal actions -->
       <button class="btn-danger" onclick="promptClearData()">Clear all data</button>
     </div>
-
-    <!-- Build stamp: shows exactly which version of the app this phone is
-         running, so it's obvious whether an update has actually arrived
-         (home-screen apps can hold on to an old copy). Filled in by JS. -->
-    <div id="app-version" style="text-align:center;font-size:11px;color:var(--muted);opacity:0.7;letter-spacing:0.06em;padding:4px 0 24px;"></div>
 
   </div>
 
@@ -1538,26 +1376,6 @@
 </div>
 
 <!-- ════════════════════════════════════════
-     EXPORT FALLBACK MODAL — "Copy your data"
-     Only shown when the phone can't hand the CSV to its share sheet
-     (see exportData()). Guarantees the export can never just silently
-     do nothing: the whole CSV is shown here so it can be copied and
-     pasted into Notes, Numbers, or an email. Read-only on purpose.
-     ════════════════════════════════════════ -->
-<div class="modal-overlay" id="export-fallback-modal">
-  <div class="modal">
-    <div class="modal-title">Copy your data</div>
-    <div class="modal-sub">This phone can&#39;t save a file directly from here. Tap Copy, then paste it into Notes, Numbers or an email to keep a backup.</div>
-    <textarea id="export-fallback-text" readonly aria-label="Exported CSV data"
-              style="width:100%;height:150px;resize:none;margin-bottom:14px;padding:10px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-family:ui-monospace,Menlo,monospace;font-size:12px;line-height:1.5;"></textarea>
-    <div class="modal-actions">
-      <button class="modal-cancel" onclick="closeExportFallback()">Close</button>
-      <button class="modal-confirm" onclick="copyExportText()">Copy</button>
-    </div>
-  </div>
-</div>
-
-<!-- ════════════════════════════════════════
      CLEAR ALL DATA MODAL
      A second, stricter confirmation for a fully
      destructive action — wipes every session from
@@ -1634,26 +1452,83 @@
 
   const STORAGE_KEY = 'trainingLog_sessions';
 
+  // ─────────────────────────────────────────────
+  // TIMEZONE-SAFE DATE KEYS
+  // A session's date means "this calendar day", full stop — not an
+  // instant in time. But JSON.stringify()-ing a Date object calls its
+  // toISOString(), which bakes in a UTC timestamp. Round-tripping that
+  // through localStorage is fine as long as the device's timezone never
+  // changes — but after flying to a new timezone, re-reading that UTC
+  // instant with LOCAL getters (getDate()/getDay()/etc., which is what
+  // the rest of the app uses everywhere) can land on the wrong calendar
+  // day. That's exactly what caused history to "shift a day back" after
+  // flying to the west coast: a session saved as local midnight in e.g.
+  // Eastern time gets stored as "...T04:00:00.000Z", and reading that
+  // back with local getters from Pacific time rolls it to the previous
+  // evening, one day early.
+  //
+  // Fix: never store a timestamp. Store a plain 'YYYY-MM-DD' key — no
+  // time, no timezone, nothing for a later TZ change to reinterpret.
+  // toDateKey() reads the LOCAL calendar date off a Date object (right
+  // now, before anything can change it); fromDateKey() rebuilds a Date
+  // at local midnight from that key. Every other date-handling function
+  // in the app uses local getters on the resulting Date objects, so as
+  // long as those Date objects are built from stable keys like this,
+  // they always reflect the day the user actually meant.
+  // ─────────────────────────────────────────────
+  function toDateKey(d) {
+    const dt = (d instanceof Date) ? d : new Date(d);
+    return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0') + '-' + String(dt.getDate()).padStart(2, '0');
+  }
+
+  function fromDateKey(key) {
+    const [y, m, d] = key.split('-').map(Number);
+    return new Date(y, m - 1, d); // local midnight
+  }
+
   // Save the sessions array to localStorage.
-  // Called every time sessions is mutated.
+  // Called every time sessions is mutated. Dates are stored as plain
+  // 'YYYY-MM-DD' keys (see TIMEZONE-SAFE DATE KEYS above) — never as
+  // Date objects, which JSON.stringify() would otherwise flatten into
+  // a UTC timestamp.
   function saveSessions() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(sessions));
+      const serializable = sessions.map(s => ({ ...s, date: toDateKey(s.date) }));
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable));
     } catch(e) {
       toast('Storage full — older sessions may not save');
     }
   }
 
   // Load sessions from localStorage on page load.
-  // Dates are serialised as ISO strings — convert them back to Date objects.
   function loadSessions() {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return [];
-      return JSON.parse(raw).map(s => ({
-        ...s,
-        date: new Date(s.date)
-      }));
+      return JSON.parse(raw).map(s => {
+        const val = s.date;
+        let date;
+        if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
+          // Current format: a plain calendar-date key — immune to any
+          // timezone change, see TIMEZONE-SAFE DATE KEYS above.
+          date = fromDateKey(val);
+        } else {
+          // Legacy data saved before this fix: a full ISO timestamp
+          // (e.g. "2026-10-08T04:00:00.000Z") produced by JSON.stringify()
+          // on a raw Date object. That timestamp was always built from
+          // LOCAL midnight at save time, so its UTC calendar date still
+          // matches the day the user actually logged — reading the UTC
+          // fields recovers that original day correctly no matter what
+          // timezone the device is in now. (Reading the LOCAL fields of
+          // a reparsed legacy timestamp is exactly the bug that shifted
+          // history back a day after flying — don't do that here.)
+          const parsed = new Date(val);
+          date = isNaN(parsed.getTime())
+            ? new Date() // last-resort fallback for truly corrupt data
+            : new Date(parsed.getUTCFullYear(), parsed.getUTCMonth(), parsed.getUTCDate());
+        }
+        return { ...s, date };
+      });
     } catch(e) {
       return []; // if storage is corrupted, start fresh
     }
@@ -1881,10 +1756,6 @@
   // .emoji-opt class and data-emoji attributes, so picking one there
   // highlights correctly here too if they later open Settings.
   // ─────────────────────────────────────────────
-  // Bump this string with every release. It's shown at the bottom of
-  // Settings so it's easy to confirm which version a phone is running.
-  const APP_VERSION = '2026.09.28-c · premium look + share export';
-
   const ONBOARD_KEY = 'trainingLog_onboarded';
 
   function hasOnboarded() {
@@ -1970,7 +1841,7 @@
 
   function maybeShowSplash() {
     if (!hasOnboarded()) return; // first-timers get the welcome screen, not this
-    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD, local calendar day
+    const today = toDateKey(new Date()); // YYYY-MM-DD, local calendar day
     let lastShown = null;
     try { lastShown = localStorage.getItem(SPLASH_LAST_SHOWN_KEY); }
     catch (e) { return; } // if storage is broken, skip the splash rather than risk it never dismissing
@@ -2250,127 +2121,78 @@
 
   // ─────────────────────────────────────────────
   // EXPORT DATA (Settings)
-  // Saves all sessions as a CSV file so training history isn't
-  // trapped on one device/browser.
+  // Downloads all sessions as a CSV file so training
+  // history isn't trapped on one device/browser.
   //
-  // Why this has three routes instead of one:
-  //  1. iPhone (Safari tab OR home-screen app) → the native SHARE
-  //     SHEET. This is the only route that's reliable inside an iOS
-  //     home-screen app: WebKit blocks the usual blob download there,
-  //     and new-tab tricks (blob: or data: URLs) either get blocked
-  //     as pop-ups or open a blank page. The share sheet is handed
-  //     the file directly and offers "Save to Files", AirDrop, Mail,
-  //     Numbers, etc.
-  //  2. If the share sheet isn't available (older iOS, or a browser
-  //     that can't share files) inside a home-screen app → an in-app
-  //     "Copy your data" panel. It never depends on downloads or
-  //     pop-ups, so the export can't fail silently — the person can
-  //     paste the CSV into Notes/Numbers/email themselves.
-  //  3. Everywhere else (desktop, Android, ordinary browser tabs) →
-  //     the normal blob + <a download> file download.
+  // iOS home-screen ("standalone") apps can't use the normal
+  // blob + <a download> trick — WebKit silently blocks it outside
+  // regular Safari tabs, so the button would appear to do nothing.
+  // We detect standalone mode and fall back to opening the file in
+  // a new tab instead, so the export still works when the app is
+  // saved to the home screen.
   //
-  // IMPORTANT: navigator.share() must be called synchronously from the
-  // tap itself (browsers only allow it while the tap's "transient
-  // activation" is still active), so the CSV and File are built
-  // first with no async gaps, then share() is called immediately.
+  // Two separate WebKit issues stack up here, and both matter:
+  //  1. window.open() must run SYNCHRONOUSLY, in the same tick as
+  //     the tap that triggered it. Browsers only treat a popup as
+  //     "requested by the user" while that original tap's transient
+  //     activation is still active; any async gap first (this used
+  //     to go through FileReader) loses that activation and gets it
+  //     blocked — regardless of the device's popup-blocking setting.
+  //  2. blob: URLs are unreliable across that new tab boundary in
+  //     WebKit — the tab opens, the address bar looks right, but the
+  //     content never actually loads and it's stuck blank/loading
+  //     forever (a long-standing Safari bug, not specific to this
+  //     app). A plain data: URI sidesteps this entirely, since the
+  //     CSV content is embedded directly in the URL string itself —
+  //     there's no separate blob store for the new tab to fail to
+  //     reach.
+  // So the standalone path below builds a data: URI synchronously
+  // (no Blob, no FileReader) and hands it straight to window.open().
   // ─────────────────────────────────────────────
+  function exportData() {
+    if (!sessions.length) { toast('No data to export yet'); return; }
 
-  // Turns any date value into a local YYYY-MM-DD string, or '' if the date is
-  // missing/invalid. Uses the phone's LOCAL calendar day (not UTC) so a
-  // workout logged at 9pm on the 28th exports as the 28th, not the 29th.
-  // Never throws — a single bad date used to be able to abort the whole export.
-  function localDateStr(value) {
-    const d = new Date(value);
-    if (isNaN(d.getTime())) return '';
-    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  }
+    const dateStr = toDateKey(new Date());
 
-  // Builds the CSV text and file name from every logged session.
-  // Written defensively: missing notes, missing exercise lists or odd
-  // values in older saved data produce blank cells instead of an error.
-  function buildCsvExport() {
-    // Quote every text cell and double any quotes inside it (standard CSV)
-    const safe = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
+    // Flatten every exercise across every session into one CSV row each
     const header = 'Date,Exercise,Sets,Reps,Weight,Unit,Notes\n';
-    const rows = [];
-
-    // One CSV row per exercise, across every session
-    sessions.forEach(s => {
-      const day = localDateStr(s.date);
-      (s.exercises || []).forEach(e => {
-        rows.push([day, safe(e.name), e.sets, e.reps, e.weight, currentUnit, safe(e.notes)].join(','));
+    const rows = sessions.flatMap(s => {
+      const dateOnly = toDateKey(s.date);
+      return s.exercises.map(e => {
+        // Escape commas/quotes in text fields for valid CSV
+        const safe = v => '"' + String(v).replace(/"/g, '""') + '"';
+        return [dateOnly, safe(e.name), e.sets, e.reps, e.weight, currentUnit, safe(e.notes || '')].join(',');
       });
     });
+    const csvText = header + rows.join('\n');
+    const filename = 'training-log-' + dateStr + '.csv';
 
-    return { csvText: header + rows.join('\n'), filename: 'training-log-' + localDateStr(new Date()) + '.csv' };
-  }
-
-  // Public entry point for the Export CSV button. Any unexpected error is
-  // caught and shown on screen (with the copy-as-text panel as a safety
-  // net) instead of the button silently doing nothing.
-  function exportData() {
-    try {
-      doExport();
-    } catch (err) {
-      console.error('Export failed:', err);
-      toast('Export hit a problem — use the copy option instead');
-      try { showExportFallback(buildCsvExport().csvText); } catch (e2) { /* nothing more to try */ }
-    }
-  }
-
-  // "Trouble saving? Copy as text" link under the Export button. Skips
-  // every file/share route and goes straight to the copy panel, which
-  // works on every phone and browser.
-  function copyExportAsText() {
-    if (!sessions.length) { toast('No data to export yet'); return; }
-    showExportFallback(buildCsvExport().csvText);
-  }
-
-  function doExport() {
-    if (!sessions.length) { toast('No data to export yet'); return; }
-
-    const { csvText, filename } = buildCsvExport();
-
-    // Are we in an iPhone/iPad browser, or an "Add to Home Screen" app?
+    // Detect iOS "Add to Home Screen" standalone mode, where the
+    // blob-download approach below silently fails.
     const isStandalone = window.navigator.standalone === true ||
       (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-    // iPadOS reports itself as a Mac, so it's detected by touch support
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 
-    // ── Route 1: native share sheet (iPhone/iPad, or any home-screen app) ──
-    if (isStandalone || isIOS) {
-      let file = null;
-      try { file = new File([csvText], filename, { type: 'text/csv' }); } catch (e) { /* very old browser */ }
-
-      if (file && navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        // Files ONLY — no title/text/url. iOS is reported to refuse a share
-        // that mixes a file with extra text fields, so the payload is kept
-        // to exactly one file. The toast confirms the new export code is
-        // what's running (handy when an app update hasn't arrived yet).
-        toast('Opening share sheet…');
-        navigator.share({ files: [file] })
-          .then(() => toast('Export shared'))
-          .catch(err => {
-            // Closing the share sheet without choosing anything isn't an error
-            if (err && err.name === 'AbortError') return;
-            showExportFallback(csvText);
-          });
-        return;
+    if (isStandalone) {
+      // Self-contained data: URI, built synchronously — see the note
+      // above for why both of those properties matter here. Safari
+      // opens this in a new tab and renders the CSV as plain text,
+      // which the Share button (already visible in that tab) can
+      // then save to Files.
+      const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvText);
+      const win = window.open(dataUri, '_blank');
+      if (!win) {
+        // Genuinely blocked — tell them plainly rather than failing silently.
+        toast('Allow pop-ups to export, or open this app in Safari directly');
+      } else {
+        toast('CSV exported');
       }
-
-      // ── Route 2: share sheet unavailable inside a home-screen app ──
-      // (In a normal iPhone Safari tab the plain download below still works.)
-      if (isStandalone) {
-        showExportFallback(csvText);
-        return;
-      }
+      return;
     }
 
-    // ── Route 3: standard file download ──
-    // Blob + <a download> is fine here since the blob is created, used
-    // and revoked within the same tab — there's no new-tab boundary for
-    // it to fail to cross.
+    // Standard path — works in normal browser tabs (desktop + mobile,
+    // both iOS Safari-in-tab and Android Chrome). Blob + <a download>
+    // is fine here since there's no new-tab boundary for the blob to
+    // fail to cross — it's used and revoked within the same tab.
     const blob = new Blob([csvText], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a   = document.createElement('a');
@@ -2381,35 +2203,6 @@
     URL.revokeObjectURL(url);
 
     toast('CSV exported');
-  }
-
-  // Opens the "Copy your data" panel with the CSV text pre-filled
-  function showExportFallback(csvText) {
-    document.getElementById('export-fallback-text').value = csvText;
-    document.getElementById('export-fallback-modal').classList.add('open');
-  }
-
-  function closeExportFallback() {
-    document.getElementById('export-fallback-modal').classList.remove('open');
-  }
-
-  // Copies the CSV text to the clipboard. Uses the modern Clipboard API
-  // when available; otherwise selects the text and uses the older
-  // execCommand('copy'), which still works in some iOS versions.
-  function copyExportText() {
-    const box = document.getElementById('export-fallback-text');
-    const done = () => { toast('Copied — paste it into Notes or Numbers'); closeExportFallback(); };
-    const legacy = () => {
-      box.focus(); box.select(); box.setSelectionRange(0, box.value.length);
-      let ok = false;
-      try { ok = document.execCommand('copy'); } catch (e) { /* ignore */ }
-      if (ok) done(); else toast('Press and hold the text to copy it');
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(box.value).then(done).catch(legacy);
-    } else {
-      legacy();
-    }
   }
 
   // ─────────────────────────────────────────────
@@ -3252,7 +3045,7 @@
                 <!-- Pencil to edit the session date — opens the date edit modal
                      pre-filled with the current date. Passes all session indices
                      so every session in this merged day gets updated together. -->
-                <button class="session-edit-btn" onclick="promptEditSessionDate(${indicesStr}, '${day.date.toISOString().slice(0,10)}')"
+                <button class="session-edit-btn" onclick="promptEditSessionDate(${indicesStr}, '${toDateKey(day.date)}')"
                         title="Edit date" aria-label="Edit session date" style="font-size:11px;">✎</button>
               </span>
               <span class="session-card-meta">${shownCount} exercise${shownCount !== 1 ? 's' : ''}
@@ -3376,7 +3169,7 @@
     if (!row) return;
 
     // Get the current session date for pre-filling the move modal
-    const sessionDate = sessions[sid] ? new Date(sessions[sid].date).toISOString().slice(0, 10) : '';
+    const sessionDate = sessions[sid] ? toDateKey(sessions[sid].date) : '';
     const safeName = name.replace(/'/g, "\\'");
 
     const menu = document.createElement('div');
@@ -3980,9 +3773,6 @@
 
     // Set the home screen / favicon icon to match the saved accent
     applyIconForAccent(loadAccent());
-
-    // Show the running app version at the bottom of Settings
-    document.getElementById('app-version').textContent = 'Version ' + APP_VERSION;
 
     // If the user closed the tab mid-session, currentQueue was restored
     // from localStorage above — render it now so those exercises (and
