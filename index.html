@@ -957,6 +957,72 @@
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
   }
+
+  /* ════════════════════════════════════════
+     PER-SET LOGGING (set builder)
+     "Same each set" keeps the original Sets/Reps/Weight fields.
+     "Different per set" shows one row per set (e.g. 12-10-8).
+     ════════════════════════════════════════ */
+  .sb-seg { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 4px; margin-bottom: 14px; }
+  .sb-seg button { background: none; border: none; color: var(--muted); font: 600 13px var(--font-body); padding: 10px 8px; border-radius: 8px; cursor: pointer; transition: background 0.15s, color 0.15s; }
+  .sb-seg button.on { background: var(--lift-dim); color: var(--lift); box-shadow: inset 0 0 0 1px var(--lift-mid); }
+  .sb-head, .sb-row { display: grid; grid-template-columns: 34px 1fr 1fr 34px; gap: 8px; align-items: center; }
+  .sb-head { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; margin-bottom: 6px; padding: 0 2px; }
+  .sb-head span { text-align: center; }
+  .sb-row { margin-bottom: 8px; }
+  .sb-n { width: 34px; height: 34px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--lift); font-variant-numeric: tabular-nums; }
+  .sb-row input { width: 100%; box-sizing: border-box; background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text); font: 16px var(--font-body); padding: 11px 12px; outline: none; font-variant-numeric: tabular-nums; text-align: center; -webkit-appearance: none; appearance: none; }
+  .sb-row input:focus { border-color: var(--lift); box-shadow: 0 0 0 3px var(--lift-dim); }
+  .sb-x { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; line-height: 1; height: 34px; }
+  .sb-x:disabled { opacity: 0.25; cursor: default; }
+  .sb-add { width: 100%; margin: 2px 0 10px; background: none; border: 1px dashed var(--lift-mid); color: var(--lift); border-radius: var(--radius-sm); font: 600 13px var(--font-body); padding: 11px; cursor: pointer; }
+  .sb-chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin: 0 0 14px; font-size: 11px; color: var(--muted); }
+  .sb-chip { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 999px; font: 600 12px var(--font-body); padding: 6px 12px; cursor: pointer; }
+  .sb-chip:active { border-color: var(--lift); color: var(--lift); }
+  .sb-line { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .sb-pill { font-size: 12px; font-variant-numeric: tabular-nums; color: var(--text); background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 3px 8px; }
+  .sb-pill.top { border-color: var(--lift-mid); color: var(--lift); }
+  .sb[data-mode="same"] .sb-diff { display: none; }
+  .sb[data-mode="diff"] .sb-same { display: none; }
+
+  /* ════════════════════════════════════════
+     WEEKLY RECAP TAB
+     Compares each lift with the last time it was trained.
+     ════════════════════════════════════════ */
+  nav { overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+  nav::-webkit-scrollbar { display: none; }
+  nav button { padding-left: 6px; padding-right: 6px; flex: 0 0 auto; }
+  .rc-nav { display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 8px 10px; margin-bottom: 14px; }
+  .rc-nav button { background: var(--surface2); border: 1px solid var(--border); color: var(--lift); border-radius: 10px; width: 36px; height: 36px; font-size: 18px; cursor: pointer; }
+  .rc-nav button:disabled { opacity: 0.3; cursor: default; }
+  .rc-wk { text-align: center; }
+  .rc-wk b { display: block; font: 400 16px var(--font-display); }
+  .rc-wk span { font-size: 11px; color: var(--muted); }
+  .rc-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 14px; }
+  .rc-tile { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 6px; text-align: center; min-width: 0; }
+  .rc-tile b { display: block; font: 400 19px var(--font-display); font-variant-numeric: tabular-nums; }
+  .rc-tile span { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .rc-tile small { display: block; font-size: 11px; margin-top: 2px; }
+  .rc-up { color: #4ade80; } .rc-down { color: #ff6f5e; } .rc-flat { color: var(--muted); }
+  .rc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 12px; box-shadow: var(--card-shadow); }
+  .rc-h { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; margin-bottom: 10px; }
+  .rc-h .n { font-size: 15px; font-weight: 600; }
+  .rc-h .m { font-size: 12px; color: var(--muted); }
+  .rc-chip { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; border-radius: 999px; padding: 4px 9px; border: 1px solid var(--border); background: var(--surface2); color: var(--muted); white-space: nowrap; }
+  .rc-chip.rc-up { color: #4ade80; background: rgba(74,222,128,0.1); border-color: rgba(74,222,128,0.35); }
+  .rc-chip.rc-down { color: #ff6f5e; background: rgba(255,111,94,0.1); border-color: rgba(255,111,94,0.35); }
+  .rc-cmp { display: grid; grid-template-columns: 28px 1fr 1fr 22px; gap: 6px 8px; align-items: center; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .rc-hd { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .rc-sn { width: 24px; height: 24px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--lift); font-weight: 700; }
+  .rc-prev { color: var(--muted); } .rc-cur { font-weight: 600; } .rc-ar { text-align: center; font-weight: 700; }
+  .rc-foot { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 12px; color: var(--muted); }
+  .rc-foot b { color: var(--text); font-variant-numeric: tabular-nums; }
+  .rc-bars { display: flex; align-items: flex-end; gap: 6px; height: 110px; }
+  .rc-bar { flex: 1; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 4px; height: 100%; min-width: 0; }
+  .rc-bar i { display: block; width: 100%; border-radius: 6px 6px 2px 2px; background: var(--lift-mid); min-height: 3px; }
+  .rc-bar.cur i { background: var(--lift); }
+  .rc-bar span { font-size: 10px; color: var(--muted); white-space: nowrap; }
+  @media (max-width: 360px) { .rc-tiles { grid-template-columns: 1fr 1fr; } }
 </style>
 <script>
   // ── Apply saved accent color before first paint ──
@@ -1086,7 +1152,8 @@
   <button class="active" onclick="switchTab('log', this)">Log</button>
   <button onclick="switchTab('history', this)">History</button>
   <button onclick="switchTab('prs', this)">PRs</button>
-  <button onclick="switchTab('e1rm', this)">1RM calc</button>
+  <button onclick="switchTab('recap', this)">Recap</button>
+  <button onclick="switchTab('e1rm', this)">1RM</button>
   <button onclick="switchTab('settings', this)">Settings</button>
 </nav>
 
@@ -1148,11 +1215,8 @@
       </div>
 
       <!-- Sets / Reps / Weight — oninput updates the live 1RM banner below -->
-      <div class="grid-3">
-        <div class="field"><label>Sets</label><input type="number" id="lift-sets" placeholder="—" min="1" max="20" inputmode="numeric" oninput="sanitizeNumberInput(this); updateLiveE1RM()"></div>
-        <div class="field"><label>Reps</label><input type="number" id="lift-reps" placeholder="—" min="1" max="50" inputmode="numeric" oninput="sanitizeNumberInput(this); updateLiveE1RM()"></div>
-        <div class="field"><label>Weight (<span class="unit-label">lb</span>)</label><input type="number" id="lift-weight" placeholder="—" min="0" inputmode="decimal" oninput="sanitizeNumberInput(this, true); updateLiveE1RM()"></div>
-      </div>
+      <!-- Set builder (see PER-SET LOGGING in the script): "same each set" or one row per set -->
+      <div class="sb" id="sb-lift" data-sb="lift" data-live="1"></div>
 
       <!-- Live 1RM banner — appears automatically once weight + reps are filled -->
       <div id="live-e1rm-wrap" style="display:none; margin-bottom:12px;">
@@ -1266,6 +1330,16 @@
   <div id="tab-prs" class="tab">
     <div class="section-label">Personal records</div>
     <div id="pr-list"></div>
+  </div>
+
+  <!-- ════════════════════════════════════════
+       WEEKLY RECAP TAB
+       Week-by-week progressive overload: each lift's sets are
+       compared with the last time that lift was trained.
+       ════════════════════════════════════════ -->
+  <div id="tab-recap" class="tab">
+    <div class="section-label">Weekly recap</div>
+    <div id="recap-body"></div>
   </div>
 
 
@@ -1500,11 +1574,7 @@
     <div class="modal-title">Edit exercise</div>
     <div class="modal-sub" style="margin-bottom:1rem">Update any field then tap Save.</div>
     <div class="field"><label>Exercise name</label><input type="text" id="edit-ex-name" autocomplete="off"></div>
-    <div class="grid-3" style="margin-bottom:12px">
-      <div class="field"><label>Sets</label><input type="number" id="edit-ex-sets" placeholder="—" min="1" max="20" inputmode="numeric" oninput="sanitizeNumberInput(this)"></div>
-      <div class="field"><label>Reps</label><input type="number" id="edit-ex-reps" placeholder="—" min="1" max="50" inputmode="numeric" oninput="sanitizeNumberInput(this)"></div>
-      <div class="field"><label>Weight (<span class="unit-label">lb</span>)</label><input type="number" id="edit-ex-weight" placeholder="—" min="0" inputmode="decimal" oninput="sanitizeNumberInput(this, true)"></div>
-    </div>
+    <div class="sb" id="sb-edit-ex" data-sb="edit-ex"></div>
     <div class="field"><label>Notes <span style="color:#555">(optional)</span></label><input type="text" id="edit-ex-notes" placeholder="e.g. paused reps, RPE 8"></div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeEditModal()">Cancel</button>
@@ -1528,11 +1598,7 @@
     <div class="modal-title">Add exercise</div>
     <div class="modal-sub" id="add-history-modal-sub" style="margin-bottom:1rem">Log something you forgot to add.</div>
     <div class="field"><label>Exercise name</label><input type="text" id="add-hist-name" placeholder="e.g. Squat" autocomplete="off"></div>
-    <div class="grid-3" style="margin-bottom:12px">
-      <div class="field"><label>Sets</label><input type="number" id="add-hist-sets" placeholder="—" min="1" max="20" inputmode="numeric" oninput="sanitizeNumberInput(this)"></div>
-      <div class="field"><label>Reps</label><input type="number" id="add-hist-reps" placeholder="—" min="1" max="50" inputmode="numeric" oninput="sanitizeNumberInput(this)"></div>
-      <div class="field"><label>Weight (<span class="unit-label">lb</span>)</label><input type="number" id="add-hist-weight" placeholder="—" min="0" inputmode="decimal" oninput="sanitizeNumberInput(this, true)"></div>
-    </div>
+    <div class="sb" id="sb-add-hist" data-sb="add-hist"></div>
     <div class="field"><label>Notes <span style="color:#555">(optional)</span></label><input type="text" id="add-hist-notes" placeholder="e.g. paused reps, RPE 8"></div>
     <div class="modal-actions">
       <button class="modal-cancel" onclick="closeAddToHistoryModal()">Cancel</button>
@@ -2204,7 +2270,11 @@
     // Convert every stored weight value to the new unit
     const factor = unit === 'kg' ? LB_TO_KG : KG_TO_LB;
     sessions.forEach(s => {
-      s.exercises.forEach(e => { e.weight = Math.round(e.weight * factor * 10) / 10; });
+      s.exercises.forEach(e => {
+        const conv = w => Math.round(w * factor * 10) / 10;
+        e.weight = conv(e.weight);
+        if (e.setList) e.setList.forEach(st => { st.w = conv(st.w); });
+      });
     });
     saveSessions();
 
@@ -2366,10 +2436,12 @@
     const header = 'Date,Exercise,Sets,Reps,Weight,Unit,Notes\n';
     const rows = sessions.flatMap(s => {
       const dateOnly = toDateKey(s.date);
-      return s.exercises.map(e => {
+      return s.exercises.flatMap(e => {
         // Escape commas/quotes in text fields for valid CSV
         const safe = v => '"' + String(v).replace(/"/g, '""') + '"';
-        return [dateOnly, safe(e.name), e.sets, e.reps, e.weight, currentUnit, safe(e.notes || '')].join(',');
+        // Per-set exercises export one row per set (Sets = 1); uniform ones stay one row
+        if (isPerSet(e)) return e.setList.map(st => [dateOnly, safe(e.name), 1, st.r, st.w, currentUnit, safe(e.notes || '')].join(','));
+        return [[dateOnly, safe(e.name), e.sets, e.reps, e.weight, currentUnit, safe(e.notes || '')].join(',')];
       });
     });
     const csvText = header + rows.join('\n');
@@ -2515,6 +2587,7 @@
     btn.classList.add('active');
     if (t === 'history')  renderHistory();
     if (t === 'prs')      renderPRs();
+    if (t === 'recap')    { recapIdx = null; renderRecap(); } // always open on the newest week
     if (t === 'settings') {
       updateHeaderName();           // refresh input with current saved name
       renderExerciseListSettings(); // refresh preset list display
@@ -2671,6 +2744,199 @@
     currentFuzzySuggestion = null;
   }
 
+  // ═════════════════════════════════════════════
+  // PER-SET LOGGING
+  // An exercise is still {name, sets, reps, weight, notes}. When the sets
+  // differ (e.g. 12-10-8) it also carries setList: [{r, w}, …] and the
+  // sets/reps/weight fields become a SUMMARY of the best set (highest
+  // estimated 1RM). Old entries have no setList and behave as N identical
+  // sets, so nothing about existing data needs converting.
+  // ═════════════════════════════════════════════
+
+  // The list of sets for any exercise (legacy entries expand to identical sets)
+  function setsOf(e) {
+    if (e.setList && e.setList.length) return e.setList;
+    return Array.from({ length: e.sets || 0 }, () => ({ r: e.reps, w: e.weight }));
+  }
+  // Points used for PR / trend maths. Legacy entries are ONE point (their
+  // sets are identical) and keep their set count `n` for the "3×5 @ 225" label.
+  function setPoints(e) {
+    if (e.setList && e.setList.length) return e.setList.map(st => ({ r: st.r, w: st.w, n: 0 }));
+    return [{ r: e.reps, w: e.weight, n: e.sets }];
+  }
+  // Best set = highest estimated 1RM; ties go to the heavier weight
+  function betterSet(a, b) {
+    const ea = e1rmEst(a.w, a.r), eb = e1rmEst(b.w, b.r);
+    return ea !== eb ? ea > eb : a.w > b.w;
+  }
+  function bestSetOf(list) {
+    return list.reduce((best, st) => (!best || betterSet(st, best)) ? st : best, null);
+  }
+  function bestEstOf(e) {
+    const b = bestSetOf(setPoints(e));
+    return b ? e1rmEst(b.w, b.r) : 0;
+  }
+  // Builds an exercise object from a list of sets. If every set is identical
+  // it collapses to a plain legacy-shaped entry (no setList).
+  function makeEx(name, list, notes) {
+    const clean = list.map(st => ({ r: st.r, w: st.w }));
+    const uniform = clean.every(st => st.r === clean[0].r && st.w === clean[0].w);
+    if (uniform) return { name, sets: clean.length, reps: clean[0].r, weight: clean[0].w, notes };
+    const best = bestSetOf(clean);
+    return { name, sets: clean.length, reps: best.r, weight: best.w, setList: clean, notes };
+  }
+  function isPerSet(e) { return !!(e.setList && e.setList.length); }
+  // One-line text, e.g. "3×10 @ 135 lb" or "12×135 · 10×145 · 8×155 lb"
+  function exText(e) {
+    const tail = e.notes ? ' · ' + e.notes : '';
+    if (!isPerSet(e)) return `${e.sets}×${e.reps} @ ${e.weight} ${currentUnit}${tail}`;
+    return e.setList.map(st => `${st.r}×${st.w}`).join(' · ') + ' ' + currentUnit + tail;
+  }
+  // Rich version for the History cards: chips with the best set highlighted
+  function exHtml(e) {
+    const tail = e.notes ? ' · ' + e.notes : '';
+    if (!isPerSet(e)) return `${e.sets}×${e.reps} @ ${e.weight} ${currentUnit}${tail}`;
+    const best = bestSetOf(e.setList);
+    return `<div class="sb-line">${e.setList.map(st =>
+      `<span class="sb-pill${st === best ? ' top' : ''}">${st.r}×${st.w}</span>`).join('')}` +
+      `<span style="font-size:12px;color:var(--muted);align-self:center">${currentUnit}${tail}</span></div>`;
+  }
+
+  // ── Set builder widget ─────────────────────────────────────────
+  // One instance per form, keyed by prefix: 'lift' (Log tab), 'edit-ex'
+  // (Edit modal), 'add-hist' (Add-to-history modal). The "same each set"
+  // inputs keep their original ids (lift-sets, lift-reps, lift-weight, …).
+  const SB = {}; // prefix -> { mode: 'same'|'diff', rows: [{r, w}] }
+
+  function sbInit(box) {
+    const p = box.dataset.sb, live = box.dataset.live ? ' updateLiveE1RM();' : '';
+    SB[p] = { mode: 'same', rows: [] };
+    box.dataset.mode = 'same';
+    box.innerHTML = `
+      <div class="sb-seg">
+        <button type="button" class="on" data-m="same" onclick="sbSetMode('${p}','same')">Same each set</button>
+        <button type="button" data-m="diff" onclick="sbSetMode('${p}','diff')">Different per set</button>
+      </div>
+      <div class="sb-same grid-3" style="margin-bottom:12px">
+        <div class="field"><label>Sets</label><input type="number" id="${p}-sets" placeholder="—" min="1" max="20" inputmode="numeric" oninput="sanitizeNumberInput(this);${live}"></div>
+        <div class="field"><label>Reps</label><input type="number" id="${p}-reps" placeholder="—" min="1" max="50" inputmode="numeric" oninput="sanitizeNumberInput(this);${live}"></div>
+        <div class="field"><label>Weight (<span class="unit-label">${currentUnit}</span>)</label><input type="number" id="${p}-weight" placeholder="—" min="0" inputmode="decimal" oninput="sanitizeNumberInput(this, true);${live}"></div>
+      </div>
+      <div class="sb-diff" style="margin-bottom:12px">
+        <div class="sb-head"><span>Set</span><span>Reps</span><span>Weight (<span class="unit-label">${currentUnit}</span>)</span><span></span></div>
+        <div class="sb-rows"></div>
+        <button type="button" class="sb-add" onclick="sbAddRow('${p}')">+ Add set</button>
+        <div class="sb-chips"><span>Quick reps:</span>
+          <button type="button" class="sb-chip" onclick="sbPattern('${p}',[12,10,8])">12·10·8</button>
+          <button type="button" class="sb-chip" onclick="sbPattern('${p}',[10,8,6])">10·8·6</button>
+          <button type="button" class="sb-chip" onclick="sbPattern('${p}',[8,6,4])">8·6·4</button>
+        </div>
+      </div>`;
+  }
+
+  function sbBox(p) { return document.getElementById('sb-' + p); }
+  function sbVal(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+
+  function sbRender(p) {
+    const st = SB[p], box = sbBox(p);
+    box.dataset.mode = st.mode;
+    box.querySelectorAll('.sb-seg button').forEach(b => b.classList.toggle('on', b.dataset.m === st.mode));
+    box.querySelector('.sb-rows').innerHTML = st.rows.map((row, i) => `
+      <div class="sb-row">
+        <div class="sb-n">${i + 1}</div>
+        <input type="number" inputmode="numeric" min="1" max="50" placeholder="reps" value="${row.r}" oninput="sanitizeNumberInput(this);sbRow('${p}',${i},'r',this.value)">
+        <input type="number" inputmode="decimal" min="0" placeholder="weight" value="${row.w}" oninput="sanitizeNumberInput(this,true);sbRow('${p}',${i},'w',this.value)">
+        <button type="button" class="sb-x" aria-label="Remove set ${i + 1}" ${st.rows.length <= 2 ? 'disabled' : ''} onclick="sbRemoveRow('${p}',${i})">×</button>
+      </div>`).join('');
+  }
+
+  // Typing in a row updates state only (no re-render, so focus is kept)
+  function sbRow(p, i, k, v) {
+    SB[p].rows[i][k] = v;
+    if (p === 'lift') updateLiveE1RM();
+  }
+  function sbAddRow(p) {
+    const rows = SB[p].rows;
+    if (rows.length >= 20) return;
+    const last = rows[rows.length - 1] || { r: '', w: '' };
+    rows.push({ r: last.r, w: last.w }); // copy the previous set — usually only one number changes
+    sbRender(p);
+  }
+  function sbRemoveRow(p, i) {
+    if (SB[p].rows.length <= 2) return;
+    SB[p].rows.splice(i, 1);
+    sbRender(p);
+    if (p === 'lift') updateLiveE1RM();
+  }
+  // Quick pattern: fills the reps, keeps the first set's weight
+  function sbPattern(p, reps) {
+    const st = SB[p];
+    const w = (st.rows[0] && st.rows[0].w !== '') ? st.rows[0].w : sbVal(p + '-weight');
+    st.rows = reps.map(r => ({ r: String(r), w: String(w) }));
+    sbRender(p);
+    if (p === 'lift') updateLiveE1RM();
+  }
+  function sbSetMode(p, mode) {
+    const st = SB[p];
+    if (st.mode === mode) return;
+    if (mode === 'diff') {
+      // Seed rows from the "same" fields so nothing typed is lost
+      if (!st.rows.length) {
+        const n = Math.min(Math.max(parseInt(sbVal(p + '-sets')) || 3, 2), 20);
+        const r = sbVal(p + '-reps'), w = sbVal(p + '-weight');
+        st.rows = Array.from({ length: n }, () => ({ r, w }));
+      }
+    } else if (st.rows.length) {
+      // Carry the first set back to the simple fields
+      document.getElementById(p + '-sets').value   = st.rows.length;
+      document.getElementById(p + '-reps').value   = st.rows[0].r;
+      document.getElementById(p + '-weight').value = st.rows[0].w;
+    }
+    st.mode = mode;
+    sbRender(p);
+    if (p === 'lift') updateLiveE1RM();
+  }
+  function sbReset(p) {
+    SB[p].rows = [];
+    SB[p].mode = 'same';
+    ['sets', 'reps', 'weight'].forEach(k => { document.getElementById(p + '-' + k).value = ''; });
+    sbRender(p);
+  }
+  // Fill the widget from an existing exercise (per-set entries open in per-set mode)
+  function sbLoad(p, e) {
+    sbReset(p);
+    if (isPerSet(e)) {
+      SB[p].rows = e.setList.map(st => ({ r: String(st.r), w: String(st.w) }));
+      SB[p].mode = 'diff';
+    } else {
+      document.getElementById(p + '-sets').value   = e.sets;
+      document.getElementById(p + '-reps').value   = e.reps;
+      document.getElementById(p + '-weight').value = e.weight;
+    }
+    sbRender(p);
+  }
+  // Read the widget → list of {r, w}, or null if anything is missing/invalid
+  function sbRead(p) {
+    const st = SB[p];
+    if (st.mode === 'same') {
+      const n = parseInt(sbVal(p + '-sets')) || 0, r = parseInt(sbVal(p + '-reps')) || 0, w = parseFloat(sbVal(p + '-weight')) || 0;
+      if (!n || !r || !w) return null;
+      return Array.from({ length: n }, () => ({ r, w }));
+    }
+    const list = st.rows.map(row => ({ r: parseInt(row.r) || 0, w: parseFloat(row.w) || 0 }));
+    if (list.length < 1 || list.some(x => !x.r || !x.w)) return null;
+    return list;
+  }
+  // Best set of whatever is currently typed (for the live 1RM banner); tolerant of blanks
+  function sbPeekBest(p) {
+    const st = SB[p];
+    if (st.mode === 'same') return { r: parseInt(sbVal(p + '-reps')), w: parseFloat(sbVal(p + '-weight')) };
+    const valid = st.rows.map(row => ({ r: parseInt(row.r) || 0, w: parseFloat(row.w) || 0 })).filter(x => x.r > 0 && x.w > 0);
+    return bestSetOf(valid) || { r: 0, w: 0 };
+  }
+  document.querySelectorAll('.sb[data-sb]').forEach(sbInit);
+
+
   // ─────────────────────────────────────────────
   // ADD EXERCISE TO CURRENT SESSION QUEUE
   // Validates the form and pushes a new exercise
@@ -2682,26 +2948,25 @@
     let ex = exEl.value === 'Custom...'
       ? document.getElementById('custom-lift-name').value.trim()
       : exEl.value;
-    const sets   = parseInt(document.getElementById('lift-sets').value)    || 0;
-    const reps   = parseInt(document.getElementById('lift-reps').value)    || 0;
-    const weight = parseFloat(document.getElementById('lift-weight').value) || 0;
+    const setList = sbRead('lift'); // null if any set is incomplete
     const notes  = document.getElementById('lift-notes').value.trim();
 
-    if (!ex || !sets || !reps || !weight) { toast('Fill in all fields'); return; }
+    if (!ex || !setList) { toast('Fill in all fields'); return; }
 
     // Canonicalize the name: if "Face Pulls" is already in history and the
     // user types "face pulls", store it as "Face Pulls" to keep them unified.
     if (exEl.value === 'Custom...') ex = canonicalize(ex);
 
     // Add to the in-progress queue
-    currentQueue.push({ name: ex, sets, reps, weight, notes });
+    currentQueue.push(makeEx(ex, setList, notes));
     saveQueue(); // persist immediately so this exercise survives a tab close
 
     // Clear the form for the next exercise
     exEl.value = '';
-    ['lift-sets', 'lift-reps', 'lift-weight', 'lift-notes', 'custom-lift-name'].forEach(id => {
+    ['lift-notes', 'custom-lift-name'].forEach(id => {
       document.getElementById(id).value = '';
     });
+    sbReset('lift'); // clears sets/reps/weight and any per-set rows
     document.getElementById('custom-lift-wrap').style.display = 'none';
     document.getElementById('live-e1rm-wrap').style.display = 'none';
     document.getElementById('fuzzy-match-banner').style.display = 'none';
@@ -2797,7 +3062,7 @@
       <div class="queue-item">
         <div>
           <div class="queue-name">${e.name}</div>
-          <div class="queue-sub">${e.sets}×${e.reps} @ ${e.weight} ${currentUnit}${e.notes ? ' · ' + e.notes : ''}</div>
+          <div class="queue-sub">${exText(e)}</div>
         </div>
         <!-- Remove this exercise from the queue before committing -->
         <button class="queue-del" onclick="removeFromQueue(${i})" aria-label="Remove">×</button>
@@ -2831,7 +3096,7 @@
 
     // Populate the modal summary with current queue exercises
     document.getElementById('modal-summary').innerHTML = currentQueue.map(e =>
-      `<div>🏋️ ${e.name} — ${e.sets}×${e.reps} @ ${e.weight} ${currentUnit}${e.notes ? ' · ' + e.notes : ''}</div>`
+      `<div>🏋️ ${e.name} — ${exText(e)}</div>`
     ).join('');
 
     // Pre-fill the date input — use the passed date if provided (stale
@@ -2876,17 +3141,19 @@
 
     // ── New-PR detection (for the quiet PR-tab glow + immediate toast) ──
     // Compares what's about to be logged against each exercise's best
-    // weight so far, matching the same "best set = heaviest weight" rule
-    // renderPRs() uses for its cards — computed before the session is
-    // actually saved, so "previous best" really means previous.
+    // estimated 1RM so far (best SET by est. 1RM — the same rule
+    // renderPRs() uses for its cards), computed before the session is
+    // actually saved so "previous best" really means previous.
     const prevBestWeight = {};
     sessions.forEach(s => s.exercises.forEach(e => {
-      if (!(e.name in prevBestWeight) || e.weight > prevBestWeight[e.name]) prevBestWeight[e.name] = e.weight;
+      const est = bestEstOf(e);
+      if (!(e.name in prevBestWeight) || est > prevBestWeight[e.name]) prevBestWeight[e.name] = est;
     }));
     const newPRByName = {};
     currentQueue.forEach(e => {
-      if ((e.name in prevBestWeight) && e.weight > prevBestWeight[e.name]) {
-        if (!(e.name in newPRByName) || e.weight > newPRByName[e.name]) newPRByName[e.name] = e.weight;
+      const est = bestEstOf(e);
+      if ((e.name in prevBestWeight) && est > prevBestWeight[e.name]) {
+        if (!(e.name in newPRByName) || est > newPRByName[e.name]) newPRByName[e.name] = est;
       }
     });
     const newPRNames = Object.keys(newPRByName);
@@ -2913,7 +3180,7 @@
       try { localStorage.setItem(PR_FLAG_KEY, JSON.stringify(newPRNames)); } catch (e) { /* glow is cosmetic — never worth breaking the save over */ }
       const first = newPRNames[0];
       const extra = newPRNames.length > 1 ? ' (+' + (newPRNames.length - 1) + ' more)' : '';
-      toast('🏆 New PR — ' + first + ', ' + newPRByName[first] + ' ' + currentUnit + extra);
+      toast('🏆 New PR — ' + first + ', ' + newPRByName[first] + ' ' + currentUnit + ' est. 1RM' + extra);
     } else {
       toast('Session saved ✓');
     }
@@ -3120,7 +3387,7 @@
         ${exercises.map(e => `
           <div class="session-exercise">
             <span class="session-ex-name">${e.name}</span>
-            <span class="session-ex-sets"> · ${e.sets}×${e.reps} @ ${e.weight} ${currentUnit}${e.notes ? ' · ' + e.notes : ''}</span>
+            <span class="session-ex-sets"> · ${exText(e)}</span>
           </div>
         `).join('')}
         <!-- Same "forgot to log something" escape hatch as the History
@@ -3276,7 +3543,7 @@
           `<div class="session-exercise" id="ex-row-${e._sid}-${e._eidx}">
             <div style="flex:1;min-width:0">
               <div class="session-ex-name">${e.name}</div>
-              <div class="session-ex-sets">${e.sets}×${e.reps} @ ${e.weight} ${currentUnit}${e.notes ? ' · ' + e.notes : ''}</div>
+              <div class="session-ex-sets">${exHtml(e)}</div>
             </div>
             <button class="ex-more-btn" onclick="toggleActionMenu(event, ${e._sid}, ${e._eidx}, '${e.name.replace(/'/g, "\\'")}')"
                     aria-label="Exercise options">⋯</button>
@@ -3476,7 +3743,7 @@
 
   function promptMoveExercise(sid, eidx, name, currentDateStr) {
     pendingMoveExercise = { sid, eidx, name };
-    document.getElementById('move-exercise-preview').textContent = '🏋️ ' + name + ' · ' + sessions[sid].exercises[eidx].sets + '×' + sessions[sid].exercises[eidx].reps + ' @ ' + sessions[sid].exercises[eidx].weight + ' ' + currentUnit;
+    document.getElementById('move-exercise-preview').textContent = '🏋️ ' + name + ' · ' + exText({ ...sessions[sid].exercises[eidx], notes: '' });
     document.getElementById('move-exercise-date-input').value = currentDateStr;
     document.getElementById('move-exercise-modal').classList.add('open');
   }
@@ -3623,9 +3890,7 @@
 
     // Pre-fill all fields safely via JS (not HTML attributes)
     document.getElementById('edit-ex-name').value   = e.name;
-    document.getElementById('edit-ex-sets').value   = e.sets;
-    document.getElementById('edit-ex-reps').value   = e.reps;
-    document.getElementById('edit-ex-weight').value = e.weight;
+    sbLoad('edit-ex', e); // per-set entries open in per-set mode
     document.getElementById('edit-ex-notes').value  = e.notes || '';
 
     document.getElementById('edit-exercise-modal').classList.add('open');
@@ -3641,18 +3906,13 @@
   function saveEditModal() {
     if (editSid === null) return;
     const name   = document.getElementById('edit-ex-name').value.trim();
-    const sets   = parseInt(document.getElementById('edit-ex-sets').value)    || 0;
-    const reps   = parseInt(document.getElementById('edit-ex-reps').value)    || 0;
-    const weight = parseFloat(document.getElementById('edit-ex-weight').value) || 0;
+    const setList = sbRead('edit-ex');
     const notes  = document.getElementById('edit-ex-notes').value.trim();
 
     if (!name)   { toast("Name cannot be empty"); return; }
-    if (!sets || !reps || !weight) { toast("Fill in sets, reps and weight"); return; }
+    if (!setList) { toast("Fill in sets, reps and weight"); return; }
 
-    sessions[editSid].exercises[editEidx] = {
-      name:   canonicalize(name),
-      sets, reps, weight, notes
-    };
+    sessions[editSid].exercises[editEidx] = makeEx(canonicalize(name), setList, notes);
 
     saveSessions(); // persist edit to localStorage
     closeEditModal();
@@ -3685,9 +3945,7 @@
 
     // Clear all fields so the form starts fresh each time
     document.getElementById('add-hist-name').value   = '';
-    document.getElementById('add-hist-sets').value   = '';
-    document.getElementById('add-hist-reps').value   = '';
-    document.getElementById('add-hist-weight').value = '';
+    sbReset('add-hist');
     document.getElementById('add-hist-notes').value  = '';
     document.getElementById('add-history-modal-sub').textContent = `Log something you forgot to add for ${dateLabel}.`;
 
@@ -3703,19 +3961,14 @@
   function saveAddToHistoryModal() {
     if (addHistorySid === null) return;
     const name   = document.getElementById('add-hist-name').value.trim();
-    const sets   = parseInt(document.getElementById('add-hist-sets').value)    || 0;
-    const reps   = parseInt(document.getElementById('add-hist-reps').value)    || 0;
-    const weight = parseFloat(document.getElementById('add-hist-weight').value) || 0;
+    const setList = sbRead('add-hist');
     const notes  = document.getElementById('add-hist-notes').value.trim();
 
     // Same validation as logging a set normally and as the edit modal
     if (!name)   { toast("Name cannot be empty"); return; }
-    if (!sets || !reps || !weight) { toast("Fill in sets, reps and weight"); return; }
+    if (!setList) { toast("Fill in sets, reps and weight"); return; }
 
-    sessions[addHistorySid].exercises.push({
-      name: canonicalize(name),
-      sets, reps, weight, notes
-    });
+    sessions[addHistorySid].exercises.push(makeEx(canonicalize(name), setList, notes));
 
     saveSessions(); // persist the new entry to localStorage
     closeAddToHistoryModal();
@@ -3726,6 +3979,115 @@
     // panel silently going stale.
     if (openDayDetail) showDayDetail(openDayDetail.year, openDayDetail.month, openDayDetail.day);
     toast('Exercise added');
+  }
+
+  // ═════════════════════════════════════════════
+  // WEEKLY RECAP
+  // Weeks run Monday–Sunday. For each lift trained in the selected week we
+  // compare every set against the same-numbered set from the last time that
+  // lift was trained in an EARLIER week. Sets from several sessions in the
+  // same week are simply joined into one list.
+  // ═════════════════════════════════════════════
+  let recapIdx = null; // index into the list of weeks that have data (null = newest)
+
+  function recapMonday(d) {
+    const x = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    x.setDate(x.getDate() - ((x.getDay() + 6) % 7));
+    return x;
+  }
+  const recapVol = list => list.reduce((a, st) => a + st.r * st.w, 0);
+  const recapFmt = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  const recapNum = n => n.toLocaleString('en-US');
+  const recapSign = n => n > 0 ? '+' + recapNum(n) : n < 0 ? '−' + recapNum(Math.abs(n)) : '0';
+  const recapCls = n => n > 0 ? 'rc-up' : n < 0 ? 'rc-down' : 'rc-flat';
+
+  function renderRecap() {
+    const body = document.getElementById('recap-body');
+    if (!sessions.length) {
+      body.innerHTML = '<div class="empty"><span class="empty-icon">📈</span>Log a few sessions to see your weekly recap</div>';
+      return;
+    }
+    // weekKey -> { lifts: { name: [sets…] }, sessions: n }
+    const weeks = {};
+    sessions.forEach(s => {
+      const k = recapMonday(new Date(s.date)).getTime();
+      const w = weeks[k] || (weeks[k] = { lifts: {}, sessions: 0 });
+      w.sessions++;
+      s.exercises.forEach(e => { (w.lifts[e.name] || (w.lifts[e.name] = [])).push(setsOf(e)); }); // one set-list per logged entry
+    });
+    const keys = Object.keys(weeks).map(Number).sort((a, b) => a - b);
+    if (recapIdx === null || recapIdx > keys.length - 1) recapIdx = keys.length - 1;
+    if (recapIdx < 0) recapIdx = 0;
+    const wk = keys[recapIdx], cur = weeks[wk];
+    const mon = new Date(wk), sun = new Date(wk); sun.setDate(sun.getDate() + 6);
+    const thisMonday = recapMonday(new Date()).getTime();
+    const title = wk === thisMonday ? 'This week' : 'Week of ' + recapFmt(mon);
+
+    const flat = l => l.reduce((a, x) => a.concat(x), []);
+    // The entry with the best set stands in for the lift when comparing weeks, so a
+    // second light session in the same week doesn't show up as 'extra sets'.
+    const mainOf = l => l.reduce((m, x) => !m || betterSet(bestSetOf(x), bestSetOf(m)) ? x : m, null);
+    const weekVol = w => Object.values(w.lifts).reduce((a, l) => a + recapVol(flat(l)), 0);
+    const totVol = weekVol(cur);
+    const totSets = Object.values(cur.lifts).reduce((a, l) => a + flat(l).length, 0);
+    const dVol = recapIdx > 0 ? totVol - weekVol(weeks[keys[recapIdx - 1]]) : null;
+
+    let prs = 0, up = 0;
+    const names = Object.keys(cur.lifts);
+    const cards = names.map(name => {
+      const sets = mainOf(cur.lifts[name]), b = bestSetOf(sets), eNow = e1rmEst(b.w, b.r);
+      // last earlier week this lift was trained, and the best est. 1RM before this week
+      let prevKey = null, everBest = 0;
+      for (let i = recapIdx - 1; i >= 0; i--) {
+        const l = weeks[keys[i]].lifts[name];
+        if (l) { if (prevKey === null) prevKey = keys[i]; flat(l).forEach(st => { everBest = Math.max(everBest, e1rmEst(st.w, st.r)); }); }
+      }
+      const isPR = everBest > 0 && eNow > everBest;
+      if (isPR) prs++;
+      if (prevKey === null) {
+        return `<div class="rc-card"><div class="rc-h"><div><div class="n">${name}</div><div class="m">Best set ${b.r}×${b.w} ${currentUnit} · est. 1RM ${eNow}</div></div><span class="rc-chip">First time</span></div>
+          <div class="rc-cmp"><div></div><div class="rc-hd">Sets</div><div></div><div></div>${sets.map((st, i) => `<div class="rc-sn">${i + 1}</div><div class="rc-cur">${st.r}×${st.w}</div><div></div><div></div>`).join('')}</div></div>`;
+      }
+      const prevSets = mainOf(weeks[prevKey].lifts[name]), bp = bestSetOf(prevSets), ePrev = e1rmEst(bp.w, bp.r);
+      const dE = eNow - ePrev, vNow = recapVol(sets), dV = vNow - recapVol(prevSets);
+      const improved = dE > 0 || (dE === 0 && dV > 0);
+      if (improved || isPR) up++;
+      const verdict = isPR ? ['rc-up', 'New PR'] : improved ? ['rc-up', 'Progressed'] : (dE < 0 && dV < 0) ? ['rc-down', 'Down'] : ['rc-flat', 'Held'];
+      let rows = '';
+      for (let i = 0; i < Math.max(sets.length, prevSets.length); i++) {
+        const c = sets[i], p = prevSets[i];
+        const d = (c && p) ? Math.sign(e1rmEst(c.w, c.r) - e1rmEst(p.w, p.r)) : (c ? 1 : 0);
+        rows += `<div class="rc-sn">${i + 1}</div><div class="rc-prev">${p ? p.r + '×' + p.w : '—'}</div><div class="rc-cur">${c ? c.r + '×' + c.w : '—'}</div><div class="rc-ar ${recapCls(d)}">${d > 0 ? '▲' : d < 0 ? '▼' : '·'}</div>`;
+      }
+      return `<div class="rc-card"><div class="rc-h"><div><div class="n">${name}</div><div class="m">vs ${recapFmt(new Date(prevKey))} · best set ${b.r}×${b.w} ${currentUnit}</div></div><span class="rc-chip ${verdict[0]}">${verdict[1]}</span></div>
+        <div class="rc-cmp"><div></div><div class="rc-hd">Last time</div><div class="rc-hd">This week</div><div></div>${rows}</div>
+        <div class="rc-foot"><span>Est. 1RM <b class="${recapCls(dE)}">${eNow} ${currentUnit} (${recapSign(dE)})</b></span><span>Volume <b class="${recapCls(dV)}">${recapNum(vNow)} (${recapSign(dV)})</b></span></div></div>`;
+    }).join('');
+
+    // 8 calendar weeks ending at the newest week with data
+    const last = keys[keys.length - 1], bars = [];
+    for (let i = 7; i >= 0; i--) {
+      const d = new Date(last); d.setDate(d.getDate() - 7 * i);
+      const k = recapMonday(d).getTime();
+      bars.push({ k, v: weeks[k] ? weekVol(weeks[k]) : 0 });
+    }
+    const mx = Math.max(...bars.map(x => x.v), 1);
+
+    body.innerHTML = `
+      <div class="rc-nav">
+        <button ${recapIdx === 0 ? 'disabled' : ''} aria-label="Previous week" onclick="recapIdx--;renderRecap()">‹</button>
+        <div class="rc-wk"><b>${title}</b><span>${recapFmt(mon)} – ${recapFmt(sun)}</span></div>
+        <button ${recapIdx === keys.length - 1 ? 'disabled' : ''} aria-label="Next week" onclick="recapIdx++;renderRecap()">›</button>
+      </div>
+      <div class="rc-tiles">
+        <div class="rc-tile"><b>${cur.sessions}</b><span>Sessions</span></div>
+        <div class="rc-tile"><b>${totSets}</b><span>Sets</span></div>
+        <div class="rc-tile"><b>${recapNum(totVol)}</b><span>Volume</span>${dVol === null ? '' : `<small class="${recapCls(dVol)}">${recapSign(dVol)}</small>`}</div>
+        <div class="rc-tile"><b>${prs}</b><span>PRs</span><small class="rc-flat">${up}/${names.length} up</small></div>
+      </div>
+      ${cards}
+      <div class="section-label" style="margin-top:20px">Weekly volume · ${currentUnit}</div>
+      <div class="rc-card"><div class="rc-bars">${bars.map(x => `<div class="rc-bar${x.k === wk ? ' cur' : ''}"><i style="height:${Math.round(x.v / mx * 88)}%"></i><span>${recapFmt(new Date(x.k))}</span></div>`).join('')}</div></div>`;
   }
 
   // Epley estimate: w × (1 + r/30). If r = 1, weight is already the 1RM.
@@ -3751,16 +4113,19 @@
     // Attach each session's date to its exercises before flattening,
     // so every exercise object carries the date it was logged on —
     // needed to show "set on [date]" for whichever set became the PR.
-    const allEx = sessions.flatMap(s => s.exercises.map(e => ({ ...e, date: s.date })));
+    // Per-set entries contribute one point per set; legacy entries one point
+    // (their sets are identical). Each point: {name, r, w, n, date}.
+    const allEx = sessions.flatMap(s => s.exercises.flatMap(e =>
+      setPoints(e).map(pt => ({ name: e.name, reps: pt.r, weight: pt.w, n: pt.n, date: s.date }))));
     if (!allEx.length) {
       document.getElementById('pr-list').innerHTML = '<div class="empty"><span class="empty-icon">🏆</span>Log sessions to see your PRs here</div>';
       return;
     }
 
-    // Best set per exercise = heaviest weight logged
+    // Best set per exercise = highest estimated 1RM (ties → heavier weight)
     const prs = {};
     allEx.forEach(e => {
-      if (!prs[e.name] || e.weight > prs[e.name].weight) prs[e.name] = e;
+      if (!prs[e.name] || betterSet({ w: e.weight, r: e.reps }, { w: prs[e.name].weight, r: prs[e.name].reps })) prs[e.name] = e;
     });
 
     // Sparkline source data: for every exercise name, one point per
@@ -3770,7 +4135,7 @@
     sessions.forEach(s => {
       const bestInSession = {}; // exercise name -> best {est, date} within this one session
       s.exercises.forEach(e => {
-        const est = e1rmEst(e.weight, e.reps);
+        const est = bestEstOf(e); // best set of the exercise by est. 1RM
         if (!bestInSession[e.name] || est > bestInSession[e.name].est) bestInSession[e.name] = { est, date: s.date };
       });
       Object.keys(bestInSession).forEach(name => {
@@ -3806,7 +4171,7 @@
           <div class="pr-badge">🏋️</div>
           <div class="pr-body">
             <div class="pr-name">${e.name}${isNew ? '<span class="pr-new">New PR</span>' : ''}</div>
-            <div class="pr-meta">Best set: ${e.sets}×${e.reps} @ ${e.weight} ${currentUnit} · ${fmtSmart(new Date(e.date))}</div>
+            <div class="pr-meta">Best set: ${e.n > 0 ? e.n + '×' : ''}${e.reps}${e.n > 0 ? ' @ ' : '×'}${e.weight} ${currentUnit} · ${fmtSmart(new Date(e.date))}</div>
             ${ratioLine}
           </div>
           <div class="pr-val">
@@ -3937,6 +4302,7 @@
   function sendToLog() {
     const w = document.getElementById('e1rm-weight').value;
     const r = document.getElementById('e1rm-reps').value;
+    sbSetMode('lift', 'same'); // the calculator's numbers are a single set
     document.getElementById('lift-reps').value   = r;
     document.getElementById('lift-weight').value = w;
     document.querySelectorAll('.tab').forEach(s => s.classList.remove('active'));
@@ -4012,8 +4378,10 @@
   // estimate. Hides if either field is cleared.
   // ─────────────────────────────────────────────
   function updateLiveE1RM() {
-    const w    = parseFloat(document.getElementById('lift-weight').value);
-    const r    = parseInt(document.getElementById('lift-reps').value);
+    // In per-set mode this reflects the best set typed so far
+    const pk   = sbPeekBest('lift');
+    const w    = pk.w;
+    const r    = pk.r;
     const wrap = document.getElementById('live-e1rm-wrap');
     const val  = document.getElementById('live-e1rm-val');
 
