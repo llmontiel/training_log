@@ -1023,6 +1023,49 @@
   .rc-bar.cur i { background: var(--lift); }
   .rc-bar span { font-size: 10px; color: var(--muted); white-space: nowrap; }
   @media (max-width: 360px) { .rc-tiles { grid-template-columns: 1fr 1fr; } }
+
+  /* ════════════════════════════════════════
+     PREMIUM IDEAS PACK: last-time chip, set ticks + rest alert, swipe rows,
+     empty states, session summary, share sheet, streak card, backup banner
+     ════════════════════════════════════════ */
+  .lt-chip { display: flex; align-items: center; gap: 10px; background: var(--lift-dim); border: 1px solid var(--lift-mid); border-radius: var(--radius-sm); padding: 10px 12px; margin: -4px 0 12px; cursor: pointer; animation: paneIn 0.25s ease-out both; }
+  .lt-chip small { display: block; color: var(--muted); font-size: 11px; }
+  .lt-chip b { font-variant-numeric: tabular-nums; font-weight: 600; }
+  .lt-chip .use { margin-left: auto; font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--lift); }
+  .sb-row.t { grid-template-columns: 34px 1fr 1fr 34px 34px; }
+  .sb-head.t { grid-template-columns: 34px 1fr 1fr 34px 34px; }
+  .sb-tick { width: 34px; height: 34px; border-radius: 50%; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-size: 15px; cursor: pointer; transition: background 0.15s, color 0.15s, border-color 0.15s; }
+  .sb-row.done .sb-tick { background: var(--lift); border-color: var(--lift); color: var(--on-lift); }
+  .sb-row.done input { opacity: 0.6; }
+  .sb-tick-same { width: 100%; margin: -2px 0 12px; background: none; border: 1px dashed var(--lift-mid); color: var(--lift); border-radius: var(--radius-sm); font: 600 13px var(--font-body); padding: 10px; cursor: pointer; }
+  .btn-stopwatch.alert { animation: restAlert 0.9s ease-out 3; }
+  @keyframes restAlert { 0%, 100% { box-shadow: none; } 50% { box-shadow: 0 0 0 2px var(--lift), 0 0 22px var(--lift-glow); } }
+  .rest-target { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin-top: 10px; font-size: 11px; color: var(--muted); }
+  .rest-target button { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 999px; font: 600 12px var(--font-body); padding: 5px 11px; cursor: pointer; }
+  .rest-target button.on { border-color: var(--lift-mid); color: var(--lift); background: var(--lift-dim); }
+  .rest-custom { width: 64px; background: var(--surface2); border: 1px solid var(--border); border-radius: 999px; color: var(--text); font: 600 12px var(--font-body); padding: 5px 10px; text-align: center; outline: none; }
+  .rest-custom.on { border-color: var(--lift-mid); color: var(--lift); background: var(--lift-dim); }
+  .session-exercise[id^="ex-row-"] { touch-action: pan-y; position: relative; transition: transform 0.18s ease-out, box-shadow 0.18s; }
+  .session-exercise.swiping { transition: none; }
+  .empty-art { display: block; margin: 0 auto 12px; opacity: 0.9; }
+  .empty-cta { margin-top: 14px; background: var(--surface2); border: 1px solid var(--lift-mid); color: var(--lift); border-radius: var(--radius-sm); font: 600 13px var(--font-body); padding: 10px 18px; cursor: pointer; }
+  .sum-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0; }
+  .sum-stats div { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px 6px; text-align: center; }
+  .sum-stats b { display: block; font: 400 19px var(--font-display); }
+  .sum-stats span { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .sum-pr { display: flex; align-items: center; gap: 8px; padding: 9px 12px; border-radius: var(--radius-sm); background: rgba(74,222,128,0.08); border: 1px solid rgba(74,222,128,0.3); font-size: 13px; margin-top: 6px; }
+  .sum-pr em { font-style: normal; font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: #4ade80; margin-left: auto; text-align: right; }
+  .share-img { display: block; width: 100%; max-width: 300px; margin: 10px auto; border-radius: 14px; border: 1px solid var(--border); }
+  .rc-streak { display: flex; gap: 16px; align-items: center; margin-bottom: 14px; }
+  .rc-streak .big { font: 400 17px var(--font-display); }
+  .rc-streak .sm { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .rc-step { display: inline-flex; gap: 6px; align-items: center; margin-top: 8px; }
+  .rc-step button { background: var(--surface2); border: 1px solid var(--border); color: var(--lift); border-radius: 8px; width: 28px; height: 28px; font-size: 16px; cursor: pointer; }
+  .rc-share { width: 100%; margin: 4px 0 14px; background: var(--surface2); border: 1px solid var(--lift-mid); color: var(--lift); border-radius: var(--radius-sm); font: 600 13px var(--font-body); padding: 11px; cursor: pointer; }
+  .backup-banner { display: none; align-items: center; gap: 10px; background: var(--surface2); border: 1px solid var(--lift-mid); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 13px; margin-bottom: 14px; }
+  .backup-banner button { background: var(--lift); color: var(--on-lift); border: none; border-radius: 8px; font: 700 12px var(--font-body); padding: 7px 12px; cursor: pointer; margin-left: auto; }
+  .backup-banner button.x { background: none; color: var(--muted); font-size: 18px; padding: 0 4px; margin-left: 0; }
+
 </style>
 <script>
   // ── Apply saved accent color before first paint ──
@@ -1174,6 +1217,13 @@
          Populated by renderQueue() each time the queue state changes. -->
     <div id="session-banner" style="display:none;"></div>
 
+    <!-- Backup nudge — shown when it's been a while since the last CSV export -->
+    <div class="backup-banner" id="backup-banner">
+      <span>💾</span><span id="backup-text"></span>
+      <button onclick="exportData()">Export</button>
+      <button class="x" onclick="snoozeBackup()" aria-label="Dismiss">×</button>
+    </div>
+
     <!-- Training focus badge — only shown if a focus is set in Settings.
          Sits above the form as a persistent reminder of the current goal. -->
     <div class="focus-badge" id="focus-badge" style="display:none;"></div>
@@ -1185,11 +1235,13 @@
            "Custom..." reveals a free-text field. -->
       <div class="field">
         <label>Exercise</label>
-        <select id="lift-exercise" onchange="toggleCustomLift()">
+        <select id="lift-exercise" onchange="toggleCustomLift(); showLastTime()">
           <option value="">Choose lift...</option>
           <!-- Preset options injected here by populateExerciseDropdown() -->
         </select>
       </div>
+      <!-- "Last time" chip — tap to prefill the form with the last session's sets -->
+      <div id="last-time-box"></div>
 
       <!-- Shown only when "Custom..." is selected.
            As the user types, getSuggestions() searches past custom exercises
@@ -1242,6 +1294,16 @@
       </div>
       <!-- Hint text shown below buttons — visible while stopwatch is running -->
       <div class="sw-hint" id="sw-hint"></div>
+      <!-- Rest alert: the timer pulses (and buzzes where supported) at this time -->
+      <div class="rest-target" id="rest-target"><span>Rest alert:</span>
+        <button data-s="90" onclick="setRestTarget(90)">1:30</button>
+        <button data-s="120" onclick="setRestTarget(120)">2:00</button>
+        <button data-s="180" onclick="setRestTarget(180)">3:00</button>
+        <button data-s="240" onclick="setRestTarget(240)">4:00</button>
+        <button data-s="300" onclick="setRestTarget(300)">5:00</button>
+        <input type="number" id="rest-custom" class="rest-custom" placeholder="min" min="0.5" max="30" step="0.5" inputmode="decimal" aria-label="Custom rest alert in minutes" onchange="setRestTarget(Math.round((parseFloat(this.value) || 0) * 60))">
+        <button data-s="0" onclick="setRestTarget(0)">Off</button>
+      </div>
 
       <!-- Notes field sits below the button row so it's the last thing
            the user fills in before tapping Log exercise -->
@@ -1569,6 +1631,28 @@
      exercise row in History. Pre-fills all
      fields so the user can edit anything.
      ════════════════════════════════════════ -->
+<div class="modal-overlay" id="summary-modal">
+  <div class="modal">
+    <div class="modal-title">Session logged 💪</div>
+    <div class="modal-sub" id="summary-sub" style="margin-bottom:0"></div>
+    <div class="sum-stats" id="summary-stats"></div>
+    <div id="summary-prs"></div>
+    <div class="modal-actions" style="margin-top:14px">
+      <button class="modal-cancel" id="summary-share" onclick="shareSummaryPR()" style="display:none">Share PR</button>
+      <button class="modal-confirm" onclick="closeSummary()">Done</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="share-modal">
+  <div class="modal">
+    <div class="modal-title">Share card</div>
+    <div class="modal-sub" style="margin-bottom:0">Press and hold the image to save it, then post it anywhere.</div>
+    <img class="share-img" id="share-img" alt="Share card">
+    <div class="modal-actions"><button class="modal-confirm" onclick="document.getElementById('share-modal').classList.remove('open')">Close</button></div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="edit-exercise-modal">
   <div class="modal">
     <div class="modal-title">Edit exercise</div>
@@ -2003,6 +2087,17 @@
     toast('Accent color updated');
   }
 
+  const BW_KEY = 'trainingLog_bwHistory';
+  function loadBwHistory() { try { return JSON.parse(localStorage.getItem(BW_KEY)) || []; } catch (e) { return []; } }
+  // Bodyweight on a given day: the latest entry on/before it (or the earliest on record)
+  function bwAt(date) {
+    const hist = loadBwHistory(), key = toDateKey(date);
+    if (!hist.length) return parseFloat(loadProfile().bodyweight) || null;
+    let bw = hist[0].bw;
+    hist.forEach(h => { if (h.date <= key) bw = h.bw; });
+    return bw;
+  }
+
   // Called when "Save profile" is tapped in Settings.
   // Saves name, avatar, and training focus together.
   function saveProfile() {
@@ -2016,6 +2111,15 @@
     const avatar = pendingAvatar !== null ? pendingAvatar : loadProfile().avatar || '';
 
     saveProfileToStorage({ name, avatar, focus, bodyweight, federation, weightClass });
+    // Remember bodyweight over time so the PR cards can show how the strength-to-bodyweight ratio is trending
+    const bwNum = parseFloat(bodyweight);
+    if (bwNum > 0) {
+      const hist = loadBwHistory();
+      if (!hist.length || hist[hist.length - 1].bw !== bwNum) {
+        hist.push({ date: toDateKey(new Date()), bw: bwNum });
+        try { localStorage.setItem(BW_KEY, JSON.stringify(hist)); } catch (e) { /* ignore */ }
+      }
+    }
     updateHeaderName();
     renderHistory(); // refresh federation badge
     renderPRs();     // refresh bodyweight ratios
@@ -2445,6 +2549,8 @@
       });
     });
     const csvText = header + rows.join('\n');
+    try { localStorage.setItem(EXPORT_KEY, String(Date.now())); } catch (e) { /* ignore */ }
+    maybeShowBackup();
     const filename = 'training-log-' + dateStr + '.csv';
 
     // Detect iOS "Add to Home Screen" standalone mode, where the
@@ -2608,6 +2714,8 @@
   }
 
   // Show/hide the custom exercise name input
+  function goLog() { switchTab('log', document.querySelector('nav button')); }
+
   function toggleCustomLift() {
     const v = document.getElementById('lift-exercise').value;
     document.getElementById('custom-lift-wrap').style.display = v === 'Custom...' ? 'block' : 'none';
@@ -2744,6 +2852,93 @@
     currentFuzzySuggestion = null;
   }
 
+  // ─────────────────────────────────────────────
+  // SMALL HELPERS: haptics, rest alert, "last time", backup nudge
+  // ─────────────────────────────────────────────
+  // Vibration is a nice-to-have: Android supports it, iPhone web apps
+  // usually don't — so it always fails quietly.
+  function buzz(pattern) { try { if (navigator.vibrate) navigator.vibrate(pattern); } catch (e) { /* unsupported */ } }
+
+  const REST_KEY = 'trainingLog_restTarget';
+  function loadRestTarget() { try { const v = localStorage.getItem(REST_KEY); return v === null ? 120 : parseInt(v) || 0; } catch (e) { return 120; } }
+  function setRestTarget(sec) {
+    try { localStorage.setItem(REST_KEY, String(sec)); } catch (e) { /* ignore */ }
+    document.querySelectorAll('#rest-target button').forEach(b => b.classList.toggle('on', parseInt(b.dataset.s) === sec));
+    // Custom minutes: shown in the box when the saved time isn't one of the presets
+    const custom = document.getElementById('rest-custom');
+    const preset = [0, 90, 120, 180, 240, 300].indexOf(sec) !== -1;
+    if (custom && document.activeElement !== custom) custom.value = preset ? '' : +(sec / 60).toFixed(1);
+    custom && custom.classList.toggle('on', !preset);
+    swAlerted = false;
+  }
+  // Starts (or restarts) the rest timer from 0:00 — used by the set ticks
+  function restStart() {
+    clearInterval(swInterval);
+    swMs = 0; swStart = Date.now(); swRunning = true; swAlerted = false;
+    const btn = document.getElementById('sw-btn');
+    btn.classList.remove('alert'); btn.classList.add('running');
+    const lbl = document.getElementById('sw-set-label');
+    lbl.textContent = 'SET ' + swSetCount; lbl.style.opacity = '1';
+    document.getElementById('sw-hint').textContent = 'Long-press to reset and start next set';
+    swInterval = setInterval(updateSwDisplay, 100);
+    updateSwDisplay();
+  }
+
+  // The most recent logged entry for an exercise name (by session date)
+  function lastEntryFor(name) {
+    let best = null;
+    sessions.forEach(s => s.exercises.forEach(e => {
+      if (e.name === name && (!best || new Date(s.date) >= new Date(best.date))) best = { e, date: s.date };
+    }));
+    return best;
+  }
+  let lastTimeEntry = null;
+  function showLastTime() {
+    const box = document.getElementById('last-time-box');
+    const name = document.getElementById('lift-exercise').value;
+    const found = (name && name !== 'Custom...') ? lastEntryFor(name) : null;
+    lastTimeEntry = found;
+    if (!found) { box.innerHTML = ''; return; }
+    box.innerHTML = `<div class="lt-chip" onclick="useLastTime()"><div><small>Last time · ${fmtShort(new Date(found.date))}</small><b>${exText({ ...found.e, notes: '' })}</b></div><span class="use">Use</span></div>`;
+  }
+  function useLastTime() {
+    if (!lastTimeEntry) return;
+    sbLoad('lift', lastTimeEntry.e);
+    updateLiveE1RM();
+    buzz(10);
+    toast('Filled from last time');
+  }
+  const fmtShort = d => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+
+  // Backup nudge: shown when the last export is over 2 weeks old (or never
+  // happened and the first session is over 2 weeks old). Snoozes for a week.
+  const EXPORT_KEY = 'trainingLog_lastExport', SNOOZE_KEY = 'trainingLog_backupSnooze';
+  function maybeShowBackup() {
+    const el = document.getElementById('backup-banner');
+    if (!el) return;
+    let show = false, text = '';
+    try {
+      const now = Date.now(), DAY = 86400000;
+      const snooze = parseInt(localStorage.getItem(SNOOZE_KEY)) || 0;
+      if (sessions.length && now > snooze) {
+        const lastExp = parseInt(localStorage.getItem(EXPORT_KEY)) || 0;
+        const first = Math.min(...sessions.map(s => new Date(s.date).getTime()));
+        const ref = lastExp || first;
+        const days = Math.floor((now - ref) / DAY);
+        if (days >= 14) {
+          show = true;
+          text = lastExp ? 'Last export <b>' + (days >= 28 ? Math.floor(days / 7) + ' weeks' : days + ' days') + ' ago</b>' : "You haven't exported your data yet";
+        }
+      }
+    } catch (e) { /* ignore */ }
+    document.getElementById('backup-text').innerHTML = text;
+    el.style.display = show ? 'flex' : 'none';
+  }
+  function snoozeBackup() {
+    try { localStorage.setItem(SNOOZE_KEY, String(Date.now() + 7 * 86400000)); } catch (e) { /* ignore */ }
+    document.getElementById('backup-banner').style.display = 'none';
+  }
+
   // ═════════════════════════════════════════════
   // PER-SET LOGGING
   // An exercise is still {name, sets, reps, weight, notes}. When the sets
@@ -2822,8 +3017,9 @@
         <div class="field"><label>Reps</label><input type="number" id="${p}-reps" placeholder="—" min="1" max="50" inputmode="numeric" oninput="sanitizeNumberInput(this);${live}"></div>
         <div class="field"><label>Weight (<span class="unit-label">${currentUnit}</span>)</label><input type="number" id="${p}-weight" placeholder="—" min="0" inputmode="decimal" oninput="sanitizeNumberInput(this, true);${live}"></div>
       </div>
+      ${box.dataset.live ? `<button type="button" class="sb-tick-same sb-same" id="${p}-tick-same" onclick="sbTickSame('${p}')">✓ Set done · start rest</button>` : ''}
       <div class="sb-diff" style="margin-bottom:12px">
-        <div class="sb-head"><span>Set</span><span>Reps</span><span>Weight (<span class="unit-label">${currentUnit}</span>)</span><span></span></div>
+        <div class="sb-head"><span>Set</span><span>Reps</span><span>Weight (<span class="unit-label">${currentUnit}</span>)</span><span></span><span></span></div>
         <div class="sb-rows"></div>
         <button type="button" class="sb-add" onclick="sbAddRow('${p}')">+ Add set</button>
         <div class="sb-chips"><span>Quick reps:</span>
@@ -2841,12 +3037,15 @@
     const st = SB[p], box = sbBox(p);
     box.dataset.mode = st.mode;
     box.querySelectorAll('.sb-seg button').forEach(b => b.classList.toggle('on', b.dataset.m === st.mode));
+    const tk = !!box.dataset.live; // only the Log form has per-set ticks (rest timer)
+    box.querySelector('.sb-head').classList.toggle('t', tk);
     box.querySelector('.sb-rows').innerHTML = st.rows.map((row, i) => `
-      <div class="sb-row">
+      <div class="sb-row${tk ? ' t' : ''}${row.done ? ' done' : ''}">
         <div class="sb-n">${i + 1}</div>
         <input type="number" inputmode="numeric" min="1" max="50" placeholder="reps" value="${row.r}" oninput="sanitizeNumberInput(this);sbRow('${p}',${i},'r',this.value)">
         <input type="number" inputmode="decimal" min="0" placeholder="weight" value="${row.w}" oninput="sanitizeNumberInput(this,true);sbRow('${p}',${i},'w',this.value)">
         <button type="button" class="sb-x" aria-label="Remove set ${i + 1}" ${st.rows.length <= 2 ? 'disabled' : ''} onclick="sbRemoveRow('${p}',${i})">×</button>
+        ${tk ? `<button type="button" class="sb-tick" aria-label="Set ${i + 1} done" onclick="sbTick('${p}',${i})">✓</button>` : ''}
       </div>`).join('');
   }
 
@@ -2896,7 +3095,33 @@
     sbRender(p);
     if (p === 'lift') updateLiveE1RM();
   }
+  // ✓ on a set row: marks it done and starts the rest timer from 0:00
+  function sbTick(p, i) {
+    const row = SB[p].rows[i];
+    if (!row.done && (!(parseInt(row.r) > 0) || !(parseFloat(row.w) > 0))) { toast('Enter reps and weight first'); return; }
+    row.done = !row.done;
+    sbRender(p);
+    if (row.done) {
+      buzz(10);
+      swSetCount = SB[p].rows.filter(r => r.done).length + 1; // label shows the NEXT set
+      restStart();
+    }
+  }
+  // Same-each-set mode: counts finished sets and starts the rest timer
+  function sbTickSame(p) {
+    const n = parseInt(sbVal(p + '-sets')) || 0;
+    SB[p].ticked = (SB[p].ticked || 0) + 1;
+    if (n && SB[p].ticked > n) SB[p].ticked = 1;
+    const btn = document.getElementById(p + '-tick-same');
+    if (btn) btn.textContent = '✓ Set ' + SB[p].ticked + (n ? ' of ' + n : '') + ' done · start rest';
+    buzz(10);
+    swSetCount = SB[p].ticked + 1;
+    restStart();
+  }
   function sbReset(p) {
+    SB[p].ticked = 0;
+    const tb = document.getElementById(p + '-tick-same');
+    if (tb) tb.textContent = '✓ Set done · start rest';
     SB[p].rows = [];
     SB[p].mode = 'same';
     ['sets', 'reps', 'weight'].forEach(k => { document.getElementById(p + '-' + k).value = ''; });
@@ -2974,14 +3199,16 @@
     // Reset set counter for the next exercise
     swSetCount = 1;
     clearInterval(swInterval);
-    swMs = 0; swStart = null; swRunning = false; swInterval = null;
+    swMs = 0; swStart = null; swRunning = false; swInterval = null; swAlerted = false;
     document.getElementById('sw-display').textContent = '0:00';
-    document.getElementById('sw-btn').classList.remove('running');
+    document.getElementById('sw-btn').classList.remove('running', 'alert');
     document.getElementById('sw-hint').textContent = '';
     const lbl = document.getElementById('sw-set-label');
     lbl.textContent = 'SET 1'; lbl.style.opacity = '0';
 
     renderQueue();
+    showLastTime(); // exercise select was cleared
+    buzz(10);
     toast(ex + ' added ✓');
   }
 
@@ -3091,6 +3318,88 @@
   // Accepts an optional prefilledDate string (YYYY-M-D format) for when
   // the red "stale session" banner links directly to end a previous day's
   // session — pre-fills that date but still lets the user change it.
+
+  // ─────────────────────────────────────────────
+  // SESSION SUMMARY + SHARE CARDS
+  // After End & Log: a recap sheet (sets, volume, lifts, PRs). Share cards
+  // are drawn on a canvas (1080×1350) and handed to the phone's share sheet;
+  // if that isn't available the image opens so it can be press-and-held to save.
+  // ─────────────────────────────────────────────
+  let lastSummary = null;
+  function showSummary(entries, prByName, prevByName, dateLabel) {
+    const sets = entries.reduce((a, e) => a + e.sets, 0);
+    const volume = entries.reduce((a, e) => a + recapVol(setsOf(e)), 0);
+    const prNames = Object.keys(prByName);
+    lastSummary = { entries, prByName, prevByName };
+    document.getElementById('summary-sub').textContent = dateLabel;
+    document.getElementById('summary-stats').innerHTML =
+      `<div><b>${sets}</b><span>Sets</span></div><div><b>${recapNum(volume)}</b><span>Volume</span></div><div><b>${entries.length}</b><span>Lifts</span></div>`;
+    document.getElementById('summary-prs').innerHTML = prNames.map(n =>
+      `<div class="sum-pr">🏆 ${n}<em>New PR<br>${prByName[n]} ${currentUnit} est. 1RM</em></div>`).join('');
+    document.getElementById('summary-share').style.display = prNames.length ? '' : 'none';
+    document.getElementById('summary-modal').classList.add('open');
+  }
+  function closeSummary() { document.getElementById('summary-modal').classList.remove('open'); }
+  function shareSummaryPR() {
+    if (!lastSummary) return;
+    const name = Object.keys(lastSummary.prByName)[0];
+    if (!name) return;
+    const entry = lastSummary.entries.find(e => e.name === name);
+    const b = bestSetOf(setPoints(entry));
+    const est = lastSummary.prByName[name], prev = lastSummary.prevByName[name];
+    drawShareCard({
+      kicker: 'New PR · ' + name,
+      big: String(est), bigUnit: currentUnit + ' est. 1RM',
+      rows: [['Best set', b.r + ' × ' + b.w + ' ' + currentUnit], ['Previous best', prev ? prev + ' ' + currentUnit : '—'], ['Gain', prev ? '+' + (est - prev) + ' ' + currentUnit : '—']]
+    });
+  }
+
+  function drawShareCard(c) {
+    const W = 1080, H = 1350, cv = document.createElement('canvas');
+    cv.width = W; cv.height = H;
+    const g = cv.getContext('2d');
+    const css = getComputedStyle(document.documentElement);
+    const lift = css.getPropertyValue('--lift').trim() || '#3ec6ff';
+    const bgGrad = g.createRadialGradient(W * 0.2, 0, 50, W * 0.2, 0, H);
+    bgGrad.addColorStop(0, '#16385a'); bgGrad.addColorStop(0.6, '#0b1220'); bgGrad.addColorStop(1, '#080d18');
+    g.fillStyle = bgGrad; g.fillRect(0, 0, W, H);
+    g.strokeStyle = lift; g.globalAlpha = 0.35; g.lineWidth = 3; g.strokeRect(36, 36, W - 72, H - 72); g.globalAlpha = 1;
+    g.textBaseline = 'alphabetic';
+    g.fillStyle = lift; g.font = '600 34px -apple-system, Helvetica, Arial, sans-serif';
+    g.letterSpacing = '8px'; g.fillText(c.kicker.toUpperCase(), 90, 150); g.letterSpacing = '0px';
+    g.fillStyle = '#e8eefc'; g.font = '400 300px Georgia, serif'; g.fillText(c.big, 90, 640);
+    const bw = g.measureText(c.big).width;
+    g.fillStyle = '#8a98b8'; g.font = '400 52px Georgia, serif'; g.fillText(c.bigUnit, 90 + Math.min(bw, 760) + 24, 640);
+    let y = 760;
+    (c.rows || []).forEach(r => {
+      g.strokeStyle = '#223152'; g.lineWidth = 2; g.beginPath(); g.moveTo(90, y - 56); g.lineTo(W - 90, y - 56); g.stroke();
+      g.fillStyle = '#8a98b8'; g.font = '400 44px -apple-system, Helvetica, Arial, sans-serif'; g.textAlign = 'left'; g.fillText(r[0], 90, y);
+      g.fillStyle = (r[2] || '#e8eefc'); g.font = '600 48px -apple-system, Helvetica, Arial, sans-serif'; g.textAlign = 'right'; g.fillText(r[1], W - 90, y);
+      y += 100;
+    });
+    g.textAlign = 'center'; g.fillStyle = '#8a98b8'; g.font = '400 34px Georgia, serif'; g.letterSpacing = '10px';
+    g.fillText('TRAINING LOG', W / 2, H - 90); g.letterSpacing = '0px'; g.textAlign = 'left';
+    cv.toBlob(async blob => {
+      if (!blob) { toast('Could not make the card'); return; }
+      const file = new File([blob], 'training-log.png', { type: 'image/png' });
+      try {
+        if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file] }); return; }
+      } catch (e) { if (e && e.name === 'AbortError') return; }
+      document.getElementById('share-img').src = cv.toDataURL('image/png');
+      document.getElementById('share-modal').classList.add('open');
+    }, 'image/png');
+  }
+  function shareRecap() {
+    const d = window.__recapShare;
+    if (!d) return;
+    drawShareCard({
+      kicker: 'Weekly recap · ' + d.range,
+      big: recapNum(d.volume), bigUnit: currentUnit + ' volume',
+      rows: [['Sessions', String(d.sessions)], ['Sets', String(d.sets)], ['PRs', String(d.prs)]].concat(
+        d.top.map(t => [t.name, t.est + ' ' + currentUnit + ' (' + recapSign(t.dE) + ')', t.dE > 0 ? '#4ade80' : t.dE < 0 ? '#ff6f5e' : '#e8eefc']))
+    });
+  }
+
   function promptEndSession(prefilledDate) {
     if (!currentQueue.length) { toast('Add at least one exercise first'); return; }
 
@@ -3157,6 +3466,7 @@
       }
     });
     const newPRNames = Object.keys(newPRByName);
+    const justLogged = [...currentQueue]; // for the summary sheet (queue is cleared below)
 
     // Save session with the selected date and a copy of the current queue
     sessions.unshift({ date: sessionDate, exercises: [...currentQueue] });
@@ -3178,12 +3488,13 @@
       // PRs tab is actually viewed, and only once (the flag is consumed
       // and cleared there).
       try { localStorage.setItem(PR_FLAG_KEY, JSON.stringify(newPRNames)); } catch (e) { /* glow is cosmetic — never worth breaking the save over */ }
-      const first = newPRNames[0];
-      const extra = newPRNames.length > 1 ? ' (+' + (newPRNames.length - 1) + ' more)' : '';
-      toast('🏆 New PR — ' + first + ', ' + newPRByName[first] + ' ' + currentUnit + ' est. 1RM' + extra);
+      buzz([20, 40, 60]);
     } else {
-      toast('Session saved ✓');
+      buzz(15);
     }
+    // Recap sheet instead of a toast: totals, plus any PRs with a share button
+    showSummary(justLogged, newPRByName, prevBestWeight, fmtSmart(new Date(sessionDate)));
+    maybeShowBackup();
   }
 
   // updateStats is intentionally removed — stat row was removed in favour of
@@ -3477,7 +3788,7 @@
     // ── Session list ──
     const el = document.getElementById('history-list');
     if (!sessions.length) {
-      el.innerHTML = '<div class="empty"><span class="empty-icon">📋</span>No sessions yet — log your first lift</div>';
+      el.innerHTML = '<div class="empty"><svg class="empty-art" width="52" height="52" viewBox="0 0 56 56" fill="none" stroke="var(--lift)" stroke-width="2.5" stroke-linecap="round"><path d="M6 28h6M44 28h6"/><rect x="12" y="16" width="7" height="24" rx="2"/><rect x="37" y="16" width="7" height="24" rx="2"/><path d="M19 28h18"/></svg><b style="display:block;color:var(--text);font-family:var(--font-display);font-size:16px;font-weight:400;margin-bottom:4px">No sessions yet</b>Log your first lift and your history, PRs and recap fill in on their own.<button class="empty-cta" onclick="goLog()">Log first lift</button></div>';
       return;
     }
 
@@ -3794,6 +4105,49 @@
     toast('Exercise moved');
   }
 
+
+  // ─────────────────────────────────────────────
+  // SWIPE ACTIONS on History rows: drag right to edit, left to delete
+  // (delete still asks to confirm). The ⋯ menu keeps working. Delegated on
+  // #history-list so it survives re-renders. Drag only starts after a
+  // 12px horizontal move, so taps and vertical scrolling are untouched.
+  // ─────────────────────────────────────────────
+  (function initSwipeRows() {
+    const list = document.getElementById('history-list');
+    let row = null, sx = 0, sy = 0, dx = 0, active = false, decided = false;
+    list.addEventListener('pointerdown', e => {
+      const r = e.target.closest('.session-exercise[id^="ex-row-"]');
+      if (!r || e.target.closest('.ex-more-btn')) return;
+      row = r; sx = e.clientX; sy = e.clientY; dx = 0; active = false; decided = false;
+    });
+    list.addEventListener('pointermove', e => {
+      if (!row) return;
+      const mx = e.clientX - sx, my = e.clientY - sy;
+      if (!decided) {
+        if (Math.abs(mx) < 12 && Math.abs(my) < 12) return;
+        decided = true; active = Math.abs(mx) > Math.abs(my);
+        if (active) { row.classList.add('swiping'); try { row.setPointerCapture(e.pointerId); } catch (x) {} }
+      }
+      if (!active) return;
+      dx = Math.max(-110, Math.min(110, mx));
+      row.style.transform = 'translateX(' + dx + 'px)';
+      row.style.boxShadow = dx > 0 ? 'inset 4px 0 0 var(--lift)' : dx < 0 ? 'inset -4px 0 0 #ff6f5e' : '';
+    });
+    const end = () => {
+      if (!row) return;
+      const r = row; row = null;
+      r.classList.remove('swiping'); r.style.transform = ''; r.style.boxShadow = '';
+      if (!active) return;
+      const m = /^ex-row-(\d+)-(\d+)$/.exec(r.id);
+      if (!m) return;
+      const sid = +m[1], eidx = +m[2];
+      if (dx > 80) { buzz(10); openEditModal(sid, eidx); }
+      else if (dx < -80) { buzz(10); promptDeleteExercise(sid, eidx, sessions[sid].exercises[eidx].name); }
+    };
+    list.addEventListener('pointerup', end);
+    list.addEventListener('pointercancel', end);
+  })();
+
   function promptDeleteExercise(sid, eidx, name) {
     pendingDelete = { type: 'exercise', sid, eidx };
     document.getElementById('delete-confirm-title').textContent = 'Delete this exercise?';
@@ -3988,6 +4342,9 @@
   // lift was trained in an EARLIER week. Sets from several sessions in the
   // same week are simply joined into one list.
   // ═════════════════════════════════════════════
+  const TARGET_KEY = 'trainingLog_weeklyTarget';
+  function loadWeeklyTarget() { try { return Math.min(7, Math.max(1, parseInt(localStorage.getItem(TARGET_KEY)) || 3)); } catch (e) { return 3; } }
+  function setWeeklyTarget(n) { n = Math.min(7, Math.max(1, n)); try { localStorage.setItem(TARGET_KEY, String(n)); } catch (e) { /* ignore */ } renderRecap(); }
   let recapIdx = null; // index into the list of weeks that have data (null = newest)
 
   function recapMonday(d) {
@@ -4004,7 +4361,7 @@
   function renderRecap() {
     const body = document.getElementById('recap-body');
     if (!sessions.length) {
-      body.innerHTML = '<div class="empty"><span class="empty-icon">📈</span>Log a few sessions to see your weekly recap</div>';
+      body.innerHTML = '<div class="empty"><svg class="empty-art" width="52" height="52" viewBox="0 0 56 56" fill="none" stroke="var(--lift)" stroke-width="2.5" stroke-linecap="round"><path d="M6 28h6M44 28h6"/><rect x="12" y="16" width="7" height="24" rx="2"/><rect x="37" y="16" width="7" height="24" rx="2"/><path d="M19 28h18"/></svg><b style="display:block;color:var(--text);font-family:var(--font-display);font-size:16px;font-weight:400;margin-bottom:4px">Nothing to recap yet</b>Log a few sessions and your week-by-week progress appears here.<button class="empty-cta" onclick="goLog()">Log first lift</button></div>';
       return;
     }
     // weekKey -> { lifts: { name: [sets…] }, sessions: n }
@@ -4034,6 +4391,7 @@
 
     let prs = 0, up = 0;
     const names = Object.keys(cur.lifts);
+    window.__recapTop = []; // lifts with their est. 1RM change, for the share card
     const cards = names.map(name => {
       const sets = mainOf(cur.lifts[name]), b = bestSetOf(sets), eNow = e1rmEst(b.w, b.r);
       // last earlier week this lift was trained, and the best est. 1RM before this week
@@ -4049,7 +4407,8 @@
           <div class="rc-cmp"><div></div><div class="rc-hd">Sets</div><div></div><div></div>${sets.map((st, i) => `<div class="rc-sn">${i + 1}</div><div class="rc-cur">${st.r}×${st.w}</div><div></div><div></div>`).join('')}</div></div>`;
       }
       const prevSets = mainOf(weeks[prevKey].lifts[name]), bp = bestSetOf(prevSets), ePrev = e1rmEst(bp.w, bp.r);
-      const dE = eNow - ePrev, vNow = recapVol(sets), dV = vNow - recapVol(prevSets);
+      const dE = eNow - ePrev; window.__recapTop.push({ name, est: eNow, dE });
+      const vNow = recapVol(sets), dV = vNow - recapVol(prevSets);
       const improved = dE > 0 || (dE === 0 && dV > 0);
       if (improved || isPR) up++;
       const verdict = isPR ? ['rc-up', 'New PR'] : improved ? ['rc-up', 'Progressed'] : (dE < 0 && dV < 0) ? ['rc-down', 'Down'] : ['rc-flat', 'Held'];
@@ -4073,7 +4432,21 @@
     }
     const mx = Math.max(...bars.map(x => x.v), 1);
 
+    // Weeks-in-a-row streak (any week with at least one session) + this week's progress toward a target
+    const target = loadWeeklyTarget();
+    let streak = 0, cur8 = new Date(thisMonday);
+    if (!weeks[cur8.getTime()]) cur8.setDate(cur8.getDate() - 7); // this week hasn't started yet — doesn't break the streak
+    while (weeks[recapMonday(cur8).getTime()]) { streak++; cur8.setDate(cur8.getDate() - 7); }
+    const doneThisWeek = weeks[thisMonday] ? weeks[thisMonday].sessions : 0;
+    const frac = Math.min(1, doneThisWeek / target), CIRC = 213.6;
+    window.__recapShare = { range: recapFmt(mon) + ' – ' + recapFmt(sun), volume: totVol, sessions: cur.sessions, sets: totSets, prs, top: window.__recapTop || [] };
     body.innerHTML = `
+      <div class="rc-card rc-streak">
+        <svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42" cy="42" r="34" fill="none" stroke="var(--border)" stroke-width="7"/><circle cx="42" cy="42" r="34" fill="none" stroke="var(--lift)" stroke-width="7" stroke-linecap="round" stroke-dasharray="${CIRC}" stroke-dashoffset="${(CIRC * (1 - frac)).toFixed(1)}" transform="rotate(-90 42 42)"/><text x="42" y="47" text-anchor="middle" font-family="Georgia,serif" font-size="20" fill="var(--text)">${doneThisWeek}/${target}</text></svg>
+        <div><div class="big">${streak} week${streak !== 1 ? 's' : ''} in a row${streak >= 2 ? ' 🔥' : ''}</div>
+          <div class="sm">${doneThisWeek} of ${target} planned sessions this week</div>
+          <div class="rc-step"><button aria-label="Fewer planned sessions" onclick="setWeeklyTarget(${target - 1})">−</button><span style="font-size:12px;color:var(--muted)">weekly goal</span><button aria-label="More planned sessions" onclick="setWeeklyTarget(${target + 1})">+</button></div></div>
+      </div>
       <div class="rc-nav">
         <button ${recapIdx === 0 ? 'disabled' : ''} aria-label="Previous week" onclick="recapIdx--;renderRecap()">‹</button>
         <div class="rc-wk"><b>${title}</b><span>${recapFmt(mon)} – ${recapFmt(sun)}</span></div>
@@ -4086,6 +4459,7 @@
         <div class="rc-tile"><b>${prs}</b><span>PRs</span><small class="rc-flat">${up}/${names.length} up</small></div>
       </div>
       ${cards}
+      <button class="rc-share" onclick="shareRecap()">Share this week's recap</button>
       <div class="section-label" style="margin-top:20px">Weekly volume · ${currentUnit}</div>
       <div class="rc-card"><div class="rc-bars">${bars.map(x => `<div class="rc-bar${x.k === wk ? ' cur' : ''}"><i style="height:${Math.round(x.v / mx * 88)}%"></i><span>${recapFmt(new Date(x.k))}</span></div>`).join('')}</div></div>`;
   }
@@ -4109,6 +4483,18 @@
   // ─────────────────────────────────────────────
   const PR_FLAG_KEY = 'trainingLog_newPr'; // exercise name(s) that just set a new best, consumed once here
 
+  // " (+0.2 since Oct)" — change in est. 1RM ÷ bodyweight since the first logged session of this lift
+  function ratioTrend(name, seriesByName, bwNow) {
+    const ser = seriesByName[name] || [];
+    if (ser.length < 2) return '';
+    const first = ser[0], last = ser[ser.length - 1];
+    const b0 = bwAt(new Date(first.date)), b1 = bwAt(new Date(last.date)) || bwNow;
+    if (!b0 || !b1) return '';
+    const d = last.est / b1 - first.est / b0;
+    if (Math.abs(d) < 0.05) return '';
+    return ' (' + (d > 0 ? '+' : '−') + Math.abs(d).toFixed(1) + ' since ' + fmtShort(new Date(first.date)) + ')';
+  }
+
   function renderPRs() {
     // Attach each session's date to its exercises before flattening,
     // so every exercise object carries the date it was logged on —
@@ -4118,7 +4504,7 @@
     const allEx = sessions.flatMap(s => s.exercises.flatMap(e =>
       setPoints(e).map(pt => ({ name: e.name, reps: pt.r, weight: pt.w, n: pt.n, date: s.date }))));
     if (!allEx.length) {
-      document.getElementById('pr-list').innerHTML = '<div class="empty"><span class="empty-icon">🏆</span>Log sessions to see your PRs here</div>';
+      document.getElementById('pr-list').innerHTML = '<div class="empty"><svg class="empty-art" width="52" height="52" viewBox="0 0 56 56" fill="none" stroke="var(--lift)" stroke-width="2.5" stroke-linecap="round"><path d="M6 28h6M44 28h6"/><rect x="12" y="16" width="7" height="24" rx="2"/><rect x="37" y="16" width="7" height="24" rx="2"/><path d="M19 28h18"/></svg><b style="display:block;color:var(--text);font-family:var(--font-display);font-size:16px;font-weight:400;margin-bottom:4px">No PRs yet</b>Your best set for every lift shows up here.<button class="empty-cta" onclick="goLog()">Log first lift</button></div>';
       return;
     }
 
@@ -4163,7 +4549,7 @@
         const isNew    = newPrNames.indexOf(e.name) !== -1;
         // Small cyan line under the lift name showing strength-to-bodyweight ratio
         const ratioLine = bw
-          ? `<div style="font-size:10px;color:var(--lift);margin-top:2px;">${(est / bw).toFixed(1)}× bodyweight</div>`
+          ? `<div style="font-size:10px;color:var(--lift);margin-top:2px;">${(est / bw).toFixed(1)}× bodyweight${ratioTrend(e.name, seriesByName, bw)}</div>`
           : '';
         const safeId = 'pr-' + i;
         return `
@@ -4408,6 +4794,7 @@
   let swRunning   = false;
   let swLongPress = null;    // setTimeout handle for long-press reset
   let swSetCount  = 1;       // current set number — increments on reset
+  let swAlerted   = false;   // true once the rest alert has fired for this rest
 
   function toggleStopwatch() {
     if (swRunning) {
@@ -4437,9 +4824,19 @@
     const m     = Math.floor(total / 60000);
     const s     = Math.floor((total % 60000) / 1000);
     document.getElementById('sw-display').textContent = m + ':' + String(s).padStart(2, '0');
+    // Rest alert: pulse the timer (and buzz where supported) once at the target time
+    const target = loadRestTarget();
+    if (swRunning && target && !swAlerted && total >= target * 1000) {
+      swAlerted = true;
+      document.getElementById('sw-btn').classList.add('alert');
+      buzz([30, 60, 30]);
+      toast('Rest over — go lift');
+    }
   }
 
   function resetStopwatch() {
+    swAlerted = false;
+    document.getElementById('sw-btn').classList.remove('alert');
     clearInterval(swInterval);
     swMs = 0; swStart = null; swRunning = false; swInterval = null;
     // Increment set counter — reset means rest is over, next set is starting
@@ -4473,6 +4870,8 @@
     // Show the welcome screen on first launch only, before anything
     // else — everyone who's already been through it (or skipped it)
     // goes straight to the app as normal.
+    setRestTarget(loadRestTarget()); // highlight the saved rest-alert choice
+    maybeShowBackup();
     if (!hasOnboarded()) {
       document.getElementById('welcome-screen').style.display = 'flex';
     } else {
