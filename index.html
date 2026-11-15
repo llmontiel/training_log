@@ -1066,6 +1066,18 @@
   .backup-banner button { background: var(--lift); color: var(--on-lift); border: none; border-radius: 8px; font: 700 12px var(--font-body); padding: 7px 12px; cursor: pointer; margin-left: auto; }
   .backup-banner button.x { background: none; color: var(--muted); font-size: 18px; padding: 0 4px; margin-left: 0; }
 
+
+  /* Auto title-case setting + tidy-names sheet */
+  .tc-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; font-size: 13px; }
+  .tc-sw { width: 46px; height: 28px; border-radius: 999px; background: var(--surface2); border: 1px solid var(--border); position: relative; cursor: pointer; flex: none; padding: 0; }
+  .tc-sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: var(--muted); transition: left 0.2s, background 0.2s; }
+  .tc-sw.on { background: var(--lift-dim); border-color: var(--lift-mid); }
+  .tc-sw.on::after { left: 21px; background: var(--lift); }
+  .tc-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 10px 0 0; max-height: 40vh; display: block; overflow-y: auto; }
+  .tc-table td { padding: 8px 4px; border-top: 1px solid var(--border); vertical-align: top; }
+  .tc-table tr:first-child td { border-top: none; }
+  .tc-old { color: var(--muted); } .tc-arrow { color: var(--lift); text-align: center; width: 20px; } .tc-new { font-weight: 600; }
+  .tc-new em { font-style: normal; font-weight: 400; font-size: 11px; color: #4ade80; margin-left: 4px; }
 </style>
 <script>
   // ── Apply saved accent color before first paint ──
@@ -1577,6 +1589,14 @@
         <button class="btn-ghost" onclick="addPresetExercise()" style="white-space:nowrap;">Add</button>
       </div>
       <button class="btn-ghost" style="width:100%;margin-top:10px;" onclick="resetPresetList()">Reset to defaults</button>
+
+      <!-- Auto title-case: tidies names as you log ("hip thrust" → "Hip Thrust") -->
+      <div class="tc-row" style="margin-top:18px;padding-top:14px;border-top:1px solid var(--border)">
+        <div><div style="color:var(--text);font-weight:600">Auto title-case names</div>
+          <div style="color:var(--muted);font-size:12px;margin-top:2px">Custom lifts, edits and added exercises. Your saved spelling always wins.</div></div>
+        <button class="tc-sw" id="tc-switch" role="switch" aria-label="Auto title-case names" onclick="toggleAutoTitle()"></button>
+      </div>
+      <button class="btn-ghost" style="width:100%;margin-top:12px;" onclick="openTidyModal()">Tidy existing names…</button>
     </div>
 
     <div class="section-label">Export</div>
@@ -1631,6 +1651,18 @@
      exercise row in History. Pre-fills all
      fields so the user can edit anything.
      ════════════════════════════════════════ -->
+<div class="modal-overlay" id="tidy-modal">
+  <div class="modal">
+    <div class="modal-title">Tidy exercise names</div>
+    <div class="modal-sub" id="tidy-sub" style="margin-bottom:0"></div>
+    <table class="tc-table" id="tidy-table"></table>
+    <div class="modal-actions" style="margin-top:14px">
+      <button class="modal-cancel" onclick="document.getElementById('tidy-modal').classList.remove('open')">Cancel</button>
+      <button class="modal-confirm" id="tidy-apply" onclick="applyTidy()">Apply</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="summary-modal">
   <div class="modal">
     <div class="modal-title">Session logged 💪</div>
@@ -2479,7 +2511,7 @@
   // Adds a new preset from the free-text input in Settings
   function addPresetExercise() {
     const input = document.getElementById('new-preset-input');
-    const name  = input.value.trim();
+    const name  = autoTitleOn() ? titleCase(input.value) : input.value.trim();
     if (!name) { toast('Enter an exercise name'); return; }
     if (presetExercises.some(p => p.toLowerCase() === name.toLowerCase())) {
       toast('Already in your list'); return;
@@ -2697,6 +2729,7 @@
     if (t === 'settings') {
       updateHeaderName();           // refresh input with current saved name
       renderExerciseListSettings(); // refresh preset list display
+      updateAutoTitleUI();
       // Reflect the currently active unit in the toggle buttons
       document.getElementById('unit-lb').classList.toggle('active', currentUnit === 'lb');
       document.getElementById('unit-kg').classList.toggle('active', currentUnit === 'kg');
@@ -2760,10 +2793,103 @@
     return [...seen.values()];
   }
 
+  // ─────────────────────────────────────────────
+  // AUTO TITLE-CASE for exercise names
+  // "hip thrust" → "Hip Thrust". Acronyms (rdl → RDL), words with numbers
+  // (8kg, 3x10) and small joining words (with, of) are handled; a name that
+  // already exists in the user's history keeps its saved spelling.
+  // ─────────────────────────────────────────────
+  const TITLE_KEY = 'trainingLog_autoTitle';
+  function autoTitleOn() { try { return localStorage.getItem(TITLE_KEY) !== '0'; } catch (e) { return true; } }
+  function toggleAutoTitle() {
+    try { localStorage.setItem(TITLE_KEY, autoTitleOn() ? '0' : '1'); } catch (e) { /* ignore */ }
+    updateAutoTitleUI();
+  }
+  function updateAutoTitleUI() {
+    const sw = document.getElementById('tc-switch');
+    if (!sw) return;
+    sw.classList.toggle('on', autoTitleOn());
+    sw.setAttribute('aria-checked', autoTitleOn());
+  }
+  const TC_SMALL = new Set(['and', 'or', 'of', 'with', 'to', 'the', 'a', 'an', 'on', 'in', 'for', 'vs']);
+  const TC_ACRONYMS = new Set(['rdl', 'ez', 'db', 'bb', 'kb', 'ssb', 'ghr', 'ohp', 'rpe', 'pr', 'amrap', 'emom', 'sldl', 'cgbp', 'jm']);
+  function tcWord(w, first) {
+    if (/\d/.test(w)) return w;                                  // 8kg, 5x5 — left alone
+    if (TC_ACRONYMS.has(w.toLowerCase())) return w.toUpperCase(); // rdl → RDL
+    if (w.length > 1 && w.length <= 4 && w === w.toUpperCase() && /[A-Z]/.test(w)) return w; // short caps typed on purpose
+    if (!first && TC_SMALL.has(w.toLowerCase())) return w.toLowerCase();
+    return w.toLowerCase().replace(/(^|[\-(])([a-z])/g, (m, a, b) => a + b.toUpperCase());
+  }
+  function titleCase(str) {
+    return str.trim().replace(/\s+/g, ' ').split(' ').map((w, i) => {
+      if (w === '+' || w === '-' || w === '/') return w;
+      return w.split('/').map((part, j) => part ? tcWord(part, i === 0 && j === 0) : part).join('/');
+    }).join(' ');
+  }
+  // The one place new names get cleaned up. Preset spellings always win. A name
+  // already in history keeps its spelling too — unless that spelling is untidy
+  // ("Hip thrust") and auto title-case is on, so typing it right can fix it going
+  // forward (Settings → Tidy existing names merges the old ones).
+  function formatName(name) {
+    const raw = name.trim().replace(/\s+/g, ' ');
+    if (!raw) return raw;
+    const lower = raw.toLowerCase();
+    const preset = presetExercises.find(n => n.toLowerCase() === lower);
+    if (preset) return preset;
+    const tidy = autoTitleOn() ? titleCase(raw) : raw;
+    const known = getAllCustomNames().find(n => n.toLowerCase() === lower);
+    if (known && (!autoTitleOn() || known === titleCase(known))) return known;
+    return tidy;
+  }
+
+  // ── Tidy existing names (Settings) ──
+  let tidyPlan = [];
+  function openTidyModal() {
+    const counts = {};
+    sessions.forEach(s => s.exercises.forEach(e => { counts[e.name] = (counts[e.name] || 0) + 1; }));
+    currentQueue.forEach(e => { counts[e.name] = (counts[e.name] || 0) + 1; });
+    // target spelling: a preset's spelling if one matches, else title case
+    const groups = {};
+    Object.keys(counts).forEach(n => {
+      const preset = presetExercises.find(x => x.toLowerCase() === n.toLowerCase());
+      const target = preset || titleCase(n);
+      (groups[target] = groups[target] || []).push(n);
+    });
+    tidyPlan = [];
+    Object.keys(groups).forEach(target => {
+      const names = groups[target];
+      if (names.every(n => n === target)) return; // nothing to change
+      tidyPlan.push({ target, from: names.filter(n => n !== target), all: names });
+    });
+    const table = document.getElementById('tidy-table');
+    if (!tidyPlan.length) {
+      document.getElementById('tidy-sub').textContent = 'Everything already looks tidy. Nothing to change.';
+      table.innerHTML = '';
+      document.getElementById('tidy-apply').style.display = 'none';
+    } else {
+      const merged = tidyPlan.filter(t => t.all.length > 1).length;
+      document.getElementById('tidy-sub').textContent = tidyPlan.length + ' name' + (tidyPlan.length !== 1 ? 's' : '') + ' would change' + (merged ? ' (duplicates are merged)' : '') + '. Your sessions and weights stay exactly as they are.';
+      table.innerHTML = tidyPlan.map(t =>
+        `<tr><td class="tc-old">${t.from.map(n => n + ' (' + counts[n] + ')').join(' + ')}</td><td class="tc-arrow">→</td><td class="tc-new">${t.target}${t.all.length > 1 ? '<em>merged</em>' : ''}</td></tr>`).join('');
+      document.getElementById('tidy-apply').style.display = '';
+      document.getElementById('tidy-apply').textContent = 'Apply ' + tidyPlan.length + ' change' + (tidyPlan.length !== 1 ? 's' : '');
+    }
+    document.getElementById('tidy-modal').classList.add('open');
+  }
+  function applyTidy() {
+    const map = {};
+    tidyPlan.forEach(t => t.from.forEach(n => { map[n] = t.target; }));
+    sessions.forEach(s => s.exercises.forEach(e => { if (map[e.name]) e.name = map[e.name]; }));
+    currentQueue.forEach(e => { if (map[e.name]) e.name = map[e.name]; });
+    saveSessions(); saveQueue();
+    document.getElementById('tidy-modal').classList.remove('open');
+    renderQueue(); renderHistory(); renderPRs();
+    toast(tidyPlan.length + ' name' + (tidyPlan.length !== 1 ? 's' : '') + ' tidied');
+    tidyPlan = [];
+  }
+
   function canonicalize(name) {
-    const lower = name.trim().toLowerCase();
-    const match = getAllCustomNames().find(n => n.toLowerCase() === lower);
-    return match || name.trim();
+    return formatName(name); // saved spelling if one exists, otherwise auto title-case (if on)
   }
 
   // ─────────────────────────────────────────────
