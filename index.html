@@ -707,7 +707,7 @@
   .modal-cancel:hover { border-color: var(--text); color: var(--text); }
 
   /* ── Stopwatch button — sits left of Log exercise ── */
-  .btn-stopwatch {
+  .btn-stopwatch { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: manipulation;
     background: var(--surface2);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
@@ -1628,6 +1628,18 @@
      exercise row in History. Pre-fills all
      fields so the user can edit anything.
      ════════════════════════════════════════ -->
+<div class="modal-overlay" id="csv-modal">
+  <div class="modal">
+    <div class="modal-title">Your data</div>
+    <div class="modal-sub" style="margin-bottom:8px">Your phone blocked the file export, so here it is as text. Tap Copy, then paste it into Notes, Mail or a spreadsheet and save it as a .csv.</div>
+    <textarea id="csv-text" readonly style="width:100%;height:30vh;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font:12px ui-monospace,Menlo,monospace;padding:10px;resize:none"></textarea>
+    <div class="modal-actions" style="margin-top:12px">
+      <button class="modal-cancel" onclick="document.getElementById('csv-modal').classList.remove('open')">Close</button>
+      <button class="modal-confirm" onclick="copyCsv()">Copy</button>
+    </div>
+  </div>
+</div>
+
 <div class="modal-overlay" id="tidy-modal">
   <div class="modal">
     <div class="modal-title">Tidy exercise names</div>
@@ -2540,6 +2552,21 @@
   // So the standalone path below builds a data: URI synchronously
   // (no Blob, no FileReader) and hands it straight to window.open().
   // ─────────────────────────────────────────────
+  // Last-resort export: the CSV as text they can copy (paste into Notes, Mail, Sheets…)
+  function showCsvSheet(csvText) {
+    const ta = document.getElementById('csv-text');
+    ta.value = csvText;
+    document.getElementById('csv-modal').classList.add('open');
+  }
+  function copyCsv() {
+    const ta = document.getElementById('csv-text');
+    ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length);
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    if (!ok && navigator.clipboard) { navigator.clipboard.writeText(ta.value).then(() => toast('Copied')).catch(() => toast('Press and hold the text to copy')); return; }
+    toast(ok ? 'Copied' : 'Press and hold the text to copy');
+  }
+
   function exportData() {
     if (!sessions.length) { toast('No data to export yet'); return; }
 
@@ -2568,19 +2595,21 @@
       (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
 
     if (isStandalone) {
-      // Self-contained data: URI, built synchronously — see the note
-      // above for why both of those properties matter here. Safari
-      // opens this in a new tab and renders the CSV as plain text,
-      // which the Share button (already visible in that tab) can
-      // then save to Files.
-      const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvText);
-      const win = window.open(dataUri, '_blank');
-      if (!win) {
-        // Genuinely blocked — tell them plainly rather than failing silently.
-        toast('Allow pop-ups to export, or open this app in Safari directly');
-      } else {
-        toast('CSV exported');
+      // Home-screen app: the iPhone share sheet is the most reliable way out.
+      // It hands the CSV over as a real file ("Save to Files", AirDrop, Mail…).
+      // If the phone can't share files, fall back to opening the data in Safari,
+      // and finally to a copy-able text sheet so the export never just fails.
+      const file = new File([csvText], filename, { type: 'text/csv' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: 'Training Log export' })
+          .then(() => toast('CSV exported'))
+          .catch(err => { if (!err || err.name !== 'AbortError') showCsvSheet(csvText); }); // AbortError = they closed the share sheet
+        return;
       }
+      const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvText);
+      let win = null;
+      try { win = window.open(dataUri, '_blank'); } catch (e) { win = null; }
+      if (win) toast('CSV exported'); else showCsvSheet(csvText);
       return;
     }
 
@@ -4841,9 +4870,13 @@
   let swInterval  = null;    // setInterval handle
   let swRunning   = false;
   let swLongPress = null;    // setTimeout handle for long-press reset
+  let swSwallowClick = false; // true right after a long-press reset, so the click that follows the release doesn't also start the timer
   let swSetCount  = 1;       // current set number — increments on reset
 
   function toggleStopwatch() {
+    // A long-press already reset the timer. Without this, releasing your finger
+    // fires a click that immediately starts a new rest on the next set.
+    if (swSwallowClick) { swSwallowClick = false; return; }
     if (swRunning) {
       // Stop — freeze rest time
       clearInterval(swInterval);
@@ -4889,8 +4922,11 @@
 
   // Long-press to reset — registered after DOM is ready
   function swPressStart() {
+    clearTimeout(swLongPress);
     swLongPress = setTimeout(function() {
       swLongPress = null;
+      swSwallowClick = true;
+      setTimeout(function() { swSwallowClick = false; }, 800); // safety: never leave the flag stuck
       resetStopwatch();
     }, 600);
   }
@@ -4943,11 +4979,13 @@
 
     const swBtn = document.getElementById('sw-btn');
     if (!swBtn) return;
-    swBtn.addEventListener('mousedown',  swPressStart);
-    swBtn.addEventListener('touchstart', swPressStart, { passive: true });
-    swBtn.addEventListener('mouseup',    swPressEnd);
-    swBtn.addEventListener('mouseleave', swPressEnd);
-    swBtn.addEventListener('touchend',   swPressEnd);
+    // Pointer events cover touch and mouse in one stream (touch + mouse
+    // listeners both fired on iPhone, which could double-trigger the press).
+    swBtn.addEventListener('pointerdown',   swPressStart);
+    swBtn.addEventListener('pointerup',     swPressEnd);
+    swBtn.addEventListener('pointerleave',  swPressEnd);
+    swBtn.addEventListener('pointercancel', swPressEnd);
+    swBtn.addEventListener('contextmenu', function(e) { e.preventDefault(); }); // no iOS callout on long-press
   });
 
 </script>
